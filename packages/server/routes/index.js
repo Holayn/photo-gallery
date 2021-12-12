@@ -11,7 +11,7 @@ const ALBUM_TITLES = JSON.parse(fs.readFileSync(path.join(__dirname, '../config/
 router.use('/test', (req, res) => {
   res.sendStatus(200);
 });
-router.use('/', express.static(path.join(__dirname, '../media/photos')));
+router.use('/', express.static(path.join(__dirname, '../../../../photo-gallery-media')));
 router.use('/config', (req, res) => {
   const album = req.query.album;
   if (AVAILABLE_ALBUMS.includes(album)) {
