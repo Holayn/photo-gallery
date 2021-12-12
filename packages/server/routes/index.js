@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const helmet = require('helmet');
 require('dotenv').config();
 
 const router = express.Router();

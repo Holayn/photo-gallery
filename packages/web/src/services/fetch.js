@@ -1,4 +1,4 @@
-export const BASE = process.env.NODE_ENV === 'development' ? 'http://192.168.0.133:8000/api' : '/api';
+export const BASE = process.env.NODE_ENV === 'development' ?  'http://localhost:8000/api' : `${process.env.VUE_APP_BASE_URL}api`;
 
 export async function fetchPhotos(albumParam) {
   const { album } = await (await fetch(`${BASE}/config?album=${albumParam}`)).json();
