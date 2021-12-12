@@ -10,7 +10,8 @@
 </template>
 
 <script>
-import { BASE, fetchPhotos } from '../services/fetch';
+import { fetchPhotos } from '../services/fetch';
+import { getUrl } from '../utils';
 
 const GALLERY_ROW_HEIGHT = 200;
 const INFINITE_SCROLL_IMAGES_TO_LOAD = 20;
@@ -64,7 +65,7 @@ export default {
       this.$emit('show-lightbox');
     },
     getUrl(path) {
-      return `${BASE}/media/${this.title}/${path}`;
+      return getUrl(path, this.title);
     },
     getHref(photo) {
       return photo.isVideo ? this.getUrl(photo.output.download.path) : this.getUrl(photo.output.large.path);

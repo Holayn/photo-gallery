@@ -36,11 +36,11 @@
 import { Keyboard, Virtual, Zoom } from 'swiper';
 import { Swiper, SwiperSlide } from 'swiper/vue/swiper-vue.js';
 
-import { BASE } from '../services/fetch';
-
 import 'swiper/swiper.scss'; // core Swiper
 import 'swiper/modules/navigation/navigation.scss'; // Navigation module
 import 'swiper/modules/pagination/pagination.scss'; // Pagination module
+
+import { getUrl } from '../utils';
 
 export default {
   name: 'Lightbox',
@@ -82,7 +82,7 @@ export default {
       this.$emit('close');
     },
     getUrl(path) {
-      return `${BASE}/media/${this.title}/${path}`;
+      return getUrl(path, this.title);
     },
     open() {
       document.body.style.position = 'fixed';

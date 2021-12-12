@@ -47,6 +47,7 @@ export default {
   },
   async mounted() {
     this.title = await fetchGalleryTitle(this.albumParam);
+    document.title = this.title;
   },
   methods: {
     onShowLightbox() {
