@@ -22,7 +22,7 @@
         :zoom="true"
       >
         <div v-if="photo.isVideo" style="display: flex; align-items: center; justify-content: center; height: 100%;">
-          <video class="video-js" controls preload="auto" :poster="getUrl(photo.output.large.path)" style="height: 100%; width: 100%; max-height: 75vh;">
+          <video :id="'video-' + index" class="video-js" controls preload="auto" :poster="getUrl(photo.output.large.path)" style="height: 100%; width: 100%; max-height: 75vh;">
             <source :src="getUrl(photo.output.download.path)" type="video/mp4"/>
           </video>
         </div>
@@ -72,6 +72,7 @@ export default {
   },
   methods: {
     activeIndexChange({ activeIndex }) {
+      this.stopCurrentVideo();
       this.$store.state.lightbox.photoIndex = activeIndex;
     },
     afterInit(e) {
@@ -79,6 +80,7 @@ export default {
     },
     close() {
       document.body.style.position = '';
+      this.stopCurrentVideo();
       this.$emit('close');
     },
     getUrl(path) {
@@ -95,6 +97,9 @@ export default {
       });
 
       this.swiper.slideTo(this.$store.state.lightbox.photoIndex, 0)
+    },
+    stopCurrentVideo() {
+      document.querySelector(`#video-${this.$store.state.lightbox.photoIndex}`)?.pause();
     },
   },
 }
