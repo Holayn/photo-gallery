@@ -1,11 +1,16 @@
 <template>
-  <div id="media">
-    <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" :href="getHref(photo)" @click.prevent>
-      <img :src="getImgSrc(photo)" @click="openSlides(i)">
-      <div v-if="photo.isVideo" class="overlay">
-        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-      </div>
-    </a>
+  <div>
+    <div id="media">
+      <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" :href="getHref(photo)" @click.prevent>
+        <img :src="getImgSrc(photo)" @click="openSlides(i)">
+        <div v-if="photo.isVideo" class="overlay">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </div>
+      </a>
+    </div>
+    <div v-if="moreToLoad" style="display: flex; justify-content: center; padding: 1rem;">
+      <Loading></Loading>
+    </div>
   </div>
 </template>
 
@@ -13,10 +18,15 @@
 import { fetchPhotos } from '../services/fetch';
 import { getUrl } from '../utils';
 
+import Loading from './Loading.vue';
+
 const GALLERY_ROW_HEIGHT = 200;
 
 export default {
   name: 'Gallery',
+  components: {
+    Loading,
+  },
   props: {
     title: String,
   },
@@ -26,6 +36,7 @@ export default {
       galleryImageRefs: [],
       infiniteScrollCanLoadMore: true,
       infiniteScrollImagesToLoad: 20,
+      moreToLoad: true,
     };
   },
   computed: {
@@ -40,6 +51,11 @@ export default {
     lightboxIndex() {
       if (this.lightboxIndex + this.infiniteScrollImagesToLoad >= this.galleryIndex) {
         this.loadMoreImagesToGallery();
+      }
+    },
+    galleryIndex() {
+      if (this.galleryIndex >= this.$store.state.photos.length) {
+        this.moreToLoad = false;
       }
     },
   },
@@ -119,7 +135,6 @@ export default {
       }
     },
     loadMoreImagesToGallery() {
-      console.log(this.infiniteScrollImagesToLoad);
       for (let i = this.galleryIndex, j = 0; i < this.$store.state.photos.length && j < this.infiniteScrollImagesToLoad; i++, j++) {
         this.galleryIndex++;
       }
