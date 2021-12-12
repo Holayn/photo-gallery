@@ -14,7 +14,6 @@ import { fetchPhotos } from '../services/fetch';
 import { getUrl } from '../utils';
 
 const GALLERY_ROW_HEIGHT = 200;
-const INFINITE_SCROLL_IMAGES_TO_LOAD = 20;
 
 export default {
   name: 'Gallery',
@@ -25,6 +24,8 @@ export default {
     return {
       galleryIndex: 0,
       galleryImageRefs: [],
+      infiniteScrollCanLoadMore: true,
+      infiniteScrollImagesToLoad: 20,
     };
   },
   computed: {
@@ -37,7 +38,7 @@ export default {
   },
   watch: {
     lightboxIndex() {
-      if (this.lightboxIndex + INFINITE_SCROLL_IMAGES_TO_LOAD >= this.galleryIndex) {
+      if (this.lightboxIndex + this.infiniteScrollImagesToLoad >= this.galleryIndex) {
         this.loadMoreImagesToGallery();
       }
     },
@@ -47,6 +48,7 @@ export default {
     await this.$nextTick();
     this.$store.state.photos = await fetchPhotos(this.title);
     this.galleryIndex = this.calculateImagesToLoad();
+    this.infiniteScrollImagesToLoad = this.galleryIndex;
 
     setTimeout(() => {
       window.$('#media').justifiedGallery({
@@ -105,12 +107,20 @@ export default {
       window.removeEventListener('scroll', this.infiniteScrollBound);
     },
     infiniteScroll() {
-      if ((window.innerHeight + window.scrollY) >= document.querySelector('#app').offsetHeight) {
+      if (this.infiniteScrollCanLoadMore && (window.innerHeight + window.scrollY + (window.innerHeight / 2)) >= document.querySelector('#app').offsetHeight) {
+        this.infiniteScrollCanLoadMore = false;
         this.loadMoreImagesToGallery();
+
+        // Prevent scrolling from loading too many images at once
+        setTimeout(() => {
+          this.infiniteScrollCanLoadMore = true;
+          this.infiniteScroll();
+        }, 1000);
       }
     },
     loadMoreImagesToGallery() {
-      for (let i = this.galleryIndex, j = 0; i < this.$store.state.photos.length && j < INFINITE_SCROLL_IMAGES_TO_LOAD; i++, j++) {
+      console.log(this.infiniteScrollImagesToLoad);
+      for (let i = this.galleryIndex, j = 0; i < this.$store.state.photos.length && j < this.infiniteScrollImagesToLoad; i++, j++) {
         this.galleryIndex++;
       }
 
