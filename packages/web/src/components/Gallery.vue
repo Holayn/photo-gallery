@@ -50,7 +50,11 @@ export default {
   watch: {
     lightboxIndex() {
       if (this.lightboxIndex + this.infiniteScrollImagesToLoad >= this.galleryIndex) {
-        this.loadMoreImagesToGallery();
+        setTimeout(() => {
+          // Delay this slightly to prevent blocking other resources from loading first.
+          // This is in the background when this is called.
+          this.loadMoreImagesToGallery();
+        }, 500);
       }
     },
     galleryIndex() {

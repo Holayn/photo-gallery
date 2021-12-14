@@ -21,12 +21,10 @@
         :virtualIndex="index"
         :zoom="true"
       >
-        <div v-if="photo.isVideo" style="display: flex; align-items: center; justify-content: center; height: 100%;">
-          <video :id="'video-' + index" class="video-js" controls preload="auto" :poster="getUrl(photo.output.large.path)" style="height: 100%; width: 100%; max-height: 75vh;">
-            <source :src="getUrl(photo.output.download.path)" type="video/mp4"/>
-          </video>
-        </div>
-        <img v-else :src="getUrl(photo.output.large.path)" style="max-width: 100%; max-height: 100vh;">
+        <lightbox-slide
+          :index="index"
+          :photo="photo"
+          :title="title"></lightbox-slide>
       </swiper-slide>
     </swiper>
   </div>
@@ -40,11 +38,12 @@ import 'swiper/swiper.scss'; // core Swiper
 import 'swiper/modules/navigation/navigation.scss'; // Navigation module
 import 'swiper/modules/pagination/pagination.scss'; // Pagination module
 
-import { getUrl } from '../utils';
+import LightboxSlide from './LightboxSlide.vue';
 
 export default {
   name: 'Lightbox',
   components: {
+    LightboxSlide,
     Swiper,
     SwiperSlide,
   },
@@ -82,9 +81,6 @@ export default {
       document.body.style.position = '';
       this.stopCurrentVideo();
       this.$emit('close');
-    },
-    getUrl(path) {
-      return getUrl(path, this.title);
     },
     open() {
       document.body.style.position = 'fixed';
