@@ -12,6 +12,7 @@
       :space-between="50"
       virtual
       :zoom="true"
+      :threshold="10"
       @activeIndexChange="activeIndexChange"
       @afterInit="afterInit"
     >
