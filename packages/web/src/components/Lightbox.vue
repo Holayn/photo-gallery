@@ -127,17 +127,4 @@ export default {
 
     background-color: rgba(0, 0, 0, 0.25);
   }
-
-  .lightbox__prev, .lightbox__next {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    z-index: 99;
-    width: 2rem;
-    height: 2rem;
-
-    border-radius: 10rem;
-    background-color: rgba(255, 255, 255, 0.5);
-  }
 </style>
