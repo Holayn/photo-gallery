@@ -2,10 +2,10 @@
   <div>
     <div>
       <header>
-        <div style="display: flex;">
-          <div id="title" style="flex: auto; margin: 3rem; font-family: 'Roboto'; font-size: 3rem;">{{title}}</div>
+        <div style="display: grid; grid-template-columns: 1fr auto; align-items: center;">
+          <div class="title" style="margin: 3rem;">{{title}}</div>
           <div style="margin: auto 1rem;">
-            <svg @click="toggleHelp(true)" style="cursor: pointer;" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <svg @click="toggleHelp(true)" style="cursor: pointer; width: 1.5rem;" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </div>
         </div>
       </header>
@@ -101,4 +101,19 @@ export default {
 </script>
 
 <style>
+  @media (max-width: 600px) {
+    .title {
+      font-size: 1.5rem;
+    }
+  }
+
+  @media (min-width: 600px) {
+    .title {
+      font-size: 3rem;
+    }
+  }
+
+  .title {
+    font-family: 'Roboto';
+  }
 </style>
