@@ -31,8 +31,11 @@
               <li>
                 downloading images:
                 <ul>
-                  <li>on mobile: tap and hold down on an image</li>
-                  <li>on desktop: right-click + save image as...</li>
+                  <li>
+                    on mobile: open the image, then tap and hold down on an image
+                    <img style="width: 50%;" src="./assets/photo-gallery-help-mobile-save.gif"/>
+                  </li>
+                  <li>on desktop: open the image, then right-click + save image as...</li>
                 </ul>
               </li>
             </ul>
