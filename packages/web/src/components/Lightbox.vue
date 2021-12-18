@@ -1,6 +1,9 @@
 <template>
   <div class="lightbox">
     <div class="lightbox__menu">
+      <div ref="download" @click="triggerDownloadTooltip()" style="margin: 1rem; z-index: 99; cursor: pointer;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"/></svg>
+      </div>
       <div @click="close()" style="margin: 1rem; z-index: 99; cursor: pointer;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </div>
@@ -63,6 +66,7 @@ export default {
   data() {
     return {
       swiper: null,
+      tippy: null,
     }
   },
   computed: {
@@ -70,10 +74,26 @@ export default {
       return this.$store.state.lightbox.photoIndex;
     },
   },
+  mounted() {
+    this.tippy = window.tippy(this.$refs.download, {
+      allowHTML: true,
+      content: `
+        <div>
+          <div><strong>Mobile:</strong> Tap and hold down on the image</div>
+          <div><strong>PC:</strong> Right-click on the image -> Save image as...</div>
+        </div>
+      `,
+      trigger: 'click',
+    });
+  },
   methods: {
     activeIndexChange({ activeIndex }) {
       this.stopCurrentVideo();
       this.$store.state.lightbox.photoIndex = activeIndex;
+
+      if (this.tippy) {
+        this.tippy.hide();
+      }
     },
     afterInit(e) {
       this.swiper = e;
@@ -98,6 +118,9 @@ export default {
     stopCurrentVideo() {
       document.querySelector(`#video-${this.$store.state.lightbox.photoIndex}`)?.pause();
     },
+    triggerDownloadTooltip() {
+      // this.tippy.show();
+    },
   },
 }
 </script>
@@ -117,7 +140,7 @@ export default {
 
   .lightbox__menu {
     display: flex;
-    flex-direction: column;
+    justify-content: flex-end;
     align-items: flex-end;
     position: absolute;
     left: 0;
