@@ -1,12 +1,12 @@
-const express = require('express');
-const path = require('path');
-const helmet = require('helmet');
-const winston = require('winston');
-const expressWinston = require('express-winston');
 const cors = require('cors');
-require('dotenv').config();
+const express = require('express');
+const helmet = require('helmet');
+const path = require('path');
 
+const logger = require('./services/logger');
 const routes = require('./routes');
+
+require('dotenv').config();
 
 const app = express();
 
@@ -14,26 +14,21 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use(expressWinston.logger({
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({
-      filename: `./log/${new Date().getTime()}-log.txt`,
-    }),
-  ],
-  format: winston.format.combine(
-    winston.format.label({ label: 'server'}),
-    winston.format.timestamp(),
-    winston.format.printf(({ level, message, label, timestamp }) => {
-      return `${timestamp} [${label}] ${level}: ${message}`;
-    },
-  )),
-  meta: false,
-  msg: "HTTP {{req.method}} {{req.url}}",
-  expressFormat: true,
-  colorize: false,
-}));
+app.use((req, res, next) => {
+  const { baseUrl, hostname, ip, method, originalUrl } = req;
+  const log = {
+    baseUrl,
+    hostname,
+    ip,
+    method,
+    status: res.statusCode,
+    timestamp: new Date(),
+    url: originalUrl,
+    userAgent: req.headers['user-agent'],
+  };
+  logger.info('Request Logging', log);
+  next();
+});
 
 app.use(helmet.contentSecurityPolicy({
   useDefaults: true,
