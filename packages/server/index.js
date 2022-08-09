@@ -7,6 +7,7 @@ const logger = require('./services/logger');
 const routes = require('./routes');
 
 require('dotenv').config();
+require('./services/jobs').run();
 
 const app = express();
 

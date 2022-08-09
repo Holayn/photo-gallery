@@ -1,4 +1,6 @@
+const dayjs = require('dayjs');
 const winston = require('winston');
+
 require('dotenv').config();
 
 const logger = winston.createLogger({
@@ -11,7 +13,7 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.Console(),
     new winston.transports.File({
-      filename: `./log/${new Date().getTime()}-log.txt`,
+      filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}-log.txt`,
     }),
   ],
 });

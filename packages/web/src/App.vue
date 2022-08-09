@@ -49,7 +49,6 @@
 <script>
 import Gallery from './components/Gallery.vue'
 import Lightbox from './components/Lightbox.vue'
-import { fetchGalleryTitle } from './services/fetch';
 
 export default {
   name: 'App',
@@ -61,7 +60,7 @@ export default {
     return {
       showLightbox: false,
       showHelp: false,
-      title: '',
+      title: 'All Photos',
     };
   },
   computed: {
@@ -83,7 +82,6 @@ export default {
     }
   },
   async mounted() {
-    this.title = await fetchGalleryTitle(this.albumParam);
     document.title = this.title;
   },
   methods: {

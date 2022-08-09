@@ -1,9 +1,9 @@
 <template>
   <div>
     <div id="media">
-      <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" :href="getHref(photo)" @click.prevent>
-        <img :src="getImgSrc(photo)" @click="openSlides(i)">
-        <div v-if="photo.isVideo" class="overlay">
+      <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" :href="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" @click.prevent>
+        <img :src="toPhotoUrl(photo, PHOTO_SIZES.SMALL)" @click="openSlides(i)">
+        <div v-if="isVideo(photo)" class="overlay">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </div>
       </a>
@@ -15,8 +15,8 @@
 </template>
 
 <script>
-import { fetchPhotos } from '../services/fetch';
-import { getUrl } from '../utils';
+import { getPhotos, PHOTO_SIZES, toPhotoUrl } from '../services/api';
+import { isVideo } from '../utils';
 
 import Loading from './Loading.vue';
 
@@ -36,6 +36,7 @@ export default {
       galleryImageRefs: [],
       infiniteScrollCanLoadMore: true,
       infiniteScrollImagesToLoad: 20,
+      PHOTO_SIZES,
       moreToLoad: true,
     };
   },
@@ -66,7 +67,7 @@ export default {
   async mounted() {
     // Let other resources load first
     await this.$nextTick();
-    this.$store.state.photos = await fetchPhotos(this.title);
+    this.$store.state.photos = await getPhotos();
     this.galleryIndex = this.calculateImagesToLoad();
     this.infiniteScrollImagesToLoad = this.galleryIndex;
 
@@ -86,15 +87,6 @@ export default {
       this.$store.state.lightbox.photoIndex = i;
       this.$emit('show-lightbox');
     },
-    getUrl(path) {
-      return getUrl(path, this.title);
-    },
-    getHref(photo) {
-      return photo.isVideo ? this.getUrl(photo.output.download.path) : this.getUrl(photo.output.large.path);
-    },
-    getImgSrc(photo) {
-      return this.getUrl(photo.output.small.path)
-    },
     calculateImagesToLoad() {
       let numImagesToLoad = 0;
         // Calculate how many images to show on page load
@@ -106,7 +98,7 @@ export default {
       const totalWidth = innerWidth * rows;
 
       for (let i = 0; i < this.$store.state.photos.length; i++) {
-        const { width, height } = this.$store.state.photos[i].meta;
+        const { width, height } = this.$store.state.photos[i].metadata;
         const thumbnailWidth = (width / height) * GALLERY_ROW_HEIGHT;
 
         if (currWidth >= totalWidth || currWidth + thumbnailWidth >= totalWidth) {
@@ -163,12 +155,13 @@ export default {
       if (el) {
         this.galleryImageRefs.push(el);
       }
-    }
+    },
+    isVideo,
+    toPhotoUrl,
   },
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
   .overlay {
     position: absolute;

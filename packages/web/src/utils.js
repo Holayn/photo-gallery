@@ -1,5 +1,3 @@
-import { BASE } from './services/fetch';
-
-export function getUrl(path, album) {
-  return `${BASE}/${album}/${path}`;
+export function isVideo(photo) {
+  return photo.metadata.File.MIMEType.includes('video');
 }
