@@ -3,7 +3,7 @@
     <div id="media">
       <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" :href="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" @click.prevent>
         <img :src="toPhotoUrl(photo, PHOTO_SIZES.SMALL)" @click="openSlides(i)">
-        <div v-if="isVideo(photo)" class="overlay">
+        <div v-if="photo.metadata.video" class="overlay">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </div>
       </a>
@@ -16,7 +16,6 @@
 
 <script>
 import { getPhotos, PHOTO_SIZES, toPhotoUrl } from '../services/api';
-import { isVideo } from '../utils';
 
 import Loading from './Loading.vue';
 
@@ -156,7 +155,6 @@ export default {
         this.galleryImageRefs.push(el);
       }
     },
-    isVideo,
     toPhotoUrl,
   },
 }

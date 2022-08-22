@@ -8,7 +8,7 @@
       </div>
     </div>
   </div>
-  <div v-else-if="isVideo(photo)" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+  <div v-else-if="photo.metadata.video" style="display: flex; align-items: center; justify-content: center; height: 100%;">
     <video :id="'video-' + index" class="video-js" controls preload="auto" :poster="toPhotoUrl(photo, PHOTO_SIZES.SMALL)" style="height: 100vw; width: 100vw; max-height: 75vh;">
       <source :src="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" type="video/mp4"/>
     </video>
@@ -18,7 +18,6 @@
 
 <script>
 import { PHOTO_SIZES, toPhotoUrl } from '../services/api';
-import { isVideo } from '../utils';
 
 import Loading from './Loading.vue';
 
@@ -39,7 +38,7 @@ export default {
     }
   },
   mounted() {
-    if (isVideo(this.photo)) {
+    if (this.photo.metadata.video) {
       this.loading = false;
     }
   },
@@ -47,7 +46,6 @@ export default {
     loaded() {
       this.loading = false;
     },
-    isVideo,
     toPhotoUrl,
   },
 }

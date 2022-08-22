@@ -2,9 +2,10 @@ const Database = require('better-sqlite3');
 const fs = require('fs-extra');
 const path = require('path');
 
+const Source = require('./source');
+
 const DB_FILENAME = 'photo-gallery.db';
 const DB_PATH = path.resolve(__dirname, `../${DB_FILENAME}`);
-const SOURCE_INDEX_DB_FILENAME = 'index.db';
 
 class Collection {
   constructor() {
@@ -21,7 +22,7 @@ class Collection {
    * @returns {String} message
    */
   addSource(sourcePath, alias) {
-    return this.db.transaction(() => {
+    return this.db.transaction(async () => {
       const insertSourceStmt = this.db.prepare('INSERT INTO source (path, alias) VALUES (@path, @alias)');
       const selectSourceStmt = this.db.prepare('SELECT * FROM source WHERE path = @path OR alias = @alias');
   
@@ -36,12 +37,10 @@ class Collection {
           path: sourcePath,
         });
   
-        const source = this.db.prepare('SELECT * FROM source WHERE rowid = ?').get(lastInsertRowid);
-        const sourceId = source.id;
+        const source = new Source(this.db.prepare('SELECT * FROM source WHERE rowid = ?').get(lastInsertRowid));
   
+        const files = await source.getFiles();
         // read in DB in source and add to file table
-        const sourceIndexDb = new Database(path.resolve(sourcePath, SOURCE_INDEX_DB_FILENAME));
-        const files = sourceIndexDb.prepare('SELECT * FROM files').all();
         files.forEach(f => {
           this.db
             .prepare(`INSERT INTO file (timestamp_added, file_timestamp, hash, metadata, source_id, processed_path_small, processed_path_large, processed_path_original) VALUES (@timestampAdded, @fileTimestamp, @hash, @metadata, @sourceId, @processedSmall, @processedLarge, @processedOriginal)`)
@@ -52,7 +51,7 @@ class Collection {
               processedLarge: f.processed_path_large,
               processedOriginal: f.processed_path_original,
               processedSmall: f.processed_path_small,
-              sourceId,
+              sourceId: source.dbRecord.id,
               timestampAdded: new Date().getTime(),
             });
         });
@@ -64,24 +63,23 @@ class Collection {
     })();
   }
 
-  syncSource(alias) {
-    const source = this.db.prepare('SELECT * FROM source WHERE alias = ?').get(alias);
-    if (source) {
-      const sourceIndexDb = new Database(path.resolve(source.path, SOURCE_INDEX_DB_FILENAME));
-
-      const sourceFiles = sourceIndexDb.prepare('SELECT * FROM files').all();
+  async syncSource(alias) {
+    const sourceRecord = this.db.prepare('SELECT * FROM source WHERE alias = ?').get(alias);
+    if (sourceRecord) {
+      const source = new Source(sourceRecord);
+      const files = await source.getFiles();
 
       const filesToAdd = [];
-      const filesToDelete = this.db.prepare('SELECT * FROM file WHERE source_id = ?').all(source.id).reduce((acc, val) => {
+      const filesToDelete = this.db.prepare('SELECT * FROM file WHERE source_id = ?').all(source.dbRecord.id).reduce((acc, val) => {
         acc[val.id] = val;
         return acc;
       }, {});
 
-      sourceFiles.forEach(sourceFile => {
+      files.forEach(sourceFile => {
         const fileHash = generateHash(sourceFile);
         const file = this.db.prepare('SELECT * FROM file WHERE hash = @fileHash AND source_id = @sourceId').get({
           fileHash,
-          sourceId: source.id,
+          sourceId: source.dbRecord.id,
         });
 
         if (!file) {
@@ -89,13 +87,17 @@ class Collection {
         }
         else {
           this.db.prepare('UPDATE file SET hash = ?, processed_path_large = ?, processed_path_original = ?, processed_path_small = ? WHERE id = ?').run(fileHash, sourceFile.processed_path_large, sourceFile.processed_path_original,  sourceFile.processed_path_small, file.id);
+          delete filesToDelete[file.id];
         }
-
-        delete filesToDelete[file.id];
       });
 
+      const totalFilesToSync = filesToAdd.length + Object.keys(filesToDelete).length;
+      if (totalFilesToSync) {
+        console.log(`Syncing ${totalFilesToSync} files from ${alias}`);
+      }
+
       filesToAdd.forEach(f => {
-        console.log(`Syncing new file: ${f.path}`)
+        // TODO: log to file
         this.db
           .prepare(`INSERT INTO file (timestamp_added, file_timestamp, hash, metadata, source_id, processed_path_small, processed_path_large, processed_path_original) VALUES (@timestampAdded, @fileTimestamp, @hash, @metadata, @sourceId, @processedSmall, @processedLarge, @processedOriginal)`)
           .run({
@@ -105,7 +107,7 @@ class Collection {
             processedLarge: f.processed_path_large,
             processedOriginal: f.processed_path_original,
             processedSmall: f.processed_path_small,
-            sourceId: source.id,
+            sourceId: source.dbRecord.id,
             timestampAdded: new Date().getTime(),
           });
       });
@@ -113,6 +115,18 @@ class Collection {
       Object.keys(filesToDelete).forEach(id => {
         this.db.prepare('DELETE FROM file WHERE id = ?').run(id);
       });
+
+      return `success: ${alias} source synced.`;
+    } else {
+      return `failed: source alias ${alias} does not exist.`;
+    }
+  }
+
+  deleteSource(alias) {
+    const source = this.db.prepare('SELECT * FROM source WHERE alias = ?').get(alias);
+    if (source) {
+      this.db.prepare('DELETE FROM file WHERE source_id = ?').run(source.id);
+      this.db.prepare('DELETE FROM source WHERE id = ?').run(source.id);
 
       return `success: ${alias} source synced.`;
     } else {

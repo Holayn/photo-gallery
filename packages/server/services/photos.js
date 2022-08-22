@@ -1,3 +1,5 @@
+const Metadata = require('../model/metadata');
+
 const SIZES = {
   large: 'processed_path_large',
   original: 'processed_path_original',
@@ -14,7 +16,7 @@ exports.filesToPhotos = (files) => {
     return {
       id: f.id,
       timestamp: f.file_timestamp,
-      metadata: JSON.parse(f.metadata),
+      metadata: new Metadata(JSON.parse(f.metadata)),
     }
   });
 

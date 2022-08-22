@@ -26,8 +26,8 @@ yargs(args)
       description: 'System filepath to the images/videos',
       type: 'string',
     },
-  }, (options) => {
-    const message = collection.addSource(options.source, options.alias);
+  }, async (options) => {
+    const message = await collection.addSource(options.source, options.alias);
     console.log(`Message: ${message}`);
   })
   .command('sync-source', 'Sync a source\'s images/videos', {
@@ -36,8 +36,18 @@ yargs(args)
       description: 'Alias for source being synced',
       type: 'string',
     },
+  }, async (options) => {
+    const message = await collection.syncSource(options.alias);
+    console.log(`Message: ${message}`);
+  })
+  .command('remove-source', 'Remove a source', {
+    alias: {
+      demand: true,
+      description: 'Alias for source being removed',
+      type: 'string',
+    },
   }, (options) => {
-    const message = collection.syncSource(options.alias);
+    const message = collection.deleteSource(options.alias);
     console.log(`Message: ${message}`);
   })
   .argv;
