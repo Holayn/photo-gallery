@@ -33,8 +33,10 @@ export default {
     return {
       galleryIndex: 0,
       galleryImageRefs: [],
+      hasNextPage: false,
       infiniteScrollCanLoadMore: true,
       infiniteScrollImagesToLoad: 20,
+      pageIndex: 0,
       PHOTO_SIZES,
       moreToLoad: true,
     };
@@ -66,7 +68,12 @@ export default {
   async mounted() {
     // Let other resources load first
     await this.$nextTick();
-    this.$store.state.photos = await getPhotos();
+
+    const { info, photos } = await getPhotos();
+    
+    this.hasNextPage = info.hasNextPage;
+    this.$store.state.photos = photos;
+
     this.galleryIndex = this.calculateImagesToLoad();
     this.infiniteScrollImagesToLoad = this.galleryIndex;
 
@@ -132,9 +139,22 @@ export default {
     loadMoreImagesToGallery() {
       for (let i = this.galleryIndex, j = 0; i < this.$store.state.photos.length && j < this.infiniteScrollImagesToLoad; i++, j++) {
         this.galleryIndex++;
+
+        if (i === this.$store.state.photos.length - 1) {
+          this.loadNextPage();
+          return;
+        }
       }
 
       window.$('#media').justifiedGallery('norewind');
+    },
+    async loadNextPage() {
+      this.pageIndex++;
+
+      const { info, photos } = await getPhotos(this.pageIndex);
+
+      this.hasNextPage = info.hasNextPage;
+      this.$store.state.photos.push(...photos);
     },
     isScrolledIntoView(el) {
       const rect = el.getBoundingClientRect();

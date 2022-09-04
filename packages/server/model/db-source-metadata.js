@@ -1,12 +1,7 @@
-/*
---------------------------------------------------------------------------------
-Standardised metadata for a given image or video
-This is based on parsing "provider data" such as Exiftool
---------------------------------------------------------------------------------
-*/
-
 const _ = require('lodash')
 const dayjs = require('dayjs')
+const customParseFormat = require('dayjs/plugin/customParseFormat')
+dayjs.extend(customParseFormat)
 const path = require('path')
 
 // mime type for videos
@@ -21,7 +16,7 @@ const FILENAME_DATE_REGEX = /\d{4}[_\-.\s]?(\d{2}[_\-.\s]?){5}\..{3,4}/
 // dayjs ignores non-numeric characters when parsing
 const FILENAME_DATE_FORMAT = 'YYYYMMDD HHmmss'
 
-class Metadata {
+class DbSourceMetadata {
   constructor (exiftool, opts) {
     // standardise metadata
     this.date = getDate(exiftool)
@@ -36,6 +31,8 @@ class Metadata {
     this.height = size.height
     this.exif = opts ? (opts.embedExif ? exiftool.EXIF : undefined) : undefined
     this.appleLivePhoto = !!tagValue(exiftool, 'QuickTime', 'LivePhotoAuto');
+    this.fileSize = tagValue(exiftool, 'File', 'FileSize');
+    this.fileName = tagValue(exiftool, 'File', 'FileName');
     // metadata could also include fields like
     //  - lat = 51.5
     //  - long = 0.12
@@ -142,4 +139,4 @@ function dimensions (exif) {
   }
 }
 
-module.exports = Metadata
+module.exports = DbSourceMetadata

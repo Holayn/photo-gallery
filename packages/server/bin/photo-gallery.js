@@ -1,13 +1,11 @@
 const yargs = require('yargs');
 
-const Collection = require('../services/collection');
+const SourceService = require('../services/source');
 
 process.on('uncaughtException', (err) => {
   console.error('\nUnexpected error:', err.message);
   process.exit(1);
 });
-
-const collection = new Collection();
 
 const args = process.argv.slice(2);
 yargs(args)
@@ -27,7 +25,7 @@ yargs(args)
       type: 'string',
     },
   }, async (options) => {
-    const message = await collection.addSource(options.source, options.alias);
+    const message = await SourceService.addSource(options.source, options.alias);
     console.log(`Message: ${message}`);
   })
   .command('sync-source', 'Sync a source\'s images/videos', {
@@ -37,7 +35,7 @@ yargs(args)
       type: 'string',
     },
   }, async (options) => {
-    const message = await collection.syncSource(options.alias);
+    const message = await SourceService.syncSource(options.alias);
     console.log(`Message: ${message}`);
   })
   .command('remove-source', 'Remove a source', {
@@ -47,7 +45,7 @@ yargs(args)
       type: 'string',
     },
   }, (options) => {
-    const message = collection.deleteSource(options.alias);
+    const message = SourceService.deleteSource(options.alias);
     console.log(`Message: ${message}`);
   })
   .argv;

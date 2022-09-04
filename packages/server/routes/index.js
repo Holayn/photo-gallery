@@ -1,36 +1,36 @@
 const express = require('express');
-const fs = require('fs-extra');
-const path = require('path');
 
-const Collection = require('../services/collection');
-const photos = require('../services/photos');
+const FileService = require('../services/file');
 
 require('dotenv').config();
 
+const PAGE_SIZE = 50;
+
 const router = express.Router();
 
-router.get('/photos', (req, res) => {
-  res.send(photos.filesToPhotos(new Collection().findAllFiles()));
+router.get('/photos', async (req, res) => {
+  const page = req.query.page || 0;
+  const files = FileService.findFilesInPage(parseInt(page), PAGE_SIZE);
+  res.send({
+    info: {
+      hasNextPage: true,
+    },
+    photos: files,
+  });
 });
 
 router.get('/photo', (req, res) => {
-  const collection = new Collection();
   const id = req.query.id;
   const size = req.query.size;
-  const file = collection.getFile(id);
+  const file = FileService.getFile(id);
   if (file) {
-    const fileOfSize = file[photos.sizes[size]];
-    if (fileOfSize) {
-      const source = collection.getSource(file.source_id);
-      const photoPath = path.resolve(source.path, fileOfSize);
-      if (fs.existsSync(photoPath)) {
-        res.contentType(photoPath);
-        res.send(fs.readFileSync(photoPath));
-      } else {
-        res.status(404).send('Photo not found.');
-      }
+    const fileData = file.getData(size);
+    if (fileData) {
+      const { data, fileType } = fileData;
+      res.contentType(fileType);
+      res.send(data);
     } else {
-      res.status(400).send('Invalid photo size.');
+      res.status(404).send('Photo not found.');
     }
   } else {
     res.status(400).send('Invalid photo id.');

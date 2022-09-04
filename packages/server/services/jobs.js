@@ -1,13 +1,13 @@
 const CronJob = require('cron').CronJob;
 
-const Collection = require('../services/collection');
+const SourceService = require('../services/source');
 
 module.exports = {
   run() {
     new CronJob('*/5 * * * *', () => {
       // TODO: log levels
       console.log('Job: Syncing sources.');
-      new Collection().syncSources();
+      SourceService.syncSources();
     }).start();
   }
 }
