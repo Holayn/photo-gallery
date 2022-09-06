@@ -34,8 +34,12 @@ yargs(args)
       description: 'Alias for source being synced',
       type: 'string',
     },
+    force: {
+      description: 'Force update',
+      type: 'boolean',
+    }
   }, async (options) => {
-    const message = await SourceService.syncSource(options.alias);
+    const message = await SourceService.syncSource(options.alias, options.force);
     console.log(`Message: ${message}`);
   })
   .command('remove-source', 'Remove a source', {

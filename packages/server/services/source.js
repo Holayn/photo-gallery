@@ -50,13 +50,14 @@ class SourceService {
     })();
   }
 
-  async syncSource(alias) {
+  async syncSource(alias, forceUpdate) {
     const sourceRecord = DB.prepare('SELECT * FROM source WHERE alias = ?').get(alias);
     if (sourceRecord) {
       const dbSource = new DbSource(sourceRecord);
       const dbSourceFiles = await dbSource.getAllFiles();
 
       const filesToAdd = [];
+      const filesToUpdate = [];
       const filesToDelete = DB.prepare('SELECT * FROM file WHERE source_id = ?').all(dbSource.id).reduce((acc, val) => {
         acc[val.id] = val;
         return acc;
@@ -80,8 +81,19 @@ class SourceService {
         }
         else {
           delete filesToDelete[fileRecord.id];
+
+          if (forceUpdate) {
+            filesToUpdate.push(dsf);
+          }
         }
       });
+
+      if (filesToUpdate.length) {
+        console.log(`Updating ${filesToUpdate.length} files from ${alias}`);
+        filesToUpdate.forEach(dsf => {
+          DB.prepare('UPDATE file SET metadata = ? WHERE source_file_id = ?').run(JSON.stringify(new DbSourceMetadata(JSON.parse(dsf.metadata))), dsf.path);
+        });
+      }
 
       const totalFilesToSync = filesToAdd.length + Object.keys(filesToDelete).length;
       if (totalFilesToSync) {

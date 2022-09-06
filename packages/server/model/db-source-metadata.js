@@ -29,6 +29,7 @@ class DbSourceMetadata {
     const size = dimensions(exiftool)
     this.width = size.width
     this.height = size.height
+    this.orientation = tagValue(exiftool, 'EXIF', 'Orientation');
     this.exif = opts ? (opts.embedExif ? exiftool.EXIF : undefined) : undefined
     this.appleLivePhoto = !!tagValue(exiftool, 'QuickTime', 'LivePhotoAuto');
     this.fileSize = tagValue(exiftool, 'File', 'FileSize');

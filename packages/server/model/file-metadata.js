@@ -7,6 +7,7 @@ class FileMetadata {
     video,
     animated,
     rating,
+    orientation,
     width,
     height,
     appleLivePhoto,
@@ -20,11 +21,17 @@ class FileMetadata {
     this.video = video;
     this.animated = animated;
     this.rating = rating;
+    this.orientation = orientation;
     this.width = width;
     this.height = height;
     this.appleLivePhoto = appleLivePhoto;
     this.fileSize = fileSize;
     this.fileName = fileName;
+
+    if (orientation === 'Rotate 90 CW') {
+      this.width = height;
+      this.height = width;
+    }
   }
 }
 
