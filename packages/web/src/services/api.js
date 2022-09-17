@@ -10,10 +10,10 @@ export function toPhotoUrl(photo, size) {
   return `${BASE}/photo?id=${photo.id}&size=${size}`;
 }
 
-export async function getPhotos(pageIndex) {
+export async function getPhotos(pageIndex, pageSize) {
   let req;
-  if (pageIndex) {
-    req = fetch(`${BASE}/photos?page=${pageIndex}`);
+  if (pageIndex !== null || pageIndex !== undefined) {
+    req = fetch(`${BASE}/photos?page=${pageIndex}&pageSize=${Math.ceil(pageSize)}`);
   } else {
     req = fetch(`${BASE}/photos`);
   }

@@ -10,6 +10,9 @@ export default createStore({
   mutations: {
   },
   actions: {
+    addPhotos(context, payload) {
+      context.state.photos.push(...payload);
+    },
   },
   modules: {
   }

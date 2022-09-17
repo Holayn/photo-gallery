@@ -23,7 +23,7 @@ export default {
     border-top: 0.25rem solid rgba(255, 255, 255, 0.2);
     border-right: 0.25rem solid rgba(255, 255, 255, 0.2);
     border-bottom: 0.25rem solid rgba(255, 255, 255, 0.2);
-    border-left: 0.25rem solid #CDCCFF;
+    border-left: 0.25rem solid var(--theme-color-main);
     -webkit-transform: translateZ(0);
     -ms-transform: translateZ(0);
     transform: translateZ(0);

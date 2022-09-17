@@ -1,5 +1,5 @@
 <template>
-  <div v-if="loading" style="width: 100vw; height: 100vh;">
+  <div v-if="photo && loading" style="width: 100vw; height: 100vh;">
     <img v-show="false" @load="loaded" :src="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" style="max-width: 100%; max-height: 100vh;">
     <div style="position: relative; display: flex; align-items: center; justify-content: center; height: 100%;">
       <img style="width: 100%; height: 100%; object-fit: contain; filter: blur(3px);" :src="toPhotoUrl(photo, PHOTO_SIZES.SMALL)">
