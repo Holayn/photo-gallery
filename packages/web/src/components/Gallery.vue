@@ -2,7 +2,7 @@
   <div ref="gallery">
     <div id="media" class="justified-gallery">
       <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" :href="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" @click.prevent>
-        <img :src="toPhotoUrl(photo, PHOTO_SIZES.SMALL)" @click="openSlides(i)">
+        <img :src="toPhotoUrl(photo, getGalleryPhotoSize())" @click="openSlides(i)">
         <div v-if="photo.metadata.video" class="overlay">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </div>
@@ -22,11 +22,15 @@
 <script>
 import { debounce } from 'lodash';
 import { getPhotos, PHOTO_SIZES, toPhotoUrl } from '../services/api';
+import { getGalleryPhotoSize, isMobileScreen } from '../utils';
 
 import Loading from './Loading.vue';
 
 const GALLERY_ROW_HEIGHT = 200;
+const GALLERY_ROW_HEIGHT_MOBILE = 80;
 const AVERAGE_IMAGE_WIDTH = 200;
+const AVERAGE_IMAGE_WIDTH_MOBILE = 80;
+const MIN_PAGE_SIZE = 25;
 
 export default {
   name: 'Gallery',
@@ -51,11 +55,20 @@ export default {
     };
   },
   computed: {
+    averageRowWidth() {
+      return isMobileScreen() ? AVERAGE_IMAGE_WIDTH_MOBILE : AVERAGE_IMAGE_WIDTH;
+    },
+    galleryRowHeight() {
+      return isMobileScreen() ? GALLERY_ROW_HEIGHT_MOBILE : GALLERY_ROW_HEIGHT;
+    },
     loadedPhotos() {
       return this.$store.state.photos?.slice(0, this.galleryIndex);
     },
     lightboxIndex() {
       return this.$store.state.lightbox.photoIndex;
+    },
+    pageSize() {
+      return Math.max(MIN_PAGE_SIZE, this.estimateNumImagesFitOnPage());
     },
   },
   watch: {
@@ -78,31 +91,37 @@ export default {
 
     this.loading = true;
     
-    const { info, photos } = await getPhotos(0, this.estimateNumImagesFitOnPage());
+    try {
+      const { info, photos } = await getPhotos(0, this.estimateNumImagesFitOnPage());
 
-    this.loading = false;
-    
-    this.hasNextPage = info.hasNextPage;
-    this.$store.dispatch('addPhotos', photos);
+      this.loading = false;
+      
+      this.hasNextPage = info.hasNextPage;
+      this.$store.dispatch('addPhotos', photos);
 
-    const numImagesCanFitOnPage = this.calculateNumImagesFitOnPage();
-    this.galleryIndex = numImagesCanFitOnPage;
-    this.infiniteScrollImagesToLoad = numImagesCanFitOnPage;
+      const numImagesCanFitOnPage = this.calculateNumImagesFitOnPage();
+      this.galleryIndex = numImagesCanFitOnPage;
+      this.infiniteScrollImagesToLoad = numImagesCanFitOnPage;
 
-    setTimeout(() => {
-      window.$('#media').justifiedGallery({
-        rowHeight: GALLERY_ROW_HEIGHT,
-      }).on('jg.complete', () => {
-        this.infiniteScrollCanLoadMore = true;
+      setTimeout(() => {
+        window.$('#media').justifiedGallery({
+          rowHeight: this.galleryRowHeight,
+          maxRowHeight: this.galleryRowHeight,
+        }).on('jg.complete', () => {
+          this.infiniteScrollCanLoadMore = true;
+        });
+
+        this.handleInfiniteScroll();
       });
-
-      this.handleInfiniteScroll();
-    });
+    } catch(e) {
+      alert(e);
+    }
   },
   beforeUpdate() {
     this.galleryImageRefs = [];
   },
   methods: {
+    getGalleryPhotoSize,
     openSlides(i) {
       this.$store.state.lightbox.photoIndex = i;
       this.$emit('show-lightbox');
@@ -110,8 +129,8 @@ export default {
     estimateNumImagesFitOnPage() {
       const { innerWidth, innerHeight } = window;
       // Add on a couple rows just in case.
-      const rows = Math.floor(innerHeight / GALLERY_ROW_HEIGHT) + 2;
-      const imagesPerRow = innerWidth / AVERAGE_IMAGE_WIDTH;
+      const rows = Math.ceil(innerHeight / this.galleryRowHeight) + 2;
+      const imagesPerRow = Math.ceil(innerWidth / this.averageRowWidth);
 
       return rows * imagesPerRow;
     },
@@ -121,14 +140,14 @@ export default {
       const { innerWidth, innerHeight } = window;
 
       // Add on another row just in case
-      const rows = Math.floor(innerHeight / GALLERY_ROW_HEIGHT) + 1;
+      const rows = Math.floor(innerHeight / this.galleryRowHeight) + 1;
 
       let currWidth = 0;
       const totalWidth = innerWidth * rows;
 
       for (let i = 0; i < this.$store.state.photos.length; i++) {
         const { width, height } = this.$store.state.photos[i].metadata;
-        const thumbnailWidth = (width / height) * GALLERY_ROW_HEIGHT;
+        const thumbnailWidth = (width / height) * this.galleryRowHeight;
 
         if (currWidth >= totalWidth || currWidth + thumbnailWidth >= totalWidth) {
           break;

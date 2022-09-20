@@ -9,6 +9,7 @@ const SIZE_COLUMNS = {
   LARGE: 'processed_path_large',
   ORIGINAL: 'processed_path_original',
   SMALL: 'processed_path_small',
+  THUMB: 'processed_path_thumb',
 }
 
 /**
@@ -35,6 +36,9 @@ class DbSource {
   getFile(path, size) {
     const fileRecord = this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE path = ?`).get(path);
     const pathColumn = SIZE_COLUMNS[size.toUpperCase()];
+    if (!pathColumn) {
+      throw new Error('Invalid size');
+    }
     const sourcePath = fileRecord[pathColumn];
     return this._getFileData(sourcePath);
   }

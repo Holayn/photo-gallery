@@ -2,6 +2,8 @@ const Source = require('../model/source');
 const DbSourceMetadata = require('../model/db-source-metadata');
 const DB = require('./db');
 const DbSource = require('./db-source');
+const File = require('../model/file');
+const FileService = require('./file');
 
 class SourceService {
   constructor() {
