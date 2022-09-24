@@ -4,18 +4,18 @@ const FileService = require('../services/file');
 
 require('dotenv').config();
 
-const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_NUM_TO_LOAD = 50;
 
 const router = express.Router();
 
 router.get('/photos', async (req, res) => {
-  const page = req.query.page || 0;
-  const pageSize = req.query.pageSize || DEFAULT_PAGE_SIZE;
-  const files = FileService.findFilesInPage(parseInt(page), pageSize);
-  const hasNextPage = files.length >= req.query.pageSize;
+  const start = req.query.start || 0;
+  const num = req.query.num || DEFAULT_NUM_TO_LOAD;
+  const files = FileService.findFilesFrom(start, num);
+  const hasMorePhotos = files.length >= req.query.num;
   res.send({
     info: {
-      hasNextPage,
+      hasMorePhotos,
     },
     photos: files,
   });

@@ -12,7 +12,7 @@
       <div v-if="loading" style="display: flex; justify-content: center; padding: 16px;">
         <Loading></Loading>
       </div>
-      <div v-else-if="hasNextPage && infiniteScrollCanLoadMore" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+      <div v-else-if="hasMorePhotos && infiniteScrollCanLoadMore" style="display: flex; align-items: center; justify-content: center; height: 100%;">
         <button style="padding: 8px 16px; background-color: var(--theme-color-main); border: none;" @click="loadMoreImagesToGallery">Load more images</button>
       </div>
     </div>
@@ -43,13 +43,12 @@ export default {
     return {
       galleryIndex: 0,
       galleryImageRefs: [],
-      hasNextPage: false,
+      hasMorePhotos: false,
       infiniteScrollBeforeHeight: null,
       infiniteScrollCanLoadMore: false,
       infiniteScrollDebounce: null,
       infiniteScrollImagesToLoad: null,
       loading: false,
-      pageIndex: 0,
       PHOTO_SIZES,
     };
   },
@@ -86,7 +85,7 @@ export default {
 
       this.loading = false;
       
-      this.hasNextPage = info.hasNextPage;
+      this.hasMorePhotos = info.hasMorePhotos;
       this.$store.dispatch('addPhotos', photos);
 
       const numImagesCanFitOnPage = this.calculateNumImagesFitOnPage();
@@ -178,8 +177,8 @@ export default {
     },
     async loadMoreImagesToGallery() {
       console.debug('loading more images to gallery');
-      if (this.galleryIndex === this.$store.state.photos.length && this.hasNextPage) {
-        await this.loadNextPage();
+      if (this.galleryIndex === this.$store.state.photos.length && this.hasMorePhotos) {
+        await this.loadMoreFromServer();
       }
 
       for (let i = this.galleryIndex, j = 0; i < this.$store.state.photos.length && j < this.infiniteScrollImagesToLoad; i++, j++) {
@@ -187,7 +186,7 @@ export default {
 
         // If we haven't reached infiniteScrollImagesToLoad but there are no more photos, we need to load the next page from the server.
         if (this.galleryIndex === this.$store.state.photos.length && j < this.infiniteScrollImagesToLoad - 1) {
-          await this.loadNextPage();
+          await this.loadMoreFromServer();
         }
       }
 
@@ -195,16 +194,15 @@ export default {
         window.$('#media').justifiedGallery('norewind');
       });
     },
-    async loadNextPage() {
+    async loadMoreFromServer() {
       console.debug('loading more photos from server');
       this.loading = true;
-      this.pageIndex++;
 
-      const { info, photos } = await getPhotos(this.pageIndex, this.estimateNumImagesFitOnPage());
+      const { info, photos } = await getPhotos(this.$store.state.photos.length, this.estimateNumImagesFitOnPage());
 
       this.loading = false;
 
-      this.hasNextPage = info.hasNextPage;
+      this.hasMorePhotos = info.hasMorePhotos;
       this.$store.dispatch('addPhotos', photos);
     },
     isScrolledIntoView(el) {

@@ -26,8 +26,8 @@ class FileService {
     return DB.prepare('SELECT * FROM file').all().map(f => FileService.dbRecordToFile(f));
   }
 
-  findFilesInPage(pageNum, pageSize) {
-    return DB.prepare('SELECT * FROM file ORDER BY date DESC LIMIT ?, ?').all(pageNum * pageSize, pageSize).map(f => FileService.dbRecordToFile(f));
+  findFilesFrom(start, num) {
+    return DB.prepare('SELECT * FROM file ORDER BY date DESC LIMIT ?, ?').all(start, num).map(f => FileService.dbRecordToFile(f));
   }
 
   static dbRecordToFile(dbRecord) {
