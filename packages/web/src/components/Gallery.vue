@@ -12,7 +12,7 @@
       <div v-if="loading" style="display: flex; justify-content: center; padding: 16px;">
         <Loading></Loading>
       </div>
-      <div v-else-if="hasMorePhotos && infiniteScrollCanLoadMore" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+      <div v-else-if="allPhotosDisplaying && hasMorePhotos && infiniteScrollCanLoadMore" style="display: flex; align-items: center; justify-content: center; height: 100%;">
         <button style="padding: 8px 16px; background-color: var(--theme-color-main); border: none;" @click="loadMoreImagesToGallery">Load more images</button>
       </div>
     </div>
@@ -20,7 +20,6 @@
 </template>
 
 <script>
-import { debounce } from 'lodash';
 import { getPhotos, PHOTO_SIZES, toPhotoUrl } from '../services/api';
 import { getGalleryPhotoSize, isMobileScreen } from '../utils';
 
@@ -46,13 +45,15 @@ export default {
       hasMorePhotos: false,
       infiniteScrollBeforeHeight: null,
       infiniteScrollCanLoadMore: false,
-      infiniteScrollDebounce: null,
       infiniteScrollImagesToLoad: null,
       loading: false,
       PHOTO_SIZES,
     };
   },
   computed: {
+    allPhotosDisplaying() {
+      return this.galleryIndex === this.$store.state.photos.length;
+    },
     galleryRowHeight() {
       return isMobileScreen() ? GALLERY_ROW_HEIGHT_MOBILE : GALLERY_ROW_HEIGHT;
     },
@@ -73,9 +74,6 @@ export default {
         }, 500);
       }
     },
-  },
-  created() {
-    this.infiniteScrollDebounce = debounce(this.infiniteScroll, 100);
   },
   async mounted() {
     this.loading = true;
@@ -117,8 +115,8 @@ export default {
     },
     estimateNumImagesFitOnPage() {
       const { innerWidth, innerHeight } = window;
-      // Add on a couple rows just in case.
-      const rows = Math.ceil(innerHeight / this.galleryRowHeight) + 2;
+      // Load double screen height, and add on a couple rows just in case.
+      const rows = Math.ceil((innerHeight * 2) / this.galleryRowHeight) + 2;
       const widthOfImage = isMobileScreen() ? IMAGE_WIDTH_MOBILE : AVERAGE_IMAGE_WIDTH;
       const imagesPerRow = Math.ceil(innerWidth / widthOfImage);
 
@@ -154,7 +152,7 @@ export default {
       return num;
     },
     handleInfiniteScroll() {
-      this.infiniteScrollBound = this.infiniteScrollDebounce.bind(this);
+      this.infiniteScrollBound = this.infiniteScroll.bind(this);
       window.addEventListener('scroll', this.infiniteScrollBound);
     },
     disableInfiniteScroll() {
