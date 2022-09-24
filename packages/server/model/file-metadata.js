@@ -28,7 +28,7 @@ class FileMetadata {
     this.fileSize = fileSize;
     this.fileName = fileName;
 
-    if (orientation === 'Rotate 90 CW') {
+    if (orientation === 'Rotate 90 CW' && this.width > this.height) {
       this.width = height;
       this.height = width;
     }

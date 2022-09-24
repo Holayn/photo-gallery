@@ -29,8 +29,7 @@ import Loading from './Loading.vue';
 const GALLERY_ROW_HEIGHT = 200;
 const GALLERY_ROW_HEIGHT_MOBILE = 80;
 const AVERAGE_IMAGE_WIDTH = 200;
-const AVERAGE_IMAGE_WIDTH_MOBILE = 80;
-const MIN_PAGE_SIZE = 25;
+const IMAGE_WIDTH_MOBILE = 80;
 
 export default {
   name: 'Gallery',
@@ -55,9 +54,6 @@ export default {
     };
   },
   computed: {
-    averageRowWidth() {
-      return isMobileScreen() ? AVERAGE_IMAGE_WIDTH_MOBILE : AVERAGE_IMAGE_WIDTH;
-    },
     galleryRowHeight() {
       return isMobileScreen() ? GALLERY_ROW_HEIGHT_MOBILE : GALLERY_ROW_HEIGHT;
     },
@@ -66,9 +62,6 @@ export default {
     },
     lightboxIndex() {
       return this.$store.state.lightbox.photoIndex;
-    },
-    pageSize() {
-      return Math.max(MIN_PAGE_SIZE, this.estimateNumImagesFitOnPage());
     },
   },
   watch: {
@@ -86,9 +79,6 @@ export default {
     this.infiniteScrollDebounce = debounce(this.infiniteScroll, 100);
   },
   async mounted() {
-    // Let other resources load first
-    await this.$nextTick();
-
     this.loading = true;
     
     try {
@@ -130,7 +120,8 @@ export default {
       const { innerWidth, innerHeight } = window;
       // Add on a couple rows just in case.
       const rows = Math.ceil(innerHeight / this.galleryRowHeight) + 2;
-      const imagesPerRow = Math.ceil(innerWidth / this.averageRowWidth);
+      const widthOfImage = isMobileScreen() ? IMAGE_WIDTH_MOBILE : AVERAGE_IMAGE_WIDTH;
+      const imagesPerRow = Math.ceil(innerWidth / widthOfImage);
 
       return rows * imagesPerRow;
     },
@@ -139,15 +130,19 @@ export default {
 
       const { innerWidth, innerHeight } = window;
 
-      // Add on another row just in case
-      const rows = Math.floor(innerHeight / this.galleryRowHeight) + 1;
+      const rows = Math.ceil(innerHeight / this.galleryRowHeight);
 
       let currWidth = 0;
       const totalWidth = innerWidth * rows;
 
       for (let i = 0; i < this.$store.state.photos.length; i++) {
-        const { width, height } = this.$store.state.photos[i].metadata;
-        const thumbnailWidth = (width / height) * this.galleryRowHeight;
+        let thumbnailWidth = null;
+        if (isMobileScreen()) {
+          thumbnailWidth = IMAGE_WIDTH_MOBILE;
+        } else {
+          const { width, height } = this.$store.state.photos[i].metadata;
+          thumbnailWidth = (width / height) * this.galleryRowHeight;
+        }
 
         if (currWidth >= totalWidth || currWidth + thumbnailWidth >= totalWidth) {
           break;
@@ -189,6 +184,11 @@ export default {
 
       for (let i = this.galleryIndex, j = 0; i < this.$store.state.photos.length && j < this.infiniteScrollImagesToLoad; i++, j++) {
         this.galleryIndex++;
+
+        // If we haven't reached infiniteScrollImagesToLoad but there are no more photos, we need to load the next page from the server.
+        if (this.galleryIndex === this.$store.state.photos.length && j < this.infiniteScrollImagesToLoad - 1) {
+          await this.loadNextPage();
+        }
       }
 
       setTimeout(() => {
@@ -216,6 +216,7 @@ export default {
       return isVisible;
     },
     scrollCurrentImageIntoView() {
+      // TODO: into center of view
       const galleryPhoto = this.galleryImageRefs[this.lightboxIndex];
       if (!this.isScrolledIntoView(galleryPhoto)) {
         galleryPhoto.scrollIntoView();

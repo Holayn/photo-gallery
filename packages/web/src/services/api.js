@@ -1,4 +1,4 @@
-export const BASE = process.env.NODE_ENV === 'development' ?  'http://localhost:8000/api' : `${process.env.VUE_APP_BASE_URL || ''}/api`;
+export const BASE = process.env.NODE_ENV === 'development' ?  `http://${window.location.hostname}:8000/api` : `${process.env.VUE_APP_BASE_URL || ''}/api`;
 
 export const PHOTO_SIZES = {
   LARGE: 'large',
