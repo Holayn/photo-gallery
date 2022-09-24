@@ -27,7 +27,7 @@ class DbSource {
 
   /**
    * 
-   * @returns { Array } { path: string; timestamp: number; metadata: string; date: number; }
+   * @returns { Array } { path: string; timestamp: number; metadata: string; date: number; processed: number; }
    */
   getAllFiles() {
     return this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME}`).all();

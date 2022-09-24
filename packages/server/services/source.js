@@ -35,7 +35,7 @@ class SourceService {
         const dbSource = new DbSource(sourceRecord);
         const dbSourceFiles = await dbSource.getAllFiles();
         dbSourceFiles
-          .filter(dsf => dsf.processed_path_small && dsf.processed_path_large && dsf.processed_path_original)
+          .filter(dsf => dsf.processed)
           .forEach(dsf => {
             FileService.addFile(new File({
               date: dsf.date,
@@ -66,7 +66,7 @@ class SourceService {
       }, {});
 
       dbSourceFiles
-      .filter(dsf => dsf.processed_path_small && dsf.processed_path_large && dsf.processed_path_original)
+      .filter(dsf => dsf.processed)
       .forEach(dsf => {
         const fileRecord = DB.prepare('SELECT * FROM file WHERE source_file_id = @sourceFileId AND source_id = @sourceId').get({
           sourceFileId: dsf.path,
