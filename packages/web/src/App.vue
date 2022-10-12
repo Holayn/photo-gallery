@@ -58,6 +58,7 @@ export default {
   },
   data() {
     return {
+      scrollPosition: 0,
       showLightbox: false,
       showHelp: false,
       title: 'All Photos',
@@ -86,12 +87,16 @@ export default {
   },
   methods: {
     onShowLightbox() {
+      this.scrollPosition = window.pageYOffset;
       this.showLightbox = true;
     },
     onLightboxClose() {
       this.showLightbox = false;
       this.$nextTick(() => {
-        this.$refs.gallery.scrollCurrentImageIntoView();
+        window.scrollTo(0, this.scrollPosition);
+        setTimeout(() => {
+          this.$refs.gallery.scrollCurrentImageIntoView();
+        });
       });
     },
     toggleHelp(show) {

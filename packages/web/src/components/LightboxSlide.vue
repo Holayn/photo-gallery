@@ -47,7 +47,6 @@ export default {
   methods: {
     getGalleryPhotoSize,
     loaded() {
-      console.debug('Loaded');
       this.loading = false;
     },
     toPhotoUrl,

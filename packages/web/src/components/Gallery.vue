@@ -212,10 +212,10 @@ export default {
       return isVisible;
     },
     scrollCurrentImageIntoView() {
-      // TODO: into center of view
       const galleryPhoto = this.galleryImageRefs[this.lightboxIndex];
       if (!this.isScrolledIntoView(galleryPhoto)) {
         galleryPhoto.scrollIntoView();
+        window.scrollBy(0, -1 * window.innerHeight / 2);
       }
     },
     setGalleryImageRef(el) {
