@@ -4,7 +4,7 @@ const SourceService = require('../services/source');
 
 module.exports = {
   run() {
-    new CronJob('*/5 * * * *', () => {
+    new CronJob('*/15 * * * *', () => {
       // TODO: log levels
       console.log('Job: Syncing sources.');
       SourceService.syncSources();
