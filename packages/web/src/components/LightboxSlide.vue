@@ -13,7 +13,7 @@
     </video>
   </div>
   <div v-show="!loading" style="display: flex; justify-content: center; width: 100vw; height: 100vh;">
-    <img @load="loaded" :src="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" style="max-width: 100%; max-height: 100vh;">
+    <img @load="loaded" :src="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" style="max-width: 100%; max-height: 100%; object-fit: contain;">
   </div>
 </template>
 
