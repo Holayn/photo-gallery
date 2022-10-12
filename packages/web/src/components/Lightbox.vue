@@ -13,7 +13,7 @@
       :keyboard="{enabled: true, onlyInViewport: false}"
       :modules="modules"
       :space-between="50"
-      virtual
+      :virtual="true"
       :zoom="true"
       :threshold="10"
       @activeIndexChange="activeIndexChange"

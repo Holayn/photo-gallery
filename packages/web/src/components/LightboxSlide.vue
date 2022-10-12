@@ -1,6 +1,5 @@
 <template>
   <div v-if="photo && loading" style="width: 100vw; height: 100vh;">
-    <img v-show="false" @load="loaded" :src="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" style="max-width: 100%; max-height: 100vh;">
     <div style="position: relative; display: flex; align-items: center; justify-content: center; height: 100%;">
       <img style="width: 100%; height: 100%; object-fit: contain; filter: blur(3px);" :src="toPhotoUrl(photo, getGalleryPhotoSize())">
       <div style="position: absolute; display: flex; align-items: center; justify-content: center; top: 0; left: 0; width: 100%; height: 100%;">
@@ -13,7 +12,9 @@
       <source :src="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" type="video/mp4"/>
     </video>
   </div>
-  <img v-else :src="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" style="max-width: 100%; max-height: 100vh;">
+  <div v-show="!loading" style="display: flex; justify-content: center; width: 100vw; height: 100vh;">
+    <img @load="loaded" :src="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" style="max-width: 100%; max-height: 100vh;">
+  </div>
 </template>
 
 <script>
@@ -46,6 +47,7 @@ export default {
   methods: {
     getGalleryPhotoSize,
     loaded() {
+      console.debug('Loaded');
       this.loading = false;
     },
     toPhotoUrl,
