@@ -93,13 +93,12 @@ class SourceService {
       if (filesToUpdate.length) {
         console.log(`Updating ${filesToUpdate.length} files from ${alias}`);
         filesToUpdate.forEach(dsf => {
-          DB.prepare('UPDATE file SET metadata = ? WHERE source_file_id = ?').run(JSON.stringify(new DbSourceMetadata(JSON.parse(dsf.metadata))), dsf.path);
+          DB.prepare('UPDATE file SET metadata = ?, date = ? WHERE source_file_id = ?').run(JSON.stringify(new DbSourceMetadata(JSON.parse(dsf.metadata))), dsf.date, dsf.path);
         });
       }
 
-      const totalFilesToSync = filesToAdd.length + Object.keys(filesToDelete).length;
-      if (totalFilesToSync) {
-        console.log(`Syncing ${totalFilesToSync} files from ${alias}`);
+      if (filesToAdd.length || Object.keys(filesToDelete).length) {
+        console.log(`Adding ${filesToAdd.length} files, deleting ${Object.keys(filesToDelete).length} files from ${alias}`);
       }
 
       filesToAdd.forEach(file => {
