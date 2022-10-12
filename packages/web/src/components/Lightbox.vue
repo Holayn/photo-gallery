@@ -85,6 +85,12 @@ export default {
       `,
       trigger: 'click',
     });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key === 'Escape') {
+        this.close();
+      }
+    });
   },
   methods: {
     activeIndexChange({ activeIndex }) {
