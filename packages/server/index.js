@@ -40,6 +40,7 @@ app.use(helmet.contentSecurityPolicy({
     mediaSrc: ["'self'", 'data:'],
     styleSrc: ["'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com', 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
     scriptSrc: ["'self'", 'https://storage.googleapis.com', 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net', 'https://code.jquery.com', 'https://unpkg.com'],
+    upgradeInsecureRequests: null,
   },
 }));
 
