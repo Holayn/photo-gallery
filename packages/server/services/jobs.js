@@ -9,5 +9,7 @@ module.exports = {
       console.log('Job: Syncing sources.');
       SourceService.syncSources();
     }).start();
+
+    console.log('Source sync job started');
   }
 }
