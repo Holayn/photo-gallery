@@ -95,6 +95,8 @@ class SourceService {
         filesToUpdate.forEach(dsf => {
           DB.prepare('UPDATE file SET metadata = ?, date = ? WHERE source_file_id = ?').run(JSON.stringify(new DbSourceMetadata(JSON.parse(dsf.metadata))), dsf.date, dsf.path);
         });
+      } else {
+        console.log('No files to update');
       }
 
       if (filesToAdd.length || Object.keys(filesToDelete).length) {
