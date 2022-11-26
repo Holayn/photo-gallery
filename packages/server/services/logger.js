@@ -8,7 +8,7 @@ class Logger {
 
   info(message, data) {
     if (!this._logger) { throw new Error('Logger not initialized!'); }
-    
+
     this._logger.info(message, data);
   }
 
@@ -23,6 +23,10 @@ class Logger {
       transports: isServerLogger ? [
         new transports.Console(),
         new transports.File({
+          filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}-error-log.txt`,
+          level: 'error',
+        }),
+        new transports.File({ 
           filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}-log.txt`,
         }),
       ] : [new transports.Console()],

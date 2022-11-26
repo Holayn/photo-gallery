@@ -2,6 +2,7 @@ const cors = require('cors');
 const express = require('express');
 const helmet = require('helmet');
 const path = require('path');
+const morgan = require('morgan');
 
 const logger = require('./services/logger');
 logger.init(true);
@@ -30,27 +31,27 @@ app.use(helmet.contentSecurityPolicy({
   },
 }));
 
+const stream = {
+  write: (message) => logger.info(message),
+};
+const morganMiddleware = morgan(
+  // Define message format string (this is the default one).
+  // The message format is made from tokens, and each token is
+  // defined inside the Morgan library.
+  // You can create your custom token to show what do you want from a request.
+  ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"',
+  // Options: in this case, I overwrote the stream and the skip logic.
+  // See the methods above.
+  { stream },
+);
+app.use(morganMiddleware);
+
 app.use('/', express.static(path.join(__dirname, '../web/dist')));
 app.use('/api', routes);
 
 app.use((err, req, res, next) => {
   console.error(err);
   res.sendStatus(500);
-  next();
-});
-
-app.use((req, res, next) => {
-  const { baseUrl, hostname, ip, method, originalUrl } = req;
-  const log = {
-    baseUrl,
-    hostname,
-    ip,
-    method,
-    status: res.statusCode,
-    url: originalUrl,
-    userAgent: req.headers['user-agent'],
-  };
-  logger.info('Request Logging', log);
   next();
 });
 
