@@ -43,11 +43,13 @@ class DbSource {
     return this._getFileData(sourcePath);
   }
 
-  _getFileData(filePath) {
+  async _getFileData(filePath) {
     const photoPath = path.resolve(this.filePath, filePath);
-    if (fs.existsSync(photoPath)) {
+    const exists = await fs.pathExists(photoPath);
+    if (exists) {
+      const data = await fs.readFile(photoPath);
       return {
-        data: fs.readFileSync(photoPath),
+        data,
         fileType: path.extname(photoPath),
       }
     }

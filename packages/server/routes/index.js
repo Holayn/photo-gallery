@@ -21,12 +21,12 @@ router.get('/photos', async (req, res) => {
   });
 });
 
-router.get('/photo', (req, res) => {
+router.get('/photo', async (req, res) => {
   const id = req.query.id;
   const size = req.query.size;
   const file = FileService.getFile(id);
   if (file) {
-    const fileData = file.getData(size);
+    const fileData = await file.getData(size);
     if (fileData) {
       const { data, fileType } = fileData;
       res.contentType(fileType);

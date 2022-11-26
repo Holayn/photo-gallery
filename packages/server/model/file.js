@@ -16,10 +16,10 @@ class File {
     }
   }
 
-  getData(size) {
+  async getData(size) {
     const source = SourceService.getSource(this.sourceId);
     const dbSource = new DbSource(source);
-    const file = dbSource.getFile(this.sourceFileId, size);
+    const file = await dbSource.getFile(this.sourceFileId, size);
     if (file) {
       return file;
     }
