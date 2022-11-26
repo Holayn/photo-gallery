@@ -39,6 +39,9 @@ class DbSource {
     if (!pathColumn) {
       throw new Error('Invalid size');
     }
+    if (!fileRecord) {
+      throw new Error(`${path} does not exist in DB source ${this.filePath}.`);
+    }
     const sourcePath = fileRecord[pathColumn];
     return this._getFileData(sourcePath);
   }

@@ -17,21 +17,6 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use((req, res, next) => {
-  const { baseUrl, hostname, ip, method, originalUrl } = req;
-  const log = {
-    baseUrl,
-    hostname,
-    ip,
-    method,
-    status: res.statusCode,
-    url: originalUrl,
-    userAgent: req.headers['user-agent'],
-  };
-  logger.info('Request Logging', log);
-  next();
-});
-
 app.use(helmet.contentSecurityPolicy({
   useDefaults: true,
   directives: {
@@ -47,6 +32,27 @@ app.use(helmet.contentSecurityPolicy({
 
 app.use('/', express.static(path.join(__dirname, '../web/dist')));
 app.use('/api', routes);
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.sendStatus(500);
+  next();
+});
+
+app.use((req, res, next) => {
+  const { baseUrl, hostname, ip, method, originalUrl } = req;
+  const log = {
+    baseUrl,
+    hostname,
+    ip,
+    method,
+    status: res.statusCode,
+    url: originalUrl,
+    userAgent: req.headers['user-agent'],
+  };
+  logger.info('Request Logging', log);
+  next();
+});
 
 const port = process.env.PORT || 8000;
 app.listen(process.env.PORT || 8000, () => {

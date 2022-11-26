@@ -4,11 +4,17 @@ const FileService = require('../services/file');
 
 require('dotenv').config();
 
+const asyncHandler = fn => (req, res, next) => {
+  return Promise
+      .resolve(fn(req, res, next))
+      .catch(next);
+};
+
 const DEFAULT_NUM_TO_LOAD = 50;
 
 const router = express.Router();
 
-router.get('/photos', async (req, res) => {
+router.get('/photos', asyncHandler(async (req, res) => {
   const start = req.query.start || 0;
   const num = req.query.num || DEFAULT_NUM_TO_LOAD;
   const files = FileService.findFilesFrom(start, num);
@@ -19,9 +25,9 @@ router.get('/photos', async (req, res) => {
     },
     photos: files,
   });
-});
+}));
 
-router.get('/photo', async (req, res) => {
+router.get('/photo', asyncHandler(async (req, res) => {
   const id = req.query.id;
   const size = req.query.size;
   const file = FileService.getFile(id);
@@ -37,6 +43,6 @@ router.get('/photo', async (req, res) => {
   } else {
     res.status(400).send('Invalid photo id.');
   }
-});
+}));
 
 module.exports = router;
