@@ -4,6 +4,7 @@ const DB = require('./db');
 const DbSource = require('./db-source');
 const File = require('../model/file');
 const FileService = require('./file');
+const logger = require('./logger');
 
 class SourceService {
   constructor() {
@@ -45,14 +46,15 @@ class SourceService {
             }));
           });
 
-        return `success: added source of path ${sourcePath}, alias ${alias}.`;
+        logger.info(`${alias} added with source path: ${sourcePath}.`);
       } else {
-        return `failed: path (${sourcePath}) or alias (${alias}) already exists.`;
+        logger.error(`Path (${sourcePath}) or alias (${alias}) already exists.`);
       }
     })();
   }
 
   async syncSource(alias, forceUpdate) {
+    logger.info(`Syncing ${alias}...`);
     const sourceRecord = DB.prepare('SELECT * FROM source WHERE alias = ?').get(alias);
     if (sourceRecord) {
       const dbSource = new DbSource(sourceRecord);
@@ -91,16 +93,16 @@ class SourceService {
       });
 
       if (filesToUpdate.length) {
-        console.log(`Updating ${filesToUpdate.length} files from ${alias}`);
+        logger.info(`Updating ${filesToUpdate.length} files from ${alias}`);
         filesToUpdate.forEach(dsf => {
           DB.prepare('UPDATE file SET metadata = ?, date = ? WHERE source_file_id = ?').run(JSON.stringify(new DbSourceMetadata(JSON.parse(dsf.metadata))), dsf.date, dsf.path);
         });
       } else {
-        console.log('No files to update');
+        logger.info(`No files to update from ${alias}`);
       }
 
       if (filesToAdd.length || Object.keys(filesToDelete).length) {
-        console.log(`Adding ${filesToAdd.length} files, deleting ${Object.keys(filesToDelete).length} files from ${alias}`);
+        logger.info(`Adding ${filesToAdd.length} files, deleting ${Object.keys(filesToDelete).length} files from ${alias}`);
       }
 
       filesToAdd.forEach(file => {
@@ -112,14 +114,14 @@ class SourceService {
         DB.prepare('DELETE FROM file WHERE id = ?').run(id);
       });
 
-      return `success: ${alias} source synced.`;
+      logger.info(`${alias} synced.`);
     } else {
-      return `failed: source alias ${alias} does not exist.`;
+      logger.error(`Source with alias ${alias} does not exist.`);
     }
   }
 
   syncSources() {
-    this.findAllSources().forEach(source => {
+    DB.prepare('SELECT * FROM source').all().forEach(source => {
       this.syncSource(source.alias);
     });
   }
@@ -130,16 +132,12 @@ class SourceService {
       DB.prepare('DELETE FROM file WHERE source_id = ?').run(source.id);
       DB.prepare('DELETE FROM source WHERE id = ?').run(source.id);
 
-      return `success: ${alias} source synced.`;
+      logger.info(`Source ${alias} deleted.`);
     } else {
-      return `failed: source alias ${alias} does not exist.`;
+      logger.error(`Failed to delete ${alias}.`);
     }
   }
 
-  findAllSources() {
-    return DB.prepare('SELECT * FROM source').all().map(s => new DbSource(s));
-  }
-  
   getSource(id) {
     const sourceRecord = DB.prepare('SELECT * FROM source WHERE id = ?').get(id);
     return SourceService.dbRecordToFile(sourceRecord);

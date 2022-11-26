@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const path = require('path');
 
 const logger = require('./services/logger');
+logger.init(true);
+
 const routes = require('./routes');
 
 require('dotenv').config();
@@ -23,7 +25,6 @@ app.use((req, res, next) => {
     ip,
     method,
     status: res.statusCode,
-    timestamp: new Date(),
     url: originalUrl,
     userAgent: req.headers['user-agent'],
   };

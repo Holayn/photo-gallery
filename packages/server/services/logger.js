@@ -1,21 +1,33 @@
 const dayjs = require('dayjs');
-const winston = require('winston');
+const { createLogger, format, transports } = require('winston');
 
 require('dotenv').config();
 
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.label({ label: 'server'}),
-    winston.format.timestamp(),
-    winston.format.json(),
-  ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({
-      filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}-log.txt`,
-    }),
-  ],
-});
+class Logger {
+  _logger;
 
-module.exports = logger;
+  info(message, data) {
+    if (!this._logger) { throw new Error('Logger not initialized!'); }
+    
+    this._logger.info(message, data);
+  }
+
+  init(isServerLogger) {
+    this._logger = createLogger({
+      level: 'info',
+      format: format.combine(
+        format.timestamp(), 
+        format.align(),
+        format.printf(({ level, message, timestamp, ...meta }) => `${timestamp} ${level}: ${message}${Object.keys(meta).length ? ` - ${JSON.stringify(meta)}` : ''}`)
+      ),
+      transports: isServerLogger ? [
+        new transports.Console(),
+        new transports.File({
+          filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}-log.txt`,
+        }),
+      ] : [new transports.Console()],
+    });
+  }
+}
+
+module.exports = new Logger(); 

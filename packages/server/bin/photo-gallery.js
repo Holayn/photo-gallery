@@ -1,5 +1,8 @@
 const yargs = require('yargs');
 
+const logger = require('../services/logger');
+logger.init();
+
 const SourceService = require('../services/source');
 
 process.on('uncaughtException', (err) => {
@@ -25,8 +28,7 @@ yargs(args)
       type: 'string',
     },
   }, async (options) => {
-    const message = await SourceService.addSource(options.source, options.alias);
-    console.log(`Message: ${message}`);
+    await SourceService.addSource(options.source, options.alias);
   })
   .command('sync-source', 'Sync a source\'s images/videos', {
     alias: {
@@ -39,8 +41,7 @@ yargs(args)
       type: 'boolean',
     }
   }, async (options) => {
-    const message = await SourceService.syncSource(options.alias, options.force);
-    console.log(`Message: ${message}`);
+    await SourceService.syncSource(options.alias, options.force);
   })
   .command('remove-source', 'Remove a source', {
     alias: {
@@ -49,7 +50,6 @@ yargs(args)
       type: 'string',
     },
   }, (options) => {
-    const message = SourceService.deleteSource(options.alias);
-    console.log(`Message: ${message}`);
+    SourceService.deleteSource(options.alias);
   })
   .argv;
