@@ -16,11 +16,11 @@ const SIZE_COLUMNS = {
  * photo-web-processor DB schema
  */
 class DbSource {
-  constructor({ path: filePath }) {
-    this.filePath = filePath;
+  constructor(record) {
+    Object.assign(this, record);
 
-    if (filePath) {
-      const sourceIndexDb = new Database(path.resolve(filePath, SOURCE_INDEX_DB_FILENAME));
+    if (record.path) {
+      const sourceIndexDb = new Database(path.resolve(record.path, SOURCE_INDEX_DB_FILENAME));
       this.db = sourceIndexDb;
     }
   }
@@ -40,14 +40,14 @@ class DbSource {
       throw new Error('Invalid size');
     }
     if (!fileRecord) {
-      throw new Error(`${path} does not exist in DB source ${this.filePath}.`);
+      throw new Error(`${path} does not exist in DB source ${this.path}.`);
     }
     const sourcePath = fileRecord[pathColumn];
     return this._getFileData(sourcePath);
   }
 
   async _getFileData(filePath) {
-    const photoPath = path.resolve(this.filePath, filePath);
+    const photoPath = path.resolve(this.path, filePath);
     const exists = await fs.pathExists(photoPath);
     if (exists) {
       const data = await fs.readFile(photoPath);
