@@ -12,8 +12,8 @@
       <div v-if="loading" style="display: flex; justify-content: center; padding: 16px;">
         <Loading></Loading>
       </div>
-      <div v-else-if="allPhotosDisplaying && hasMorePhotos && infiniteScrollCanLoadMore" style="display: flex; align-items: center; justify-content: center; height: 100%;">
-        <button style="padding: 8px 16px; background-color: var(--theme-color-main); border: none;" @click="loadMoreImagesToGallery">Load more images</button>
+      <div v-else-if="allPhotosDisplaying && hasMorePhotos && infiniteScrollEnabled" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+        <button style="padding: 8px 16px; background-color: var(--theme-color-main); border: none;" @click="renderMore">Load more images</button>
       </div>
     </div>
   </div>
@@ -44,9 +44,10 @@ export default {
       galleryImageRefs: [],
       hasMorePhotos: false,
       infiniteScrollBeforeHeight: null,
-      infiniteScrollCanLoadMore: false,
-      infiniteScrollImagesToLoad: null,
+      infiniteScrollEnabled: true,
+      infiniteScrollNumImages: null,
       loading: false,
+      renderingMore: false,
       PHOTO_SIZES,
     };
   },
@@ -66,11 +67,11 @@ export default {
   },
   watch: {
     lightboxIndex() {
-      if (this.lightboxIndex + this.infiniteScrollImagesToLoad >= this.galleryIndex) {
+      if (this.lightboxIndex + this.infiniteScrollNumImages >= this.galleryIndex) {
         setTimeout(() => {
           // Delay this slightly to prevent blocking other resources from loading first.
           // This is in the background when this is called.
-          this.loadMoreImagesToGallery();
+          this.renderMore();
         }, 500);
       }
     },
@@ -88,14 +89,12 @@ export default {
 
       const numImagesCanFitOnPage = this.calculateNumImagesFitOnPage();
       this.galleryIndex = numImagesCanFitOnPage;
-      this.infiniteScrollImagesToLoad = numImagesCanFitOnPage;
+      this.infiniteScrollNumImages = numImagesCanFitOnPage;
 
       setTimeout(() => {
         window.$('#media').justifiedGallery({
           rowHeight: this.galleryRowHeight,
           maxRowHeight: this.galleryRowHeight,
-        }).on('jg.complete', () => {
-          this.infiniteScrollCanLoadMore = true;
         });
 
         this.handleInfiniteScroll();
@@ -115,7 +114,6 @@ export default {
     },
     estimateNumImagesFitOnPage() {
       const { innerWidth, innerHeight } = window;
-      // Load double screen height, and add on a couple rows just in case.
       const rows = Math.ceil((innerHeight * 2) / this.galleryRowHeight) + 2;
       const widthOfImage = isMobileScreen() ? IMAGE_WIDTH_MOBILE : AVERAGE_IMAGE_WIDTH;
       const imagesPerRow = Math.ceil(innerWidth / widthOfImage);
@@ -160,40 +158,51 @@ export default {
     },
     async infiniteScroll() {
       // Load more if at least half a page length from the bottom.
-      if (this.infiniteScrollCanLoadMore && (window.innerHeight + window.scrollY + (window.innerHeight / 2)) >= this.$refs.gallery.offsetHeight) {
-        this.infiniteScrollCanLoadMore = false;
-        this.infiniteScrollBeforeHeight = window.document.documentElement.scrollHeight;
-        await this.loadMoreImagesToGallery();
+      if (this.infiniteScrollEnabled && (window.innerHeight + window.scrollY + (window.innerHeight / 2)) >= this.$refs.gallery.offsetHeight) {
+        this.infiniteScrollEnabled = false;
         console.debug('infinite scroll: disabled');
+
+        this.infiniteScrollBeforeHeight = window.document.documentElement.scrollHeight;
+        await this.renderMore();
+        
       }
 
       // Re-enable infinite scrolling once the user has scrolled down past where the infinite scrolling was originally triggered.
       if (window.innerHeight + window.scrollY > this.infiniteScrollBeforeHeight) {
-        this.infiniteScrollCanLoadMore = true;
-        console.debug('infinite scroll: enabled')
+        if (!this.infiniteScrollEnabled && !this.renderingMore) {
+          this.infiniteScrollEnabled = true;
+          console.debug('infinite scroll: enabled')
+        }
       }
     },
-    async loadMoreImagesToGallery() {
-      console.debug('loading more images to gallery');
+    async renderMore() {
+      console.debug('adding more images for rendering...');
+      this.renderingMore = true;
+
+      const originalIndex = this.galleryIndex;
+
       if (this.galleryIndex === this.$store.state.photos.length && this.hasMorePhotos) {
         await this.loadMoreFromServer();
       }
 
-      for (let i = this.galleryIndex, j = 0; i < this.$store.state.photos.length && j < this.infiniteScrollImagesToLoad; i++, j++) {
+      for (let i = this.galleryIndex, j = 0; i < this.$store.state.photos.length && j < this.infiniteScrollNumImages; i++, j++) {
         this.galleryIndex++;
 
-        // If we haven't reached infiniteScrollImagesToLoad but there are no more photos, we need to load the next page from the server.
-        if (this.galleryIndex === this.$store.state.photos.length && j < this.infiniteScrollImagesToLoad - 1) {
+        // If we haven't reached infiniteScrollNumImages but there are no more photos, we need to load the next page from the server.
+        if (this.galleryIndex === this.$store.state.photos.length && j < this.infiniteScrollNumImages - 1) {
           await this.loadMoreFromServer();
         }
       }
+
+      console.debug(`added ${this.galleryIndex - originalIndex} more images for rendering.`);
+      this.renderingMore = false;
 
       setTimeout(() => {
         window.$('#media').justifiedGallery('norewind');
       });
     },
     async loadMoreFromServer() {
-      console.debug('loading more photos from server');
+      console.debug('loading more photo info from server...');
       this.loading = true;
 
       const { info, photos } = await getPhotos(this.$store.state.photos.length, this.estimateNumImagesFitOnPage());
@@ -202,6 +211,8 @@ export default {
 
       this.hasMorePhotos = info.hasMorePhotos;
       this.$store.dispatch('addPhotos', photos);
+
+      console.debug(`fetched photo info of ${photos.length} more photos from server.`);
     },
     isScrolledIntoView(el) {
       const rect = el.getBoundingClientRect();
