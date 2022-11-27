@@ -1,19 +1,35 @@
 <template>
   <div ref="gallery">
-    <div class="px-8 flex items-center">
+    <div class="px-8 flex items-center gap-8">
       <h1 class="flex-auto text-5xl">
         <span v-if="loadingAlbumInfo">(loading...)</span>
         <span v-else>{{ title }}</span>
       </h1>
       <div class="cursor-pointer">
+        <div v-if="isSelectionMode" class="flex gap-2 items-center">
+          <div>Selected: {{ Object.keys(selected).length }}</div>
+          <button class="px-2 py-1 bg-orange-100" :disabled="!Object.keys(selected).length" @click="createAlbumFromSelected()">Create Album</button>
+        </div>
+        <svg v-else @click="toggleSelect()" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+      </div>
+      <div class="cursor-pointer">
         <svg @click="toggleHelp(true)" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
       </div>
     </div>
+
     <div id="media" class="justified-gallery">
       <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" :href="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" @click.prevent>
-        <img :src="toPhotoUrl(photo, getGalleryPhotoSize())" @click="openSlides(i)">
+        <img :src="toPhotoUrl(photo, getGalleryPhotoSize())" @click="isSelectionMode ? select(photo) : openSlides(i)">
         <div v-if="photo.metadata.video" class="overlay">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </div>
+        <div v-if="isSelectionMode" class="overlay p-2 justify-end items-start" :class="{ 'bg-white/25': !selected[photo.id], 'bg-white/75': selected[photo.id] }">
+          <div v-if="selected[photo.id]" class="text-orange-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div v-else class="text-orange-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+          </div>
         </div>
       </a>
     </div>
@@ -63,7 +79,7 @@
 </template>
 
 <script>
-import { getPhotos, PHOTO_SIZES, toPhotoUrl, getAlbum } from '../services/api';
+import { getPhotos, PHOTO_SIZES, toPhotoUrl, getAlbum, createAlbum } from '../services/api';
 import { getGalleryPhotoSize, isMobileScreen } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
@@ -100,6 +116,9 @@ export default {
       scrollPosition: 0,
       showLightbox: false,
       showHelp: false,
+
+      isSelectionMode: false,
+      selected: {},
     };
   },
   computed: {
@@ -326,6 +345,29 @@ export default {
     toggleHelp(show) {
       this.showHelp = show;
     },
+
+    toggleSelect() {
+      this.isSelectionMode = true;
+    },
+    select(photo) {
+      if (this.selected[photo.id]) {
+        delete this.selected[photo.id];
+      } else {
+        this.selected[photo.id] = photo;
+      }
+    },
+    async createAlbumFromSelected() {
+      const albumName = prompt('Enter album name');
+      if (!albumName) {
+        alert('Album name required.');
+        return;
+      }
+
+      await createAlbum(albumName, Object.keys(this.selected));
+      alert(`Album "${albumName}" created.`);
+      this.selected = {};
+      this.isSelectionMode = false;
+    },
   },
 }
 </script>
@@ -333,7 +375,6 @@ export default {
 <style scoped>
   .overlay {
     position: absolute;
-    z-index: 99;
     height: 100%;
     width: 100%;
     display: flex;
