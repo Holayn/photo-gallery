@@ -27,7 +27,7 @@
     </div>
 
     
-    <Lightbox ref="lightbox" v-show="showLightbox" :title="'Photos'" @close="onLightboxClose"></Lightbox>
+    <Lightbox ref="lightbox" v-show="showLightbox" :title="'Photos'" @close="closeLightbox()"></Lightbox>
     <div v-if="showHelp" @click="toggleHelp(false)" style="display: flex; align-items: center; justify-content: center; position: fixed; z-index: 99; top: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.5);">
       <div style="background-color: white; margin: 1rem;">
         <div style="height: 100%; padding: 1rem;">
@@ -185,7 +185,7 @@ export default {
     getGalleryPhotoSize,
     openSlides(i) {
       this.$store.state.lightbox.photoIndex = i;
-      this.showLightbox();
+      this.openLightbox();
     },
     estimateNumImagesFitOnPage() {
       const { innerWidth, innerHeight } = window;
@@ -310,16 +310,16 @@ export default {
       }
     },
 
-    onShowLightbox() {
+    openLightbox() {
       this.scrollPosition = window.pageYOffset;
       this.showLightbox = true;
     },
-    onLightboxClose() {
+    closeLightbox() {
       this.showLightbox = false;
       this.$nextTick(() => {
         window.scrollTo(0, this.scrollPosition);
         setTimeout(() => {
-          this.$refs.gallery.scrollCurrentImageIntoView();
+          this.scrollCurrentImageIntoView();
         });
       });
     },
