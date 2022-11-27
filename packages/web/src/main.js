@@ -7,6 +7,7 @@ import store from './store'
 
 const routes = [
   { path: '/', redirect: { name: 'albums' } },
+  { name: 'all', path: '/gallery', component: Gallery },
   { name: 'gallery', path: '/gallery/:albumId', component: Gallery, props: true },
   { name: 'albums', path: '/albums', component: Albums },
 ];
