@@ -170,6 +170,8 @@ export default {
         this.album = await getAlbum(this.albumId);
         this.loadingAlbumInfo = false;
         document.title = this.album.name;
+      } else {
+        document.title = 'All Photos';
       }
 
       this.$store.dispatch('clearPhotos');
@@ -199,6 +201,9 @@ export default {
   },
   beforeUpdate() {
     this.galleryImageRefs = [];
+  },
+  beforeUnmount() {
+    this.disableInfiniteScroll();
   },
   methods: {
     getGalleryPhotoSize,
