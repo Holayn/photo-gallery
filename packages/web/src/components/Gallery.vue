@@ -36,7 +36,7 @@ export default {
     Loading,
   },
   props: {
-    title: String,
+    albumId: Number,
   },
   data() {
     return {
@@ -80,7 +80,8 @@ export default {
     this.loading = true;
     
     try {
-      const { info, photos } = await getPhotos(0, this.estimateNumImagesFitOnPage());
+      this.$store.dispatch('clearPhotos');
+      const { info, photos } = await getPhotos(this.albumId, 0, this.estimateNumImagesFitOnPage());
 
       this.loading = false;
       
@@ -205,7 +206,7 @@ export default {
       console.debug('loading more photo info from server...');
       this.loading = true;
 
-      const { info, photos } = await getPhotos(this.$store.state.photos.length, this.estimateNumImagesFitOnPage());
+      const { info, photos } = await getPhotos(this.albumId, this.$store.state.photos.length, this.estimateNumImagesFitOnPage());
 
       this.loading = false;
 

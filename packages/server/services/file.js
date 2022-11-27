@@ -30,6 +30,10 @@ class FileService {
     return DB.prepare('SELECT * FROM file ORDER BY date DESC LIMIT ?, ?').all(start, num).map(f => FileService.dbRecordToFile(f));
   }
 
+  findByFileIds(fileIds) {
+    return DB.prepare(`SELECT * FROM file WHERE id IN (${fileIds.join(', ')})`).all().map(f => FileService.dbRecordToFile(f));
+  }
+
   static dbRecordToFile(dbRecord) {
     return new File({
       ...dbRecord,

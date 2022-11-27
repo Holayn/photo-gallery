@@ -11,7 +11,16 @@ export function toPhotoUrl(photo, size) {
   return `${BASE}/photo?id=${photo.id}&size=${size}`;
 }
 
-export async function getPhotos(start, num) {
-  return fetch(`${BASE}/photos?start=${start}&num=${Math.ceil(num)}`)
+export function getPhotos(albumId, start, num) {
+  if (albumId) {
+    return fetch(`${BASE}/album?id=${albumId}&start=${start}&num=${Math.ceil(num)}`)
     .then(res => res.json());
+  } else {
+    return fetch(`${BASE}/photos?start=${start}&num=${Math.ceil(num)}`)
+    .then(res => res.json());
+  }
+}
+
+export function getAlbums() {
+  return fetch(`${BASE}/albums`).then(res => res.json());
 }
