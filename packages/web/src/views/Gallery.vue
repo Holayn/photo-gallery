@@ -1,5 +1,14 @@
 <template>
   <div ref="gallery">
+    <div class="px-8 flex items-center">
+      <h1 class="flex-auto text-5xl">
+        <span v-if="loadingAlbumInfo">(loading...)</span>
+        <span v-else>{{ title }}</span>
+      </h1>
+      <div class="cursor-pointer">
+        <svg @click="toggleHelp(true)" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+    </div>
     <div id="media" class="justified-gallery">
       <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" :href="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" @click.prevent>
         <img :src="toPhotoUrl(photo, getGalleryPhotoSize())" @click="openSlides(i)">
@@ -16,14 +25,49 @@
         <button style="padding: 8px 16px; background-color: var(--theme-color-main); border: none;" @click="renderMore">Load more images</button>
       </div>
     </div>
+
+    
+    <Lightbox ref="lightbox" v-show="showLightbox" :title="'Photos'" @close="onLightboxClose"></Lightbox>
+    <div v-if="showHelp" @click="toggleHelp(false)" style="display: flex; align-items: center; justify-content: center; position: fixed; z-index: 99; top: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.5);">
+      <div style="background-color: white; margin: 1rem;">
+        <div style="height: 100%; padding: 1rem;">
+          <div style="display: flex; justify-content: flex-end;">
+            <div>
+              <svg @click="toggleHelp(false)" style="cursor: pointer;" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center;">
+            <ul>
+              <li>
+                click or tap to view an image
+                <ul>
+                  <li>swipe or use arrow keys to view more images</li>
+                </ul>
+              </li>
+              <li>
+                downloading images:
+                <ul>
+                  <li>
+                    on mobile: open the image, then tap and hold down on an image
+                    <img style="width: 50%;" src="../assets/photo-gallery-help-mobile-save.gif"/>
+                  </li>
+                  <li>on desktop: open the image, then right-click + save image as...</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { getPhotos, PHOTO_SIZES, toPhotoUrl } from '../services/api';
+import { getPhotos, PHOTO_SIZES, toPhotoUrl, getAlbum } from '../services/api';
 import { getGalleryPhotoSize, isMobileScreen } from '../utils';
 
-import Loading from './Loading.vue';
+import Lightbox from '../components/Lightbox.vue'
+import Loading from '../components/Loading.vue';
 
 const GALLERY_ROW_HEIGHT = 200;
 const GALLERY_ROW_HEIGHT_MOBILE = 80;
@@ -33,13 +77,15 @@ const IMAGE_WIDTH_MOBILE = 80;
 export default {
   name: 'Gallery',
   components: {
+    Lightbox,
     Loading,
   },
   props: {
-    albumId: Number,
+    albumId: String,
   },
   data() {
     return {
+      album: null,
       galleryIndex: 0,
       galleryImageRefs: [],
       hasMorePhotos: false,
@@ -47,8 +93,13 @@ export default {
       infiniteScrollEnabled: true,
       infiniteScrollNumImages: null,
       loading: false,
+      loadingAlbumInfo: false,
       renderingMore: false,
       PHOTO_SIZES,
+
+      scrollPosition: 0,
+      showLightbox: false,
+      showHelp: false,
     };
   },
   computed: {
@@ -64,6 +115,9 @@ export default {
     lightboxIndex() {
       return this.$store.state.lightbox.photoIndex;
     },
+    title() {
+      return this.albumId ? this.album?.name : 'All Photos';
+    },
   },
   watch: {
     lightboxIndex() {
@@ -75,11 +129,30 @@ export default {
         }, 500);
       }
     },
+    showLightbox() {
+      if (this.showLightbox) {
+        document.body.style.overflow = 'hidden';
+        this.$refs.lightbox.open();
+      }
+      else {
+        document.body.style.overflow = '';
+      }
+    },
+  },
+  created() {
+    this.toPhotoUrl = toPhotoUrl;
   },
   async mounted() {
     this.loading = true;
     
     try {
+      if (this.albumId) {
+        this.loadingAlbumInfo = true;
+        this.album = await getAlbum(this.albumId);
+        this.loadingAlbumInfo = false;
+        document.title = this.album.name;
+      }
+
       this.$store.dispatch('clearPhotos');
       const { info, photos } = await getPhotos(this.albumId, 0, this.estimateNumImagesFitOnPage());
 
@@ -102,6 +175,7 @@ export default {
       });
     } catch(e) {
       alert(e);
+      throw e;
     }
   },
   beforeUpdate() {
@@ -111,7 +185,7 @@ export default {
     getGalleryPhotoSize,
     openSlides(i) {
       this.$store.state.lightbox.photoIndex = i;
-      this.$emit('show-lightbox');
+      this.showLightbox();
     },
     estimateNumImagesFitOnPage() {
       const { innerWidth, innerHeight } = window;
@@ -235,7 +309,23 @@ export default {
         this.galleryImageRefs.push(el);
       }
     },
-    toPhotoUrl,
+
+    onShowLightbox() {
+      this.scrollPosition = window.pageYOffset;
+      this.showLightbox = true;
+    },
+    onLightboxClose() {
+      this.showLightbox = false;
+      this.$nextTick(() => {
+        window.scrollTo(0, this.scrollPosition);
+        setTimeout(() => {
+          this.$refs.gallery.scrollCurrentImageIntoView();
+        });
+      });
+    },
+    toggleHelp(show) {
+      this.showHelp = show;
+    },
   },
 }
 </script>

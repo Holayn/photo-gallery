@@ -17,6 +17,10 @@ module.exports = {
     return DB.prepare('SELECT * FROM album').all().map(a => new Album(a));
   },
 
+  getAlbum(id) {
+    return new Album(DB.prepare('SELECT * FROM album WHERE id = ?').get(id));
+  },
+
   getAlbumFiles(id) {
     const fileIds = DB.prepare('SELECT file_id FROM album_file WHERE album_id = ?').all(id).map(f => f.file_id);
     return FileService.findByFileIds(fileIds);

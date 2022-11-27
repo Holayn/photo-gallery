@@ -24,3 +24,7 @@ export function getPhotos(albumId, start, num) {
 export function getAlbums() {
   return fetch(`${BASE}/albums`).then(res => res.json());
 }
+
+export function getAlbum(albumId) {
+  return fetch(`${BASE}/album/info?id=${albumId}`).then(res => res.json());
+}

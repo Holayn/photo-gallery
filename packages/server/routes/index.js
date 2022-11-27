@@ -63,6 +63,10 @@ router.get('/album', asyncHandler(async (req, res) => {
     photos: paginatedFiles,
   });
 }));
+router.get('/album/info', asyncHandler(async (req, res) => {
+  const id = req.query.id;
+  res.send(AlbumService.getAlbum(id));
+}));
 
 router.post('/album', asyncHandler(async (req, res) => {
   const name = req.body.name;
