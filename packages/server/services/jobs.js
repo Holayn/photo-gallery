@@ -7,7 +7,12 @@ module.exports = {
   run() {
     new CronJob('*/15 * * * *', () => {
       logger.info('Syncing sources.');
-      SourceService.syncSources();
+      try {
+        SourceService.syncSources();
+      } catch (e) {
+        logger.error('Job failed.');
+        logger.error(e);
+      }
     }).start();
 
     logger.info('Source sync job started.');
