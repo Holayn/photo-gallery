@@ -13,6 +13,15 @@ module.exports = {
     });
   },
 
+  addToAlbum(id, files = []) {
+    files.forEach(f => {
+      const existing = DB.prepare(`SELECT * FROM album_file album WHERE album_id = ? AND file_id = ?`).get(id, f);
+      if (!existing) {
+        DB.prepare(`INSERT INTO album_file (album_id, file_id) VALUES (?, ?)`).run(id, f);
+      }
+    });
+  },
+
   findAllAlbums() {
     return DB.prepare('SELECT * FROM album').all().map(a => new Album(a));
   },

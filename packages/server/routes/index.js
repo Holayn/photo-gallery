@@ -71,10 +71,16 @@ router.get('/album/info', asyncHandler(async (req, res) => {
 router.post('/album', asyncHandler(async (req, res) => {
   const name = req.body.name;
   const files = req.body.files;
+  const albumId = req.body.albumId;
 
-  if (!name) { throw new Error('Missing parameter: name.'); }
+  if (!name && !albumId) { throw new Error('Missing parameter: name.'); }
   
-  AlbumService.createAlbum(name, files);
+  if (albumId) {
+    AlbumService.addToAlbum(albumId, files);
+  } else {
+    AlbumService.createAlbum(name, files);
+  }
+  
   res.sendStatus(200);
 }));
 

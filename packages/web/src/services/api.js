@@ -41,3 +41,16 @@ export function createAlbum(name, photoIds) {
     }),
   });
 }
+
+export function addToAlbum(albumId, photoIds) {
+  return fetch(`${BASE}/album`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      albumId,
+      files: photoIds,
+    }),
+  });
+}

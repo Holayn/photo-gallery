@@ -5,8 +5,8 @@
     <div class="mt-4">
       <Loading v-if="loading"></Loading>
       <div v-else class="flex flex-wrap gap-4">
-        <div v-for="album in albums" :key="album.id" class="px-6 py-4 bg-orange-100 rounded-md cursor-pointer">
-          <div @click="openAlbum(album)">{{ album.name }}</div>
+        <div v-for="album in albums" :key="album.id" class="px-6 py-4 bg-orange-100 rounded-md cursor-pointer" @click="openAlbum(album)">
+          {{ album.name }}
         </div>
       </div>
     </div>
