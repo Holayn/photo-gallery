@@ -1,16 +1,11 @@
-const Source = require('../model/source');
-const DbSourceMetadata = require('../model/db-source-metadata');
-const DB = require('./db');
 const DbSource = require('./db-source');
+const logger = require('../logger');
+
+const AlbumFile = require('../model/album-file');
 const File = require('../model/file');
-const FileService = require('./file');
-const logger = require('./logger');
+const Source = require('../model/source');
 
 class SourceService {
-  constructor() {
-    DB.exec('CREATE TABLE IF NOT EXISTS source (id INTEGER PRIMARY KEY, path STRING, alias STRING)');
-  }
-
   /**
    * 
    * @param {String} source 
@@ -18,51 +13,24 @@ class SourceService {
    * @returns {String} message
    */
    addSource(sourcePath, alias) {
-    return DB.transaction(async () => {
-      const insertSourceStmt = DB.prepare('INSERT INTO source (path, alias) VALUES (@path, @alias)');
-      const selectSourceStmt = DB.prepare('SELECT * FROM source WHERE path = @path OR alias = @alias');
-  
-      const existingSource = selectSourceStmt.get({
-        alias,
-        path: sourcePath,
-      });
-  
-      if (!existingSource) {
-        const { lastInsertRowid } = insertSourceStmt.run({
-          alias,
-          path: sourcePath,
-        });
-        const sourceRecord = DB.prepare('SELECT * FROM source WHERE rowid = ?').get(lastInsertRowid);
-        const dbSource = new DbSource(sourceRecord);
-        const dbSourceFiles = await dbSource.getAllFiles();
-        dbSourceFiles
-          .filter(dsf => dsf.processed)
-          .forEach(dsf => {
-            FileService.addFile(new File({
-              date: dsf.date,
-              metadata: new DbSourceMetadata(JSON.parse(dsf.metadata)),
-              sourceFileId: dsf.path,
-              sourceId: sourceRecord.id,
-            }));
-          });
+    const existingSource = Source.getSourceByPathOrAlias(alias, sourcePath);
 
-        logger.info(`${alias} added with source path: ${sourcePath}.`);
-      } else {
-        logger.error(`Path (${sourcePath}) or alias (${alias}) already exists.`);
-      }
-    })();
+    if (!existingSource) {
+      Source.insert(alias, sourcePath);
+      logger.info(`${alias} added with source path: ${sourcePath}.`);
+    } else {
+      logger.error(`Path (${sourcePath}) or alias (${alias}) already exists.`);
+    }
   }
 
-  async syncSource(alias, forceUpdate) {
+  async syncSource(alias) {
     logger.info(`Syncing ${alias}...`);
-    const sourceRecord = DB.prepare('SELECT * FROM source WHERE alias = ?').get(alias);
-    if (sourceRecord) {
-      const dbSource = new DbSource(sourceRecord);
+    const source = Source.getSourceByAlias(alias);
+    if (source) {
+      const dbSource = new DbSource(source);
       const dbSourceFiles = await dbSource.getAllFiles();
 
-      const filesToAdd = [];
-      const filesToUpdate = [];
-      const filesToDelete = DB.prepare('SELECT * FROM file WHERE source_id = ?').all(dbSource.id).reduce((acc, val) => {
+      const filesToDelete = File.findBySourceId(dbSource.id).reduce((acc, val) => {
         acc[val.id] = val;
         return acc;
       }, {});
@@ -70,48 +38,20 @@ class SourceService {
       dbSourceFiles
       .filter(dsf => dsf.processed)
       .forEach(dsf => {
-        const fileRecord = DB.prepare('SELECT * FROM file WHERE source_file_id = @sourceFileId AND source_id = @sourceId').get({
-          sourceFileId: dsf.path,
-          sourceId: sourceRecord.id,
-        });
+        const fileRecord = File.getBySource(source.id, dsf.path);
 
-        if (!fileRecord) {
-          filesToAdd.push(new File({
-            date: dsf.date,
-            metadata: new DbSourceMetadata(JSON.parse(dsf.metadata)),
-            sourceFileId: dsf.path,
-            sourceId: sourceRecord.id,
-          }));
-        }
-        else {
+        if (fileRecord) {
           delete filesToDelete[fileRecord.id];
-
-          if (forceUpdate) {
-            filesToUpdate.push(dsf);
-          }
         }
       });
 
-      if (filesToUpdate.length) {
-        logger.info(`Updating ${filesToUpdate.length} files from ${alias}`);
-        filesToUpdate.forEach(dsf => {
-          DB.prepare('UPDATE file SET metadata = ?, date = ? WHERE source_file_id = ?').run(JSON.stringify(new DbSourceMetadata(JSON.parse(dsf.metadata))), dsf.date, dsf.path);
-        });
-      } else {
-        logger.info(`No files to update from ${alias}`);
+      if (Object.keys(filesToDelete).length) {
+        logger.info(`Deleting ${Object.keys(filesToDelete).length} files from ${alias}`);
       }
-
-      if (filesToAdd.length || Object.keys(filesToDelete).length) {
-        logger.info(`Adding ${filesToAdd.length} files, deleting ${Object.keys(filesToDelete).length} files from ${alias}`);
-      }
-
-      filesToAdd.forEach(file => {
-        // TODO: log to file
-        FileService.addFile(file);
-      });
 
       Object.keys(filesToDelete).forEach(id => {
-        DB.prepare('DELETE FROM file WHERE id = ?').run(id);
+        AlbumFile.deleteByFileId(id);
+        File.delete(id);
       });
 
       logger.info(`${alias} synced.`);
@@ -121,32 +61,53 @@ class SourceService {
   }
 
   syncSources() {
-    DB.prepare('SELECT * FROM source').all().forEach(source => {
+    Source.findAll().forEach(source => {
       this.syncSource(source.alias);
     });
   }
 
-  deleteSource(alias) {
-    const source = DB.prepare('SELECT * FROM source WHERE alias = ?').get(alias);
-    if (source) {
-      DB.prepare('DELETE FROM file WHERE source_id = ?').run(source.id);
-      DB.prepare('DELETE FROM source WHERE id = ?').run(source.id);
+  getSource(sourceId) {
+    return Source.get(sourceId);
+  }
 
-      logger.info(`Source ${alias} deleted.`);
-    } else {
-      logger.error(`Failed to delete ${alias}.`);
+  findAll() {
+    return Source.findAll();
+  }
+
+  findFilesFrom(sourceId, start, num) {
+    const source = Source.get(sourceId);
+    if (source.type === 'local') {
+      const dbSource = new DbSource(source);
+      const dbSourceFiles = dbSource.findFilesFrom(start, num);
+      return dbSourceFiles.map(({ date, path, metadata }) => new File({
+        date,
+        sourceId: this.id,
+        sourceFileId: path,
+        metadata,
+      }));
     }
   }
 
-  getSource(id) {
-    const sourceRecord = DB.prepare('SELECT * FROM source WHERE id = ?').get(id);
-    return SourceService.dbRecordToFile(sourceRecord);
+  getSourceFile(sourceId, sourceFileId) {
+    const source = Source.get(sourceId);
+    if (source.type === 'local') {
+      const dbSource = new DbSource(source);
+      const dbSourceFile = dbSource.getFile(sourceFileId);
+      return new File({
+        date: dbSourceFile.date,
+        sourceId,
+        sourceFileId,
+        metadata: dbSourceFile.metadata,
+      });
+    }
   }
 
-  static dbRecordToFile(dbRecord) {
-    return new Source({
-      ...dbRecord,
-    });
+  getSourceFileData(sourceId, id, size) {
+    const source = Source.get(sourceId);
+    if (source.type === 'local') {
+      const dbSource = new DbSource(source);
+      return dbSource.getFileData(id, size);
+    }
   }
 }
 

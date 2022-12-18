@@ -2,6 +2,9 @@ const Database = require('better-sqlite3');
 const fs = require('fs-extra');
 const path = require('path');
 
+const logger = require('../logger');
+const DbSourceMetadata = require('../model/db-source-metadata');
+
 const SOURCE_INDEX_DB_FILENAME = 'index.db';
 const FILES_TABLE_NAME = 'files';
 
@@ -16,13 +19,18 @@ const SIZE_COLUMNS = {
  * photo-web-processor DB schema
  */
 class DbSource {
-  constructor(record) {
-    Object.assign(this, record);
+  constructor({ path: sourcePath }) {
+    this.path = sourcePath;
 
-    if (record.path) {
-      const sourceIndexDb = new Database(path.resolve(record.path, SOURCE_INDEX_DB_FILENAME));
+    if (sourcePath) {
+      logger.info(`Opening DB source: ${sourcePath}`);
+      const sourceIndexDb = new Database(path.resolve(sourcePath, SOURCE_INDEX_DB_FILENAME));
       this.db = sourceIndexDb;
     }
+  }
+
+  findFilesFrom(start, num) {
+    return this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME} ORDER BY date DESC LIMIT ?, ?`).all(start, num).map(f => new DbSourceFile(f));
   }
 
   /**
@@ -33,14 +41,19 @@ class DbSource {
     return this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME}`).all();
   }
 
-  getFile(path, size) {
-    const fileRecord = this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE path = ?`).get(path);
+  getFile(id) {
+    const fileRecord = this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE path = ?`).get(id);
+    return new DbSourceFile(fileRecord);
+  }
+
+  getFileData(id, size) {
+    const fileRecord = this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE path = ?`).get(id);
     const pathColumn = SIZE_COLUMNS[size.toUpperCase()];
     if (!pathColumn) {
       throw new Error('Invalid size');
     }
     if (!fileRecord) {
-      throw new Error(`${path} does not exist in DB source ${this.path}.`);
+      throw new Error(`${id} does not exist in DB source ${this.path}.`);
     }
     const sourcePath = fileRecord[pathColumn];
     return this._getFileData(sourcePath);
@@ -56,6 +69,15 @@ class DbSource {
         fileType: path.extname(photoPath),
       }
     }
+  }
+}
+
+class DbSourceFile {
+  constructor({ path, date, metadata, sourceId }) {
+    this.path = path;
+    this.date = date;
+    this.metadata = new DbSourceMetadata(JSON.parse(metadata));
+    this.sourceId = sourceId;
   }
 }
 

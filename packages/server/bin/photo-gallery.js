@@ -1,6 +1,6 @@
 const yargs = require('yargs');
 
-const logger = require('../services/logger');
+const logger = require('../logger');
 logger.init();
 
 const SourceService = require('../services/source');

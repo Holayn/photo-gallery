@@ -1,10 +1,9 @@
 <template>
   <div ref="gallery">
     <div class="px-8 flex items-center gap-8">
-      <h1 class="flex-auto text-5xl">
-        <span v-if="loadingAlbumInfo">(loading...)</span>
-        <span v-else>{{ title }}</span>
-      </h1>
+      <div class="flex-auto">
+        <slot name="heading"></slot>
+      </div>
       <div class="cursor-pointer">
         <div v-if="isSelectionMode" class="flex gap-2 items-center">
           <div>Selected: {{ Object.keys(selected).length }}</div>
@@ -47,7 +46,7 @@
     </div>
 
     
-    <Lightbox ref="lightbox" v-show="showLightbox" :title="'Photos'" @close="closeLightbox()"></Lightbox>
+    <Lightbox ref="lightbox" v-show="showLightbox" @close="closeLightbox()"></Lightbox>
 
     <Modal v-if="showAddToExistingAlbum" @close="showAddToExistingAlbum = false">
       <Loading v-if="loadingAlbums"></Loading>
@@ -84,7 +83,7 @@
 </template>
 
 <script>
-import { getPhotos, PHOTO_SIZES, toPhotoUrl, getAlbum, getAlbums, createAlbum, addToAlbum } from '../services/api';
+import { PHOTO_SIZES, toPhotoUrl, getAlbums, createAlbum, addToAlbum } from '../services/api';
 import { getGalleryPhotoSize, isMobileScreen } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
@@ -104,20 +103,19 @@ export default {
     Modal,
   },
   props: {
-    albumId: String,
+    hasMorePhotos: Boolean,
+    loadMore: Function,
   },
   data() {
     return {
-      album: null,
       albums: [],
+
       galleryIndex: 0,
       galleryImageRefs: [],
-      hasMorePhotos: false,
       infiniteScrollBeforeHeight: null,
       infiniteScrollEnabled: true,
       infiniteScrollNumImages: null,
       loading: false,
-      loadingAlbumInfo: false,
       loadingAlbums: false,
       renderingMore: false,
       PHOTO_SIZES,
@@ -144,11 +142,13 @@ export default {
     lightboxIndex() {
       return this.$store.state.lightbox.photoIndex;
     },
-    title() {
-      return this.albumId ? this.album?.name : 'All Photos';
-    },
   },
   watch: {
+    galleryIndex() {
+      setTimeout(() => {
+        window.$('#media').justifiedGallery('norewind');
+      });
+    },
     lightboxIndex() {
       if (this.lightboxIndex + this.infiniteScrollNumImages >= this.galleryIndex) {
         setTimeout(() => {
@@ -170,28 +170,16 @@ export default {
   },
   created() {
     this.toPhotoUrl = toPhotoUrl;
+    this.getGalleryPhotoSize = getGalleryPhotoSize;
   },
-  async mounted() {
-    this.loading = true;
-    
-    try {
-      if (this.albumId) {
-        this.loadingAlbumInfo = true;
-        this.album = await getAlbum(this.albumId);
-        this.loadingAlbumInfo = false;
-        document.title = this.album.name;
-      } else {
-        document.title = 'All Photos';
-      }
-
-      this.$store.dispatch('clearPhotos');
-      const { info, photos } = await getPhotos(this.albumId, 0, this.estimateNumImagesFitOnPage());
-
-      this.loading = false;
-      
-      this.hasMorePhotos = info.hasMorePhotos;
-      this.$store.dispatch('addPhotos', photos);
-
+  beforeUpdate() {
+    this.galleryImageRefs = [];
+  },
+  beforeUnmount() {
+    this.disableInfiniteScroll();
+  },
+  methods: {
+    init() {
       const numImagesCanFitOnPage = this.calculateNumImagesFitOnPage();
       this.galleryIndex = numImagesCanFitOnPage;
       this.infiniteScrollNumImages = numImagesCanFitOnPage;
@@ -204,19 +192,7 @@ export default {
 
         this.handleInfiniteScroll();
       });
-    } catch(e) {
-      alert(e);
-      throw e;
-    }
-  },
-  beforeUpdate() {
-    this.galleryImageRefs = [];
-  },
-  beforeUnmount() {
-    this.disableInfiniteScroll();
-  },
-  methods: {
-    getGalleryPhotoSize,
+    },
     openSlides(i) {
       this.$store.state.lightbox.photoIndex = i;
       this.openLightbox();
@@ -291,37 +267,23 @@ export default {
       const originalIndex = this.galleryIndex;
 
       if (this.galleryIndex === this.$store.state.photos.length && this.hasMorePhotos) {
-        await this.loadMoreFromServer();
+        await this.loadMore();
       }
 
+      let newGalleryIndex = this.galleryIndex;
+
       for (let i = this.galleryIndex, j = 0; i < this.$store.state.photos.length && j < this.infiniteScrollNumImages; i++, j++) {
-        this.galleryIndex++;
+        newGalleryIndex++;
 
         // If we haven't reached infiniteScrollNumImages but there are no more photos, we need to load the next page from the server.
-        if (this.galleryIndex === this.$store.state.photos.length && j < this.infiniteScrollNumImages - 1) {
-          await this.loadMoreFromServer();
+        if (newGalleryIndex === this.$store.state.photos.length && j < this.infiniteScrollNumImages - 1) {
+          await this.loadMore();
         }
       }
 
-      console.debug(`added ${this.galleryIndex - originalIndex} more images for rendering.`);
+      console.debug(`added ${newGalleryIndex - originalIndex} more images for rendering.`);
+      this.galleryIndex = newGalleryIndex;
       this.renderingMore = false;
-
-      setTimeout(() => {
-        window.$('#media').justifiedGallery('norewind');
-      });
-    },
-    async loadMoreFromServer() {
-      console.debug('loading more photo info from server...');
-      this.loading = true;
-
-      const { info, photos } = await getPhotos(this.albumId, this.$store.state.photos.length, this.estimateNumImagesFitOnPage());
-
-      this.loading = false;
-
-      this.hasMorePhotos = info.hasMorePhotos;
-      this.$store.dispatch('addPhotos', photos);
-
-      console.debug(`fetched photo info of ${photos.length} more photos from server.`);
     },
     isScrolledIntoView(el) {
       const rect = el.getBoundingClientRect();
@@ -382,7 +344,7 @@ export default {
       this.loadingAlbums = true;
 
       try {
-        await addToAlbum(albumId, Object.keys(this.selected));
+        await addToAlbum(albumId, this.selected);
         alert(`Album updated.`);
         this.selected = {};
         this.isSelectionMode = false;

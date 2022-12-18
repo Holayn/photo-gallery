@@ -1,4 +1,4 @@
-const logger = require('./logger');
+const logger = require('../logger');
 const CronJob = require('cron').CronJob;
 
 const SourceService = require('../services/source');
@@ -15,6 +15,6 @@ module.exports = {
       }
     }).start();
 
-    logger.info('Source sync job started.');
+    logger.info('Job schedule started.');
   }
 }

@@ -8,17 +8,33 @@ export const PHOTO_SIZES = {
 }
 
 export function toPhotoUrl(photo, size) {
-  return `${BASE}/photo?id=${photo.id}&size=${size}`;
+  return `${BASE}/photo?id=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}`;
 }
 
-export function getPhotos(albumId, start, num) {
-  if (albumId) {
-    return fetch(`${BASE}/album?id=${albumId}&start=${start}&num=${Math.ceil(num)}`)
-    .then(res => res.json());
-  } else {
-    return fetch(`${BASE}/photos?start=${start}&num=${Math.ceil(num)}`)
-    .then(res => res.json());
-  }
+export function getSources() {
+  return fetch(`${BASE}/sources`).then(res => res.json());
+}
+export function getSource(sourceId) {
+  return fetch(`${BASE}/source/info?id=${sourceId}`).then(res => res.json());
+}
+
+export async function getPhotosFromSource(sourceId, start, num) {
+  const response = await fetch(`${BASE}/source/photos?id=${sourceId}&start=${start}&num=${Math.ceil(num)}`)
+  .then(res => res.json());
+  response.photos.forEach(p => {
+    p.sourceId = sourceId
+    p.id = `${sourceId}_${p.sourceFileId}`;
+  });
+  return response;
+}
+
+export async function getPhotosFromAlbum(albumId, start, num) {
+  const response = await fetch(`${BASE}/album/photos?id=${albumId}&start=${start}&num=${Math.ceil(num)}`)
+  .then(res => res.json());
+  response.photos.forEach(p => {
+    p.id = `${p.sourceId}_${p.sourceFileId}`;
+  });
+  return response;
 }
 
 export function getAlbums() {
@@ -42,7 +58,7 @@ export function createAlbum(name, photoIds) {
   });
 }
 
-export function addToAlbum(albumId, photoIds) {
+export function addToAlbum(albumId, photos) {
   return fetch(`${BASE}/album`, {
     method: 'POST',
     headers: {
@@ -50,7 +66,11 @@ export function addToAlbum(albumId, photoIds) {
     },
     body: JSON.stringify({
       albumId,
-      files: photoIds,
+      files: photos,
     }),
+  }).then(res => {
+    if (res.status === 500) {
+      throw new Error('Server Error');
+    }
   });
 }

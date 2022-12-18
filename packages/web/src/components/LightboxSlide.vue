@@ -30,7 +30,6 @@ export default {
   },
   props: {
     photo: Object,
-    title: String,
     index: Number,
   },
   data() {

@@ -28,7 +28,7 @@
         <lightbox-slide
           :index="index"
           :photo="photo"
-          :title="title"></lightbox-slide>
+        ></lightbox-slide>
       </swiper-slide>
     </swiper>
   </div>
@@ -50,9 +50,6 @@ export default {
     LightboxSlide,
     Swiper,
     SwiperSlide,
-  },
-  props: {
-    title: String,
   },
   setup() {
     return {

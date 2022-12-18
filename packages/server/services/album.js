@@ -1,37 +1,43 @@
-const DB = require('./db');
-const Album = require('../model/album');
-const FileService = require('./file');
+const SourceService = require('./source');
 
-DB.exec('CREATE TABLE IF NOT EXISTS album (id INTEGER PRIMARY KEY, name TEXT)');
-DB.exec('CREATE TABLE IF NOT EXISTS album_file (id INTEGER PRIMARY KEY, album_id INTEGER, file_id INTEGER, FOREIGN KEY(album_id) REFERENCES album(id), FOREIGN KEY(file_id) REFERENCES file(id))');
+const Album = require('../model/album');
+const AlbumFile = require('../model/album-file');
+const File = require('../model/file');
 
 module.exports = {
-  createAlbum(name, files = []) {
-    const { lastInsertRowid: albumId } = DB.prepare(`INSERT INTO album (name) VALUES (?)`).run(name);
-    files.forEach(f => {
-      DB.prepare(`INSERT INTO album_file (album_id, file_id) VALUES (?, ?)`).run(albumId, f);
-    });
+  createAlbum(name, files = {}) {
+    const albumId = Album.insert(name);
+    this.addToAlbum(albumId, files);
   },
 
-  addToAlbum(id, files = []) {
-    files.forEach(f => {
-      const existing = DB.prepare(`SELECT * FROM album_file album WHERE album_id = ? AND file_id = ?`).get(id, f);
-      if (!existing) {
-        DB.prepare(`INSERT INTO album_file (album_id, file_id) VALUES (?, ?)`).run(id, f);
+  addToAlbum(albumId, files = {}) {
+    for (const file in files) {
+      const f = files[file];
+      const existingFile = File.getBySource(f.sourceId, f.sourceFileId);
+      if (existingFile) {
+        const existsInAlbum = AlbumFile.getByAlbumIdFileId(albumId, existingFile.id);
+        if (!existsInAlbum) {
+          AlbumFile.insert(albumId, existingFile.id);
+        }
+      } else {
+        const sourceFile = SourceService.getSourceFile(f.sourceId, f.sourceFileId);
+        const newFileId = File.insert(sourceFile);
+        AlbumFile.insert(albumId, newFileId);
       }
-    });
+    }
   },
 
   findAllAlbums() {
-    return DB.prepare('SELECT * FROM album').all().map(a => new Album(a));
+    return Album.findAll();
   },
 
   getAlbum(id) {
-    return new Album(DB.prepare('SELECT * FROM album WHERE id = ?').get(id));
+    return Album.get(id);
   },
 
-  getAlbumFiles(id) {
-    const fileIds = DB.prepare('SELECT file_id FROM album_file WHERE album_id = ?').all(id).map(f => f.file_id);
-    return FileService.findByFileIds(fileIds);
+  getAlbumFiles(id, start, num) {
+    const albumFiles = AlbumFile.findByAlbumId(id);
+    const fileIds = albumFiles.map(f => f.file_id);
+    return File.findByIds(fileIds, start, num);
   },
 }

@@ -1,11 +1,11 @@
 <template>
   <div class="px-8">
-    <h1 class="text-5xl">Albums</h1>
+    <h1 class="text-5xl">Sources</h1>
     <div class="mt-4">
       <Loading v-if="loading"></Loading>
       <div v-else class="flex flex-wrap gap-4">
-        <div v-for="album in albums" :key="album.id" class="px-6 py-4 bg-orange-100 rounded-md cursor-pointer" @click="openAlbum(album)">
-          {{ album.name }}
+        <div v-for="source in sources" :key="source.id" class="px-6 py-4 bg-orange-100 rounded-md cursor-pointer" @click="openSource(source)">
+          {{ source.alias }} ({{ source.path }})
         </div>
       </div>
     </div>
@@ -15,26 +15,26 @@
 <script>
 import Loading from '../components/Loading.vue';
 
-import { getAlbums } from '../services/api';
+import { getSources } from '../services/api';
 
 export default {
-  name: 'Albums',
+  name: 'Sources',
   components: {
     Loading,
   },
   data() {
     return {
-      albums: [],
+      sources: [],
       loading: true,
     };
   },
   async mounted() {
-    this.albums = await getAlbums();
+    this.sources = await getSources();
     this.loading = false;
   },
   methods: {
-    openAlbum(album) {
-      this.$router.push({ name: 'album', params: { albumId: album.id } });
+    openSource(source) {
+      this.$router.push({ name: 'source', params: { sourceId: source.id } });
     },
   },
 }

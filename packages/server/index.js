@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const path = require('path');
 const morgan = require('morgan');
 
-const logger = require('./services/logger');
+const logger = require('./logger');
 logger.init(true);
 
 const routes = require('./routes');

@@ -17,6 +17,9 @@
         <div class="mt-4">
           <router-link :to="{ name: 'albums' }" @click="showSidebar = false">Albums</router-link>
         </div>
+        <div class="mt-4">
+          <router-link :to="{ name: 'sources' }" @click="showSidebar = false">Sources</router-link>
+        </div>
       </div>
     </nav>
   </div>
