@@ -30,7 +30,14 @@ class DbSource {
   }
 
   findFilesFrom(start, num) {
-    return this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME} ORDER BY date DESC LIMIT ?, ?`).all(start, num).map(f => new DbSourceFile(f));
+    return this.db.prepare(`
+      SELECT * FROM ${FILES_TABLE_NAME} 
+      WHERE 
+        processed_path_large NOT NULL AND
+        processed_path_small NOT NULL AND
+        processed_path_original NOT NULL
+      ORDER BY date DESC LIMIT ?, ?
+    `).all(start, num).map(f => new DbSourceFile(f));
   }
 
   /**
@@ -56,6 +63,9 @@ class DbSource {
       throw new Error(`${id} does not exist in DB source ${this.path}.`);
     }
     const sourcePath = fileRecord[pathColumn];
+    if (!sourcePath) {
+      throw new Error(`${pathColumn} does not exist for ${id}`);
+    }
     return this._getFileData(sourcePath);
   }
 
