@@ -32,10 +32,7 @@ class DbSource {
   findFilesFrom(start, num) {
     return this.db.prepare(`
       SELECT * FROM ${FILES_TABLE_NAME} 
-      WHERE 
-        processed_path_large NOT NULL AND
-        processed_path_small NOT NULL AND
-        processed_path_original NOT NULL
+      WHERE processed != 0
       ORDER BY date DESC LIMIT ?, ?
     `).all(start, num).map(f => new DbSourceFile(f));
   }
