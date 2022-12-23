@@ -1,18 +1,20 @@
 const DB = require('../services/db');
 
-DB.exec('CREATE TABLE IF NOT EXISTS album (id INTEGER PRIMARY KEY, name TEXT)');
+DB.exec('CREATE TABLE IF NOT EXISTS album (id INTEGER PRIMARY KEY, name TEXT, token TEXT)');
 
 class Album {
   id;
   name;
+  token;
 
-  constructor({ id, name }) {
+  constructor({ id, name, token }) {
     this.id = id;
     this.name = name;
+    this.token = token;
   }
 
-  static insert(name) {
-    const { lastInsertRowid } = DB.prepare(`INSERT INTO album (name) VALUES (?)`).run(name);
+  static insert(name, token) {
+    const { lastInsertRowid } = DB.prepare(`INSERT INTO album (name, token) VALUES (?, ?)`).run(name, token);
     return lastInsertRowid;
   }
 
@@ -22,6 +24,11 @@ class Album {
 
   static get(id) {
     return new Album(DB.prepare('SELECT * FROM album WHERE id = ?').get(id));
+  }
+
+  static getByToken(token) {
+    if (!token) throw new Error('Missing token');
+    return new Album(DB.prepare('SELECT * FROM album WHERE token = ?').get(token));
   }
 }
 

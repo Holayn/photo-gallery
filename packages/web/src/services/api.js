@@ -1,3 +1,5 @@
+import fetcher from './fetcher';
+
 export const BASE = process.env.NODE_ENV === 'development' ?  `http://${window.location.hostname}:8000/api` : `${process.env.VUE_APP_BASE_URL || ''}/api`;
 
 export const PHOTO_SIZES = {
@@ -7,20 +9,19 @@ export const PHOTO_SIZES = {
   THUMB: 'thumb',
 }
 
-export function toPhotoUrl(photo, size) {
-  return `${BASE}/photo?id=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}`;
+export function toPhotoUrl(photo, size, token) {
+  return `${BASE}/photo?id=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}&token=${token}`;
 }
 
 export function getSources() {
-  return fetch(`${BASE}/sources`).then(res => res.json());
+  return fetcher.fetch(`${BASE}/sources`);
 }
 export function getSource(sourceId) {
-  return fetch(`${BASE}/source/info?id=${sourceId}`).then(res => res.json());
+  return fetcher.fetch(`${BASE}/source/info?id=${sourceId}`);
 }
 
 export async function getPhotosFromSource(sourceId, start, num) {
-  const response = await fetch(`${BASE}/source/photos?id=${sourceId}&start=${start}&num=${Math.ceil(num)}`)
-  .then(res => res.json());
+  const response = await fetcher.fetch(`${BASE}/source/photos?id=${sourceId}&start=${start}&num=${Math.ceil(num)}`)
   response.photos.forEach(p => {
     p.sourceId = sourceId
     p.id = `${sourceId}_${p.sourceFileId}`;
@@ -28,9 +29,8 @@ export async function getPhotosFromSource(sourceId, start, num) {
   return response;
 }
 
-export async function getPhotosFromAlbum(albumId, start, num) {
-  const response = await fetch(`${BASE}/album/photos?id=${albumId}&start=${start}&num=${Math.ceil(num)}`)
-  .then(res => res.json());
+export async function getPhotosFromAlbum(albumId, start, num, token) {
+  const response = await fetcher.fetch(`${BASE}/album/photos?id=${albumId}&start=${start}&num=${Math.ceil(num)}&token=${token}`)
   response.photos.forEach(p => {
     p.id = `${p.sourceId}_${p.sourceFileId}`;
   });
@@ -38,15 +38,15 @@ export async function getPhotosFromAlbum(albumId, start, num) {
 }
 
 export function getAlbums() {
-  return fetch(`${BASE}/albums`).then(res => res.json());
+  return fetcher.fetch(`${BASE}/albums`);
 }
 
-export function getAlbum(albumId) {
-  return fetch(`${BASE}/album/info?id=${albumId}`).then(res => res.json());
+export function getAlbum(albumId, token) {
+  return fetcher.fetch(`${BASE}/album/info?id=${albumId}&token=${token}`);
 }
 
 export function createAlbum(name, photoIds) {
-  return fetch(`${BASE}/album`, {
+  return fetcher.fetch(`${BASE}/album`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export function createAlbum(name, photoIds) {
 }
 
 export function addToAlbum(albumId, photos) {
-  return fetch(`${BASE}/album`, {
+  return fetcher.fetch(`${BASE}/album`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -68,9 +68,5 @@ export function addToAlbum(albumId, photos) {
       albumId,
       files: photos,
     }),
-  }).then(res => {
-    if (res.status === 500) {
-      throw new Error('Server Error');
-    }
   });
 }

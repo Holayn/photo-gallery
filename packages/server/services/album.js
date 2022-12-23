@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 const SourceService = require('./source');
 
 const Album = require('../model/album');
@@ -6,7 +8,7 @@ const File = require('../model/file');
 
 module.exports = {
   createAlbum(name, files = {}) {
-    const albumId = Album.insert(name);
+    const albumId = Album.insert(name, generateAlbumToken());
     this.addToAlbum(albumId, files);
   },
 
@@ -40,4 +42,8 @@ module.exports = {
     const fileIds = albumFiles.map(f => f.file_id);
     return File.findByIds(fileIds, start, num);
   },
+}
+
+function generateAlbumToken() {
+  return crypto.randomBytes(16).toString('hex');
 }

@@ -142,6 +142,9 @@ export default {
     lightboxIndex() {
       return this.$store.state.lightbox.photoIndex;
     },
+    token() {
+      return this.$store.state.token;
+    },
   },
   watch: {
     galleryIndex() {
@@ -169,7 +172,6 @@ export default {
     },
   },
   created() {
-    this.toPhotoUrl = toPhotoUrl;
     this.getGalleryPhotoSize = getGalleryPhotoSize;
   },
   beforeUpdate() {
@@ -304,6 +306,10 @@ export default {
       if (el) {
         this.galleryImageRefs.push(el);
       }
+    },
+
+    toPhotoUrl(photo, size) {
+      return toPhotoUrl(photo, size, this.token);
     },
 
     openLightbox() {

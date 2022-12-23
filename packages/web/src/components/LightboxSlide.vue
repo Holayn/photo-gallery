@@ -38,6 +38,11 @@ export default {
       PHOTO_SIZES,
     }
   },
+  computed: {
+    token() {
+      return this.$store.state.token;
+    },
+  },
   mounted() {
     if (this.photo.metadata.video) {
       this.loading = false;
@@ -48,7 +53,9 @@ export default {
     loaded() {
       this.loading = false;
     },
-    toPhotoUrl,
+    toPhotoUrl(photo, size) {
+      return toPhotoUrl(photo, size, this.token);
+    }
   },
 }
 </script>

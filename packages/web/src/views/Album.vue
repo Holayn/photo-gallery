@@ -42,31 +42,43 @@ export default {
     title() {
       return this.album?.name;
     },
+    token() {
+      return this.$route.query.token;
+    },
   },
   async mounted() {
+    this.$store.dispatch('setToken', this.token);
+
     this.loading = true;
     this.loadingAlbumInfo = true;
 
-    this.album = await getAlbum(this.albumId);
-    this.loadingAlbumInfo = false;
-    document.title = this.album.name;
-
-    this.$store.dispatch('clearPhotos');
-    const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage());
-    this.$store.dispatch('addPhotos', photos);
-
-    this.loading = false;
+    try {
+      this.album = await getAlbum(this.albumId, this.token);
       
-    this.hasMorePhotos = info.hasMorePhotos;
+      document.title = this.album.name;
 
-    this.$refs.gallery.init();
+      this.$store.dispatch('clearPhotos');
+      const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage(), this.token);
+      this.$store.dispatch('addPhotos', photos);
+
+      this.loading = false;
+        
+      this.hasMorePhotos = info.hasMorePhotos;
+
+      this.$refs.gallery.init();
+    } catch(e) {
+      alert(e);
+      throw e;
+    } finally {
+      this.loadingAlbumInfo = false;
+    }
   },
   methods: {
     async loadMoreFromServer() {
       console.debug('loading more photo info from server...');
       this.loading = true;
 
-      const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage());
+      const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage(), this.token);
 
       this.loading = false;
 

@@ -6,6 +6,7 @@ export default createStore({
     lightbox: {
       photoIndex: 0,
     },
+    token: '',
   },
   mutations: {
   },
@@ -15,6 +16,9 @@ export default createStore({
     },
     clearPhotos(context) {
       context.state.photos = [];
+    },
+    setToken(context, token) {
+      context.state.token = token;
     },
   },
   modules: {
