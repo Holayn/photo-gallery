@@ -27,8 +27,13 @@ class Album {
   }
 
   static getByToken(token) {
-    if (!token) throw new Error('Missing token');
-    return new Album(DB.prepare('SELECT * FROM album WHERE token = ?').get(token));
+    if (!token) { throw new Error('Missing token'); }
+    const record = DB.prepare('SELECT * FROM album WHERE token = ?').get(token);
+    if (record) { 
+      return new Album(record);
+    }
+
+    return null;
   }
 }
 
