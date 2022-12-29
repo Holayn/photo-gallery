@@ -50,7 +50,9 @@ const router = express.Router();
 
 router.post('/auth', requiredBody(['password']), asyncHandler(async (req, res) => {
   if (UserService.isValidUser('admin', req.body.password)) {
-    res.send(await AuthService.generateToken('admin'));
+    res.send({
+      token: await AuthService.generateToken('admin'),
+    });
   } else {
     res.sendStatus(401);
   }

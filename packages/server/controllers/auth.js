@@ -12,7 +12,9 @@ function getBearerToken(authorization) {
 }
 
 async function validateAdmin(req) {
-  const token = getBearerToken(req.headers.authorization);
+  const headerToken = getBearerToken(req.headers.authorization);
+  const cookieToken = req.cookies.token;
+  const token = headerToken || cookieToken;
   if (token) {
     return await AuthService.validateToken(token);
   }
@@ -32,7 +34,7 @@ const AuthController = {
   async authPhoto(req, res, next) {
     const id = req.query.id;
     const sourceId = req.query.sourceId;
-    const albumToken = req.query.token;
+    const albumToken = req.query.albumToken;
 
     if (albumToken) {
       const file = File.getBySource(sourceId, id);
@@ -64,7 +66,7 @@ const AuthController = {
     } else {
       const albumId = req.query.id;
       const album = AlbumService.getAlbum(albumId);
-      if (album.token === req.query.token) {
+      if (album.token === req.query.albumToken) {
         next();
       } else {
         res.sendStatus(401);
