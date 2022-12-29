@@ -39,6 +39,9 @@ export default {
     };
   },
   computed: {
+    albumToken() {
+      return this.$route.query.albumToken;
+    },
     title() {
       return this.album?.name;
     },
@@ -47,19 +50,19 @@ export default {
     },
   },
   async mounted() {
-    this.$store.dispatch('setToken', this.token);
+    this.$store.dispatch('setAlbumToken', this.albumToken);
 
     this.loading = true;
     this.loadingAlbumInfo = true;
 
     try {
-      this.album = await getAlbum(this.albumId, this.token);
+      this.album = (await getAlbum(this.albumId, this.albumToken)).data;
       
       document.title = this.album.name;
 
       this.$store.dispatch('clearPhotos');
-      const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage(), this.token);
-      this.$store.dispatch('addPhotos', photos);
+      const { info, photos } = (await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage(), this.albumToken)).data;
+      this.$store.dispatch('addPhotos', { photos });
 
       this.loading = false;
         
@@ -68,7 +71,6 @@ export default {
       this.$refs.gallery.init();
     } catch(e) {
       alert(e);
-      throw e;
     } finally {
       this.loadingAlbumInfo = false;
     }
@@ -78,12 +80,12 @@ export default {
       console.debug('loading more photo info from server...');
       this.loading = true;
 
-      const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage(), this.token);
+      const { info, photos } = (await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage(), this.albumToken)).data;
 
       this.loading = false;
 
       this.hasMorePhotos = info.hasMorePhotos;
-      this.$store.dispatch('addPhotos', photos);
+      this.$store.dispatch('addPhotos', { photos });
 
       console.debug(`fetched photo info of ${photos.length} more photos from server.`);
     },

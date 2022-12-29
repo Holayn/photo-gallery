@@ -9,6 +9,7 @@
           </h1>
         </template>
       </Gallery>
+      <Loading v-if="loading"></Loading>
     </div>
   </div>
 </template>
@@ -47,13 +48,13 @@ export default {
     this.loading = true;
     this.loadingSourceInfo = true;
 
-    this.source = await getSource(this.sourceId);
+    this.source = (await getSource(this.sourceId)).data;
     this.loadingSourceInfo = false;
     document.title = this.source.alias;
 
     this.$store.dispatch('clearPhotos');
-    const { info, photos } = await getPhotosFromSource(this.sourceId, 0, this.$refs.gallery.estimateNumImagesFitOnPage());
-    this.$store.dispatch('addPhotos', photos);
+    const { info, photos } = (await getPhotosFromSource(this.sourceId, 0, this.$refs.gallery.estimateNumImagesFitOnPage())).data;
+    this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
 
     this.loading = false;
       
@@ -66,12 +67,12 @@ export default {
       console.debug('loading more photo info from server...');
       this.loading = true;
 
-      const { info, photos } = await getPhotosFromSource(this.sourceId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage());
+      const { info, photos } = (await getPhotosFromSource(this.sourceId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage())).data;
 
       this.loading = false;
 
       this.hasMorePhotos = info.hasMorePhotos;
-      this.$store.dispatch('addPhotos', photos);
+      this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
 
       console.debug(`fetched photo info of ${photos.length} more photos from server.`);
     },

@@ -29,7 +29,7 @@ export default {
     };
   },
   async mounted() {
-    this.sources = await getSources();
+    this.sources = (await getSources()).data;
     this.loading = false;
   },
   methods: {

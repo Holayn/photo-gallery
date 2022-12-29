@@ -4,7 +4,7 @@
       <div class="flex-auto">
         <slot name="heading"></slot>
       </div>
-      <div class="cursor-pointer">
+      <div v-if="$store.state.isAdmin" class="cursor-pointer">
         <div v-if="isSelectionMode" class="flex gap-2 items-center">
           <div>Selected: {{ Object.keys(selected).length }}</div>
           <button class="px-2 py-1 bg-orange-100" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Existing Album</button>
@@ -21,8 +21,8 @@
     </div>
 
     <div id="media" class="justified-gallery">
-      <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" :href="toPhotoUrl(photo, PHOTO_SIZES.LARGE)" @click.prevent>
-        <img :src="toPhotoUrl(photo, getGalleryPhotoSize())" @click="isSelectionMode ? select(photo) : openSlides(i)">
+      <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" @click.prevent>
+        <img :src="photo.urls[getGalleryPhotoSize()]" @click="isSelectionMode ? select(photo) : openSlides(i)">
         <div v-if="photo.metadata.video" class="overlay">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </div>
@@ -83,7 +83,7 @@
 </template>
 
 <script>
-import { PHOTO_SIZES, toPhotoUrl, getAlbums, createAlbum, addToAlbum } from '../services/api';
+import { PHOTO_SIZES, getAlbums, createAlbum, addToAlbum } from '../services/api';
 import { getGalleryPhotoSize, isMobileScreen } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
@@ -368,7 +368,7 @@ export default {
         return;
       }
 
-      await createAlbum(albumName, Object.keys(this.selected));
+      await createAlbum(albumName, this.selected);
       alert(`Album "${albumName}" created.`);
       this.selected = {};
       this.isSelectionMode = false;

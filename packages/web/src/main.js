@@ -8,6 +8,9 @@ import Sources from './views/Sources.vue';
 import Source from './views/Source.vue';
 import store from './store'
 
+import Cookies from 'js-cookie'
+import { auth } from './services/api';
+
 const routes = [
   { path: '/', redirect: { name: 'albums' } },
   { name: 'all', path: '/gallery', component: Gallery },
@@ -20,7 +23,30 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
-})
+});
+
+router.beforeEach(async (to) => {
+  if (to.name === 'albums' && to.query.albumToken) {
+    return true;
+  }
+
+  if (!store.state.authToken) {
+    const password = prompt('Password:');
+    const { data, error } = await auth(password);
+    if (error) {
+      alert('Authentication failed.');
+      return false;
+    } else {
+      const { token } = data;
+      store.dispatch('setAuthToken', token);
+      store.dispatch('setIsAdmin', true);
+      Cookies.set('token', token, { 
+        sameSite: 'Strict', 
+        secure: true
+      });
+    }
+  }
+});
 
 createApp(App)
   .use(store)

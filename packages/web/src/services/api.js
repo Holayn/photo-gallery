@@ -1,6 +1,6 @@
 import fetcher from './fetcher';
 
-export const BASE = process.env.NODE_ENV === 'development' ?  `http://${window.location.hostname}:8000/api` : `${process.env.VUE_APP_BASE_URL || ''}/api`;
+export const BASE = process.env.NODE_ENV === 'development' ? `/api` : `${process.env.VUE_APP_BASE_URL || ''}/api`;
 
 export const PHOTO_SIZES = {
   LARGE: 'large',
@@ -9,8 +9,16 @@ export const PHOTO_SIZES = {
   THUMB: 'thumb',
 }
 
-export function toPhotoUrl(photo, size, token) {
-  return `${BASE}/photo?id=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}&token=${token}`;
+export function auth(password) {
+  return fetcher.fetch(`${BASE}/auth`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      password,
+    }),
+  });
 }
 
 export function getSources() {
@@ -19,33 +27,23 @@ export function getSources() {
 export function getSource(sourceId) {
   return fetcher.fetch(`${BASE}/source/info?id=${sourceId}`);
 }
-
-export async function getPhotosFromSource(sourceId, start, num) {
-  const response = await fetcher.fetch(`${BASE}/source/photos?id=${sourceId}&start=${start}&num=${Math.ceil(num)}`)
-  response.photos.forEach(p => {
-    p.sourceId = sourceId
-    p.id = `${sourceId}_${p.sourceFileId}`;
-  });
-  return response;
+export function getPhotosFromSource(sourceId, start, num) {
+  return fetcher.fetch(`${BASE}/source/photos?id=${sourceId}&start=${start}&num=${Math.ceil(num)}`)
 }
 
-export async function getPhotosFromAlbum(albumId, start, num, token) {
-  const response = await fetcher.fetch(`${BASE}/album/photos?id=${albumId}&start=${start}&num=${Math.ceil(num)}&token=${token}`)
-  response.photos.forEach(p => {
-    p.id = `${p.sourceId}_${p.sourceFileId}`;
-  });
-  return response;
+function attachAlbumToken(albumToken) {
+  return albumToken ? `&albumToken=${albumToken}` : '';
 }
-
+export function getPhotosFromAlbum(albumId, start, num, albumToken) {
+  return fetcher.fetch(`${BASE}/album/photos?id=${albumId}&start=${start}&num=${Math.ceil(num)}${attachAlbumToken(albumToken)}`)
+}
 export function getAlbums() {
   return fetcher.fetch(`${BASE}/albums`);
 }
-
-export function getAlbum(albumId, token) {
-  return fetcher.fetch(`${BASE}/album/info?id=${albumId}&token=${token}`);
+export function getAlbum(albumId, albumToken) {
+  return fetcher.fetch(`${BASE}/album/info?id=${albumId}${attachAlbumToken(albumToken)}`);
 }
-
-export function createAlbum(name, photoIds) {
+export function createAlbum(name, photos) {
   return fetcher.fetch(`${BASE}/album`, {
     method: 'POST',
     headers: {
@@ -53,11 +51,10 @@ export function createAlbum(name, photoIds) {
     },
     body: JSON.stringify({
       name,
-      files: photoIds,
+      files: photos,
     }),
   });
 }
-
 export function addToAlbum(albumId, photos) {
   return fetcher.fetch(`${BASE}/album`, {
     method: 'POST',
@@ -69,4 +66,8 @@ export function addToAlbum(albumId, photos) {
       files: photos,
     }),
   });
+}
+
+export function toPhotoUrl(photo, size, albumToken) {
+  return `${BASE}/photo?id=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}${attachAlbumToken(albumToken)}`;
 }

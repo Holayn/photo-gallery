@@ -1,16 +1,38 @@
+function getError(status) {
+  switch (status) {
+    case 500:
+      return 'Server Error';
+    case 401:
+      return 'Unauthorized';
+    default:
+      return null;
+  }
+}
+
 const fetcher = {
   fetch(url, options) {
     return window.fetch(url, options)
-      .then(res => {
-        if (res.status === 500) {
-          throw new Error('Server Error');
+      .then(async res => {
+        if (res.ok) {
+          console.log(res);
+          if (res.headers.get('Content-Type').includes('json')) {
+            return {
+              data: await res.json(),
+              status: res.status,
+            }
+          } else {
+            return {
+              data: true,
+              status: res.status,
+            }
+          }
+        } else {
+          return {
+            error: getError(res.status),
+            status: res.status,
+          }
         }
-        if (res.status === 403) {
-          throw new Error('Access denied');
-        }
-        return res;
-      })
-      .then(res => res.json());
+      });
   }
 }
 
