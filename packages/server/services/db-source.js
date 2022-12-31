@@ -15,6 +15,8 @@ const SIZE_COLUMNS = {
   THUMB: 'processed_path_thumb',
 }
 
+const connections = {}
+
 /**
  * photo-web-processor DB schema
  */
@@ -23,9 +25,14 @@ class DbSource {
     this.path = sourcePath;
 
     if (sourcePath) {
-      logger.info(`Opening DB source: ${sourcePath}`);
-      const sourceIndexDb = new Database(path.resolve(sourcePath, SOURCE_INDEX_DB_FILENAME));
-      this.db = sourceIndexDb;
+      if (!connections[sourcePath]) {
+        logger.info(`Opening DB source: ${sourcePath}`);
+        const sourceIndexDb = new Database(path.resolve(sourcePath, SOURCE_INDEX_DB_FILENAME));
+        this.db = sourceIndexDb;
+        connections[sourcePath] = sourceIndexDb;
+      } else {
+        this.db = connections[sourcePath];
+      }
     }
   }
 
