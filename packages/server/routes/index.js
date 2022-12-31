@@ -68,7 +68,19 @@ router.get('/source/info', AuthController.authAdmin, asyncHandler(async (req, re
   const id = req.query.id;
   res.send(SourceService.getSource(id));
 }));
-
+/**
+ * Returns:
+ * {
+ *  info: {
+ *    hasMorePhotos: boolean;
+ *  },
+ *  photos: {
+ *    date: number;
+ *    metadata: object;
+ *    sourceFileId: string;
+ *  }[]
+ * }
+ */
 router.get('/source/photos', AuthController.authAdmin, asyncHandler(async (req, res) => {
   const sourceId = parseInt(req.query.id);
 
@@ -112,6 +124,20 @@ router.get('/album/info', requiredParams(['id']), AuthController.authAlbum, asyn
   const albumId = req.query.id;
   res.send(AlbumService.getAlbum(albumId));
 }));
+/**
+ * Returns:
+ * {
+ *  info: {
+ *    hasMorePhotos: boolean;
+ *  },
+ *  photos: {
+ *    date: number;
+ *    metadata: object;
+ *    sourceId: string;  
+ *    sourceFileId: string;
+ *  }[]
+ * }
+ */
 router.get('/album/photos', requiredParams(['id']), AuthController.authAlbum, asyncHandler(async (req, res) => {
   const albumId = req.query.id;
   const start = parseInt(req.query.start) || 0;
@@ -130,6 +156,17 @@ router.get('/album/photos', requiredParams(['id']), AuthController.authAlbum, as
   });
 }));
 
+/**
+ * Accepts:
+ * {
+ *  name: string;
+ *  albumId: number;
+ *  files: {
+ *    sourceId: number;
+ *    sourceFileId: string;
+ *  }[]
+ * }
+ */
 router.post('/album', AuthController.authAdmin, asyncHandler(async (req, res) => {
   const name = req.body.name;
   const files = req.body.files;

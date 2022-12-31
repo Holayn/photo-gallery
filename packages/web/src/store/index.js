@@ -15,12 +15,14 @@ export default createStore({
     isAdmin: false,
   },
   actions: {
-    addPhotos(context, { photos, sourceId }) {
+    addPhotos(context, { photos, sourceId = null }) {
       const modPhotos = photos.reduce((acc, photo) => {
+        const photoSourceId = photo.sourceId || sourceId;
         const modPhoto = { 
-          ...photo,
-          sourceId: photo.sourceId || sourceId,
-          id: `${photo.sourceId || sourceId}_${photo.sourceFileId}`,
+          id: `${photoSourceId}_${photo.sourceFileId}`,
+          sourceId: photoSourceId,
+          sourceFileId: photo.sourceFileId,
+          metadata: photo.metadata,
         }
         modPhoto.urls = {
           [PHOTO_SIZES.LARGE]: toPhotoUrl(modPhoto, PHOTO_SIZES.LARGE, context.state.albumToken),

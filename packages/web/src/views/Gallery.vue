@@ -9,6 +9,7 @@
           <div>Selected: {{ Object.keys(selected).length }}</div>
           <button class="px-2 py-1 bg-orange-100" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Existing Album</button>
           <button class="px-2 py-1 bg-orange-100" :disabled="!Object.keys(selected).length" @click="createAlbumFromSelected()">Create Album</button>
+          <Loading v-if="loadingCreateAlbum"></Loading>
           <button @click="toggleSelect()">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
@@ -37,10 +38,7 @@
       </a>
     </div>
     <div style="height: 200px;">
-      <div v-if="loading" style="display: flex; justify-content: center; padding: 16px;">
-        <Loading></Loading>
-      </div>
-      <div v-else-if="allPhotosDisplaying && hasMorePhotos && infiniteScrollEnabled" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+      <div v-if="allPhotosDisplaying && hasMorePhotos && infiniteScrollEnabled" style="display: flex; align-items: center; justify-content: center; height: 100%;">
         <button style="padding: 8px 16px; background-color: var(--theme-color-main); border: none;" @click="renderMore">Load more images</button>
       </div>
     </div>
@@ -115,7 +113,7 @@ export default {
       infiniteScrollBeforeHeight: null,
       infiniteScrollEnabled: true,
       infiniteScrollNumImages: null,
-      loading: false,
+      loadingCreateAlbum: false,
       loadingAlbums: false,
       renderingMore: false,
       PHOTO_SIZES,
@@ -332,25 +330,28 @@ export default {
     toggleSelect() {
       this.isSelectionMode = !this.isSelectionMode;
     },
-    select(photo) {
-      if (this.selected[photo.id]) {
-        delete this.selected[photo.id];
+    select({ id, sourceId, sourceFileId }) {
+      if (this.selected[id]) {
+        delete this.selected[id];
       } else {
-        this.selected[photo.id] = photo;
+        this.selected[id] = {
+          sourceId,
+          sourceFileId,
+        };
       }
     },
 
     async showAlbumSelection() {
       this.showAddToExistingAlbum = true;
       this.loadingAlbums = true;
-      this.albums = await getAlbums();
+      this.albums = (await getAlbums()).data;
       this.loadingAlbums = false;
     },
     async addToAlbumFromSelected(albumId) {
       this.loadingAlbums = true;
 
       try {
-        await addToAlbum(albumId, this.selected);
+        await addToAlbum(albumId, Object.values(this.selected));
         alert(`Album updated.`);
         this.selected = {};
         this.isSelectionMode = false;
@@ -362,16 +363,23 @@ export default {
       this.loadingAlbums = false;
     },
     async createAlbumFromSelected() {
+      this.loadingCreateAlbum = true;
       const albumName = prompt('Enter album name');
       if (!albumName) {
         alert('Album name required.');
         return;
       }
 
-      await createAlbum(albumName, this.selected);
-      alert(`Album "${albumName}" created.`);
-      this.selected = {};
-      this.isSelectionMode = false;
+      try {
+        await createAlbum(albumName, Object.values(this.selected));
+        alert(`Album "${albumName}" created.`);
+        this.selected = {};
+        this.isSelectionMode = false;
+      } catch (e) {
+        alert(e);
+      }
+
+      this.loadingCreateAlbum = false;
     },
   },
 }

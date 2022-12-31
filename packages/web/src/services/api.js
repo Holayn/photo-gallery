@@ -43,7 +43,7 @@ export function getAlbums() {
 export function getAlbum(albumId, albumToken) {
   return fetcher.fetch(`${BASE}/album/info?id=${albumId}${attachAlbumToken(albumToken)}`);
 }
-export function createAlbum(name, photos) {
+export function createAlbum(name, files) {
   return fetcher.fetch(`${BASE}/album`, {
     method: 'POST',
     headers: {
@@ -51,11 +51,11 @@ export function createAlbum(name, photos) {
     },
     body: JSON.stringify({
       name,
-      files: photos,
+      files,
     }),
   });
 }
-export function addToAlbum(albumId, photos) {
+export function addToAlbum(albumId, files) {
   return fetcher.fetch(`${BASE}/album`, {
     method: 'POST',
     headers: {
@@ -63,7 +63,7 @@ export function addToAlbum(albumId, photos) {
     },
     body: JSON.stringify({
       albumId,
-      files: photos,
+      files,
     }),
   });
 }
