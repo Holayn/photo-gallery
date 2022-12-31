@@ -104,7 +104,6 @@ router.get('/photo', requiredParams(['id', 'sourceId', 'size']), AuthController.
   const id = req.query.id;
   const size = req.query.size;
   const sourceId = req.query.sourceId;
-  const token = req.query.token;
 
   const fileData = await SourceService.getSourceFileData(sourceId, id, size);
 
