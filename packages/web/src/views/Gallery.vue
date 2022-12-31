@@ -306,10 +306,6 @@ export default {
       }
     },
 
-    toPhotoUrl(photo, size) {
-      return toPhotoUrl(photo, size, this.token);
-    },
-
     openLightbox() {
       this.scrollPosition = window.pageYOffset;
       this.showLightbox = true;
