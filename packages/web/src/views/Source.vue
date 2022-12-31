@@ -9,7 +9,10 @@
           </h1>
         </template>
       </Gallery>
-      <Loading v-if="loading"></Loading>
+      <div v-if="loading" class="flex flex-col items-center justify-center pb-4">
+        <Loading></Loading>
+        <p>Retrieving photo info</p>
+      </div>
     </div>
   </div>
 </template>

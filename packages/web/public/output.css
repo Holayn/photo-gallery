@@ -592,6 +592,10 @@ video {
   margin-top: 1rem !important;
 }
 
+.mb-4 {
+  margin-bottom: 1rem !important;
+}
+
 .flex {
   display: flex !important;
 }
@@ -640,6 +644,10 @@ video {
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
 }
 
+.flex-col {
+  flex-direction: column !important;
+}
+
 .flex-wrap {
   flex-wrap: wrap !important;
 }
@@ -674,15 +682,6 @@ video {
 
 .gap-1 {
   gap: 0.25rem !important;
-}
-
-.gap-x-2 {
-  -moz-column-gap: 0.5rem !important;
-       column-gap: 0.5rem !important;
-}
-
-.gap-y-6 {
-  row-gap: 1.5rem !important;
 }
 
 .gap-x-6 {
@@ -768,6 +767,10 @@ video {
 .py-1 {
   padding-top: 0.25rem !important;
   padding-bottom: 0.25rem !important;
+}
+
+.pb-4 {
+  padding-bottom: 1rem !important;
 }
 
 .text-3xl {
