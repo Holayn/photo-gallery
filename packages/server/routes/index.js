@@ -100,12 +100,12 @@ router.get('/source/photos', AuthController.authAdmin, asyncHandler(async (req, 
   });
 }));
 
-router.get('/photo', requiredParams(['id', 'sourceId', 'size']), AuthController.authPhoto, asyncHandler(async (req, res) => {
-  const id = req.query.id;
-  const size = req.query.size;
+router.get('/photo', requiredParams(['sourceFileId', 'sourceId', 'size']), AuthController.authPhoto, asyncHandler(async (req, res) => {
+  const sourceFileId = req.query.sourceFileId;
   const sourceId = req.query.sourceId;
+  const size = req.query.size;
 
-  const fileData = await SourceService.getSourceFileData(sourceId, id, size);
+  const fileData = await SourceService.getSourceFileData(sourceId, sourceFileId, size);
 
   if (fileData) {
     const { data, fileType } = fileData;

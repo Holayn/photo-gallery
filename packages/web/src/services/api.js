@@ -69,5 +69,5 @@ export function addToAlbum(albumId, files) {
 }
 
 export function toPhotoUrl(photo, size, albumToken) {
-  return `${BASE}/photo?id=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}${attachAlbumToken(albumToken)}`;
+  return `${BASE}/photo?sourceFileId=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}${attachAlbumToken(albumToken)}`;
 }
