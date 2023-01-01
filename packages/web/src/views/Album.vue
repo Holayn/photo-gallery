@@ -61,7 +61,7 @@ export default {
 
     try {
       this.album = (await getAlbum(this.albumId, this.albumToken)).data;
-      
+      this.loadingAlbumInfo = false;
       document.title = this.album.name;
 
       this.$store.dispatch('clearPhotos');
@@ -74,9 +74,11 @@ export default {
 
       this.$refs.gallery.init();
     } catch(e) {
-      alert(e);
+      alert('An error occurred.');
+      throw e;
     } finally {
       this.loadingAlbumInfo = false;
+      this.loading = false;
     }
   },
   methods: {
@@ -84,14 +86,21 @@ export default {
       console.debug('loading more photo info from server...');
       this.loading = true;
 
-      const { info, photos } = (await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage(), this.albumToken)).data;
+      try {
+        const { info, photos } = (await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage(), this.albumToken)).data;
 
-      this.loading = false;
+        this.loading = false;
 
-      this.hasMorePhotos = info.hasMorePhotos;
-      this.$store.dispatch('addPhotos', { photos });
+        this.hasMorePhotos = info.hasMorePhotos;
+        this.$store.dispatch('addPhotos', { photos });
 
-      console.debug(`fetched photo info of ${photos.length} more photos from server.`);
+        console.debug(`fetched photo info of ${photos.length} more photos from server.`);
+      } catch(e) {
+        alert('An error occurred.');
+        throw e;
+      } finally {
+        this.loading = false;
+      }
     },
   }
 }

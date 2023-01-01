@@ -51,33 +51,48 @@ export default {
     this.loading = true;
     this.loadingSourceInfo = true;
 
-    this.source = (await getSource(this.sourceId)).data;
-    this.loadingSourceInfo = false;
-    document.title = this.source.alias;
+    try {
+      this.source = (await getSource(this.sourceId)).data;
+      this.loadingSourceInfo = false;
+      document.title = this.source.alias;
 
-    this.$store.dispatch('clearPhotos');
-    const { info, photos } = (await getPhotosFromSource(this.sourceId, 0, this.$refs.gallery.estimateNumImagesFitOnPage())).data;
-    this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
+      this.$store.dispatch('clearPhotos');
+      const { info, photos } = (await getPhotosFromSource(this.sourceId, 0, this.$refs.gallery.estimateNumImagesFitOnPage())).data;
+      this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
 
-    this.loading = false;
-      
-    this.hasMorePhotos = info.hasMorePhotos;
+      this.loading = false;
+        
+      this.hasMorePhotos = info.hasMorePhotos;
 
-    this.$refs.gallery.init();
+      this.$refs.gallery.init();
+    } catch(e) {
+      alert('An error occurred.');
+      throw e;
+    } finally {
+      this.loadingSourceInfo = false;
+      this.loading = false;
+    }
   },
   methods: {
     async loadMoreFromServer() {
       console.debug('loading more photo info from server...');
       this.loading = true;
 
-      const { info, photos } = (await getPhotosFromSource(this.sourceId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage())).data;
+      try {
+        const { info, photos } = (await getPhotosFromSource(this.sourceId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage())).data;
 
-      this.loading = false;
+        this.loading = false;
 
-      this.hasMorePhotos = info.hasMorePhotos;
-      this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
+        this.hasMorePhotos = info.hasMorePhotos;
+        this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
 
-      console.debug(`fetched photo info of ${photos.length} more photos from server.`);
+        console.debug(`fetched photo info of ${photos.length} more photos from server.`);
+      } catch(e) {
+        alert('An error occurred.');
+        throw e;
+      } finally {
+        this.loading = false;
+      }
     },
   }
 }
