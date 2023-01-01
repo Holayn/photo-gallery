@@ -4,6 +4,7 @@ const logger = require('../logger');
 const AlbumFile = require('../model/album-file');
 const File = require('../model/file');
 const Source = require('../model/source');
+const FileMetadata = require('../metadata/file-metadata');
 
 class SourceService {
   /**
@@ -79,11 +80,11 @@ class SourceService {
     if (source.type === 'local') {
       const dbSource = new DbSource(source);
       const dbSourceFiles = dbSource.findFilesFrom(start, num);
-      return dbSourceFiles.map(({ date, path, metadata }) => new File({
+      return dbSourceFiles.map(({ date, path, metadata }) => ({
         date,
         sourceId: this.id,
         sourceFileId: path,
-        metadata,
+        metadata: new FileMetadata(metadata),
       }));
     }
   }
@@ -93,12 +94,12 @@ class SourceService {
     if (source.type === 'local') {
       const dbSource = new DbSource(source);
       const dbSourceFile = dbSource.getFile(sourceFileId);
-      return new File({
+      return {
         date: dbSourceFile.date,
         sourceId,
         sourceFileId,
-        metadata: dbSourceFile.metadata,
-      });
+        metadata: new FileMetadata(dbSourceFile.metadata),
+      };
     }
   }
 

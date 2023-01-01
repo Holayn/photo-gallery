@@ -1,6 +1,7 @@
 const express = require('express');
 
 const AlbumService = require('../services/album');
+const ApiService = require('../services/api');
 const AuthService = require('../services/auth');
 const SourceService = require('../services/source');
 const UserService = require('../services/user');
@@ -89,15 +90,7 @@ router.get('/source/photos', AuthController.authAdmin, asyncHandler(async (req, 
   const start = parseInt(req.query.start) || 0;
   const num = parseInt(req.query.num) || DEFAULT_NUM_TO_LOAD;
 
-  const files = SourceService.findFilesFrom(sourceId, start, num);
-
-  const hasMorePhotos = files.length >= num;
-  res.send({
-    info: {
-      hasMorePhotos,
-    },
-    photos: files,
-  });
+  res.send(ApiService.getSourceFiles(sourceId, start, num));
 }));
 
 router.get('/photo', requiredParams(['sourceFileId', 'sourceId', 'size']), AuthController.authPhoto, asyncHandler(async (req, res) => {
@@ -144,15 +137,7 @@ router.get('/album/photos', requiredParams(['id']), AuthController.authAlbum, as
 
   if (!albumId) { missingParam(res, 'id'); return; }
 
-  const files = AlbumService.getAlbumFiles(albumId, start, start + num);
-  const hasMorePhotos = files.length >= num;
-
-  res.send({
-    info: {
-      hasMorePhotos,
-    },
-    photos: files,
-  });
+  res.send(ApiService.getAlbumFiles(albumId, start, start + num));
 }));
 
 /**
