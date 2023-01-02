@@ -1,9 +1,6 @@
 <template>
   <div class="lightbox">
     <div class="lightbox__menu">
-      <div ref="download" @click="triggerDownloadTooltip()" style="margin: 1rem; z-index: 99; cursor: pointer;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"/></svg>
-      </div>
       <div class="m-4 cursor-pointer" @click="showMetadata = true">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
       </div>
@@ -90,17 +87,6 @@ export default {
     }
   },
   mounted() {
-    this.tippy = window.tippy(this.$refs.download, {
-      allowHTML: true,
-      content: `
-        <div>
-          <div><strong>Mobile:</strong> Tap and hold down on the image</div>
-          <div><strong>PC:</strong> Right-click on the image -> Save image as...</div>
-        </div>
-      `,
-      trigger: 'click',
-    });
-
     window.addEventListener('keyup', (e) => {
       if (e.key === 'Escape') {
         this.close();
@@ -138,9 +124,6 @@ export default {
     },
     stopCurrentVideo() {
       document.querySelector(`#video-${this.$store.state.lightbox.photoIndex}`)?.pause();
-    },
-    triggerDownloadTooltip() {
-      // this.tippy.show();
     },
   },
 }
