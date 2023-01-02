@@ -14,7 +14,6 @@ const fetcher = {
     return window.fetch(url, options)
       .then(async res => {
         if (res.ok) {
-          console.log(res);
           if (res.headers.get('Content-Type').includes('json')) {
             return {
               data: await res.json(),
