@@ -1,7 +1,5 @@
-const dayjs = require('dayjs');
 const { createLogger, format, transports } = require('winston');
-
-require('dotenv').config();
+require('winston-daily-rotate-file');
 
 class Logger {
   _logger;
@@ -28,18 +26,31 @@ class Logger {
     this._logger = createLogger({
       level: 'http',
       format: format.combine(
+        format.errors({ stack: true }),
         format.timestamp(), 
         format.align(),
-        format.printf(({ level, message, timestamp, ...meta }) => `${timestamp} ${level}: ${message}${Object.keys(meta).length ? ` - ${JSON.stringify(meta)}` : ''}`)
+        format.printf(({ level, message, timestamp, stack, ...meta }) => {
+          return `${timestamp} ${level}: ${message}${Object.keys(meta).length ? ` - ${JSON.stringify(meta)}` : ''}${stack ? `\n${stack}` : ''}`
+        }),
       ),
       transports: isServerLogger ? [
         new transports.Console(),
-        new transports.File({
-          filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}-error.log`,
+        new transports.DailyRotateFile({
+          filename: `./log/%DATE%-error.log`,
           level: 'error',
+          maxSize: '20m',
+          maxFiles: '14d',
         }),
-        new transports.File({ 
-          filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}.log`,
+        new transports.DailyRotateFile({ 
+          filename: `./log/%DATE%-info.log`,
+          level: 'info',
+          maxSize: '20m',
+          maxFiles: '14d',
+        }),
+        new transports.DailyRotateFile({ 
+          filename: `./log/%DATE%.log`,
+          maxSize: '20m',
+          maxFiles: '14d',
         }),
       ] : [new transports.Console()],
     });

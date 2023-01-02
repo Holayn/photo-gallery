@@ -48,7 +48,7 @@ app.use('/api', routes);
 
 app.use((err, req, res, next) => {
   console.error(err);
-  logger.error(err.message);
+  logger.error(err);
   res.sendStatus(500);
   next();
 });
