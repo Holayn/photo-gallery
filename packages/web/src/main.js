@@ -26,7 +26,7 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
-  if (to.name === 'albums' && to.query.albumToken) {
+  if (to.name === 'album' && to.query.albumToken) {
     return true;
   }
 
