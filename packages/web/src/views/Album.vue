@@ -60,19 +60,25 @@ export default {
     this.loadingAlbumInfo = true;
 
     try {
-      this.album = (await getAlbum(this.albumId, this.albumToken)).data;
+      const album = await getAlbum(this.albumId, this.albumToken);
       this.loadingAlbumInfo = false;
-      document.title = this.album.name;
+      if (album.error) { 
+        alert(album.error);
+      } else {
+        this.album = album;
+        document.title = this.album.name;
 
-      this.$store.dispatch('clearPhotos');
-      const { info, photos } = (await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage(), this.albumToken)).data;
-      this.$store.dispatch('addPhotos', { photos });
+        this.$store.dispatch('clearPhotos');
+        const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage(), this.albumToken);
+        this.$store.dispatch('addPhotos', { photos });
 
-      this.loading = false;
-        
-      this.hasMorePhotos = info.hasMorePhotos;
+        this.loading = false;
+          
+        this.hasMorePhotos = info.hasMorePhotos;
 
-      this.$refs.gallery.init();
+        this.$refs.gallery.init();
+      }
+      
     } catch(e) {
       alert('An error occurred.');
       throw e;
@@ -87,7 +93,7 @@ export default {
       this.loading = true;
 
       try {
-        const { info, photos } = (await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage(), this.albumToken)).data;
+        const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage(), this.albumToken);
 
         this.loading = false;
 

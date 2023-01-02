@@ -52,12 +52,12 @@ export default {
     this.loadingSourceInfo = true;
 
     try {
-      this.source = (await getSource(this.sourceId)).data;
+      this.source = await getSource(this.sourceId);
       this.loadingSourceInfo = false;
       document.title = this.source.alias;
 
       this.$store.dispatch('clearPhotos');
-      const { info, photos } = (await getPhotosFromSource(this.sourceId, 0, this.$refs.gallery.estimateNumImagesFitOnPage())).data;
+      const { info, photos } = await getPhotosFromSource(this.sourceId, 0, this.$refs.gallery.estimateNumImagesFitOnPage());
       this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
 
       this.loading = false;
@@ -79,7 +79,7 @@ export default {
       this.loading = true;
 
       try {
-        const { info, photos } = (await getPhotosFromSource(this.sourceId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage())).data;
+        const { info, photos } = await getPhotosFromSource(this.sourceId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage());
 
         this.loading = false;
 

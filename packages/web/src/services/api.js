@@ -21,27 +21,58 @@ export function auth(password) {
   });
 }
 
-export function getSources() {
-  return fetcher.fetch(`${BASE}/sources`);
+export async function getSources() {
+  return (await fetcher.fetch(`${BASE}/sources`)).data;
 }
-export function getSource(sourceId) {
-  return fetcher.fetch(`${BASE}/source/info?id=${sourceId}`);
+export async function getSource(sourceId) {
+  return (await fetcher.fetch(`${BASE}/source/info?id=${sourceId}`)).data;
 }
-export function getPhotosFromSource(sourceId, start, num) {
-  return fetcher.fetch(`${BASE}/source/photos?id=${sourceId}&start=${start}&num=${Math.ceil(num)}`)
+export async function getPhotosFromSource(sourceId, start, num) {
+  const res = await fetcher.fetch(`${BASE}/source/photos?id=${sourceId}&start=${start}&num=${Math.ceil(num)}`);
+  if (res.data) {
+    const { info, files } = res.data;
+    return {
+      info,
+      photos: files,
+    }
+  } else if (res.error) {
+    throw new Error(res.error.message);
+  }
 }
 
 function attachAlbumToken(albumToken) {
   return albumToken ? `&albumToken=${albumToken}` : '';
 }
-export function getPhotosFromAlbum(albumId, start, num, albumToken) {
-  return fetcher.fetch(`${BASE}/album/photos?id=${albumId}&start=${start}&num=${Math.ceil(num)}${attachAlbumToken(albumToken)}`)
+export async function getPhotosFromAlbum(albumId, start, num, albumToken) {
+  const res = await fetcher.fetch(`${BASE}/album/photos?id=${albumId}&start=${start}&num=${Math.ceil(num)}${attachAlbumToken(albumToken)}`);
+  if (res.data) {
+    const { info, files } = res.data;
+    return {
+      info,
+      photos: files,
+    }
+  } else if (res.error) {
+    throw new Error(res.error.message);
+  }
 }
-export function getAlbums() {
-  return fetcher.fetch(`${BASE}/albums`);
+export async function getAlbums() {
+  return (await fetcher.fetch(`${BASE}/albums`)).data;
 }
-export function getAlbum(albumId, albumToken) {
-  return fetcher.fetch(`${BASE}/album/info?id=${albumId}${attachAlbumToken(albumToken)}`);
+export async function getAlbum(albumId, albumToken) {
+  const res = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${attachAlbumToken(albumToken)}`);
+  if (res.data) {
+    return res.data;
+  } else if (res.error) {
+    if (albumToken) {
+      return {
+        error: 'Bad album link.',
+      };
+    } else {
+      return {
+        error: res.error.message,
+      };
+    }
+  }
 }
 export function createAlbum(name, files) {
   return fetcher.fetch(`${BASE}/album`, {

@@ -340,7 +340,7 @@ export default {
     async showAlbumSelection() {
       this.showAddToExistingAlbum = true;
       this.loadingAlbums = true;
-      this.albums = (await getAlbums()).data;
+      this.albums = await getAlbums();
       this.loadingAlbums = false;
     },
     async addToAlbumFromSelected(albumId) {

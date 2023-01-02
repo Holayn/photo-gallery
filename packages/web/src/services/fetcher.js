@@ -28,8 +28,10 @@ const fetcher = {
           }
         } else {
           return {
-            error: getError(res.status),
-            status: res.status,
+            error: {
+              message: getError(res.status),
+              status: res.status,
+            }
           }
         }
       });

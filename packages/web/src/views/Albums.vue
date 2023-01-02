@@ -29,7 +29,7 @@ export default {
     };
   },
   async mounted() {
-    this.albums = (await getAlbums()).data;
+    this.albums = await getAlbums();
     this.loading = false;
   },
   methods: {
