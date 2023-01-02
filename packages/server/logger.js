@@ -12,9 +12,21 @@ class Logger {
     this._logger.info(message, data);
   }
 
+  http(message, data) {
+    if (!this._logger) { throw new Error('Logger not initialized!'); }
+
+    this._logger.http(message, data);
+  }
+
+  error(message, data) {
+    if (!this._logger) { throw new Error('Logger not initialized!'); }
+
+    this._logger.error(message, data);
+  }
+
   init(isServerLogger) {
     this._logger = createLogger({
-      level: 'info',
+      level: 'http',
       format: format.combine(
         format.timestamp(), 
         format.align(),
@@ -23,11 +35,11 @@ class Logger {
       transports: isServerLogger ? [
         new transports.Console(),
         new transports.File({
-          filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}-error-log.txt`,
+          filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}-error.log`,
           level: 'error',
         }),
         new transports.File({ 
-          filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}-log.txt`,
+          filename: `./log/${dayjs().format('YYYY-MM-DD_HHmmss')}.log`,
         }),
       ] : [new transports.Console()],
     });

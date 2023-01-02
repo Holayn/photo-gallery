@@ -33,18 +33,13 @@ app.use(helmet.contentSecurityPolicy({
   },
 }));
 
-const stream = {
-  write: (message) => logger.info(message),
-};
 const morganMiddleware = morgan(
-  // Define message format string (this is the default one).
-  // The message format is made from tokens, and each token is
-  // defined inside the Morgan library.
-  // You can create your custom token to show what do you want from a request.
   ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"',
-  // Options: in this case, I overwrote the stream and the skip logic.
-  // See the methods above.
-  { stream },
+  { 
+    stream: {
+      write: (message) => logger.http(message),
+    }
+  },
 );
 app.use(morganMiddleware);
 
@@ -53,6 +48,7 @@ app.use('/api', routes);
 
 app.use((err, req, res, next) => {
   console.error(err);
+  logger.error(err.message);
   res.sendStatus(500);
   next();
 });
