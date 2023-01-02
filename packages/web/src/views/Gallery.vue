@@ -16,9 +16,6 @@
         </div>
         <svg v-else @click="toggleSelect()" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
       </div>
-      <div class="cursor-pointer">
-        <svg @click="toggleHelp(true)" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-      </div>
     </div>
 
     <div id="media" class="justified-gallery">
@@ -52,29 +49,6 @@
         <div v-for="album in albums" :key="album.id" class="px-6 py-4 bg-orange-100 rounded-md cursor-pointer" @click="addToAlbumFromSelected(album.id)">
           {{ album.name }}
         </div>
-      </div>
-    </Modal>
-
-    <Modal v-if="showHelp" @close="toggleHelp(false)">
-      <div style="display: flex; align-items: center;">
-        <ul>
-          <li>
-            click or tap to view an image
-            <ul>
-              <li>swipe or use arrow keys to view more images</li>
-            </ul>
-          </li>
-          <li>
-            downloading images:
-            <ul>
-              <li>
-                on mobile: open the image, then tap and hold down on an image
-                <img style="width: 50%;" src="../assets/photo-gallery-help-mobile-save.gif"/>
-              </li>
-              <li>on desktop: open the image, then right-click + save image as...</li>
-            </ul>
-          </li>
-        </ul>
       </div>
     </Modal>
   </div>
@@ -121,7 +95,6 @@ export default {
       scrollPosition: 0,
       showAddToExistingAlbum: false,
       showLightbox: false,
-      showHelp: false,
 
       isSelectionMode: false,
       selected: {},
@@ -318,9 +291,6 @@ export default {
           this.scrollCurrentImageIntoView();
         });
       });
-    },
-    toggleHelp(show) {
-      this.showHelp = show;
     },
 
     toggleSelect() {
