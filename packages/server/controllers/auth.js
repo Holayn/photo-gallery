@@ -32,12 +32,12 @@ const AuthController = {
   },
 
   async authPhoto(req, res, next) {
-    const id = req.query.id;
+    const sourceFileId = req.query.sourceFileId;
     const sourceId = req.query.sourceId;
     const albumToken = req.query.albumToken;
 
     if (albumToken) {
-      const file = File.getBySource(sourceId, id);
+      const file = File.getBySource(sourceId, sourceFileId);
       if (file) {
         const album = Album.getByToken(albumToken);
         if (album) {
@@ -61,9 +61,9 @@ const AuthController = {
   },
 
   async authAlbum(req, res, next) {
-    if (await validateAdmin(req)) {
-      next();
-    } else {
+    const albumToken = req.query.albumToken;
+
+    if (albumToken) {
       const albumId = req.query.id;
       const album = AlbumService.getAlbum(albumId);
       if (album.token === req.query.albumToken) {
@@ -71,6 +71,10 @@ const AuthController = {
       } else {
         res.sendStatus(401);
       }
+    } else if (await validateAdmin(req)) {
+      next();
+    } else {
+      res.sendStatus(401);
     }
   },
 }
