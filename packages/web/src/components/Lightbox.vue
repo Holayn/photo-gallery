@@ -45,11 +45,11 @@
 
 <script>
 import { Keyboard, Virtual, Zoom } from 'swiper';
-import { Swiper, SwiperSlide } from 'swiper/vue/swiper-vue.js';
+import { Swiper, SwiperSlide } from 'swiper/vue';
 
-import 'swiper/swiper.scss'; // core Swiper
-import 'swiper/modules/navigation/navigation.scss'; // Navigation module
-import 'swiper/modules/pagination/pagination.scss'; // Pagination module
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 import LightboxSlide from './LightboxSlide.vue';
 import Modal from './Modal.vue';

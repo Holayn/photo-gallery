@@ -1,6 +1,6 @@
 import fetcher from './fetcher';
 
-export const BASE = process.env.NODE_ENV === 'development' ? `/api` : `${process.env.VUE_APP_BASE_URL || ''}/api`;
+export const BASE = import.meta.env.DEV ? '/api' : `${import.meta.env.BASE_URL}/api`;
 
 export const PHOTO_SIZES = {
   LARGE: 'large',
