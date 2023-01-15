@@ -3,7 +3,7 @@ const DB = require('../services/db');
 DB.exec('CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, timestamp_added INTEGER, date INTEGER, source_id INTEGER, source_file_id TEXT, FOREIGN KEY(source_id) REFERENCES source(id))');
 
 class File {
-  constructor({ id, date, metadata, sourceId, sourceFileId }) {
+  constructor({ id, date, sourceId, sourceFileId }) {
     this.id = id;
     this.date = date;
     this.sourceId = sourceId;
@@ -31,7 +31,7 @@ class File {
   }
 
   static findBySourceId(sourceId) {
-    return DB.prepare('SELECT * FROM file WHERE source_id = ?').all(sourceId);
+    return DB.prepare('SELECT * FROM file WHERE source_id = ?').all(sourceId).map(f => dbRecordToFile(f));
   }
 
   static getBySource(sourceId, sourceFileId) {

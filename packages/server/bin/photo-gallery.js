@@ -30,18 +30,14 @@ yargs(args)
   }, async (options) => {
     await SourceService.addSource(options.source, options.alias);
   })
-  .command('sync-source', 'Sync a source\'s images/videos', {
+  .command('sync-source', 'Update files with the latest source info.', {
     alias: {
       demand: true,
       description: 'Alias for source being synced',
       type: 'string',
     },
-    force: {
-      description: 'Force update',
-      type: 'boolean',
-    }
   }, async (options) => {
-    await SourceService.syncSource(options.alias, options.force);
+    await SourceService.syncSource(options.alias);
   })
   .command('remove-source', 'Remove a source', {
     alias: {

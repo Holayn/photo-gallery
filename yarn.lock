@@ -2983,15 +2983,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cron@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "cron@npm:2.1.0"
-  dependencies:
-    luxon: ^1.23.x
-  checksum: 9395875c091f56db7964491c249cb143d2e4ba77560d7132da783943c1b0537ef1814eb8f552c81eda5a2aa153216dd3f5b7ff63e372a68a063fcfafe8231f91
-  languageName: node
-  linkType: hard
-
 "cross-spawn@npm:^7.0.2":
   version: 7.0.3
   resolution: "cross-spawn@npm:7.0.3"
@@ -5461,13 +5452,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"luxon@npm:^1.23.x":
-  version: 1.28.0
-  resolution: "luxon@npm:1.28.0"
-  checksum: 5250cb9f138b6048eeb0b3a9044a4ac994d0058f680c72a0da4b6aeaec8612460385639cba2b1052ef6d5564879e9ed144d686f26d9d97b38ab920d82e18281c
-  languageName: node
-  linkType: hard
-
 "magic-string@npm:^0.25.7":
   version: 0.25.9
   resolution: "magic-string@npm:0.25.9"
@@ -5929,7 +5913,6 @@ __metadata:
     better-sqlite3: ^7.6.2
     cookie-parser: ^1.4.6
     cors: ^2.8.5
-    cron: ^2.1.0
     dayjs: ^1.11.5
     dotenv: ^10.0.0
     express: ^4.17.1
