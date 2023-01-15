@@ -25,17 +25,6 @@ const router = createRouter({
   routes,
 });
 
-const existingToken = Cookies.get('token');
-if (existingToken) {
-  // Verify token
-  if (await authVerify()) {
-    store.dispatch('setAuthToken', existingToken);
-    store.dispatch('setIsAdmin', true);
-  } else {
-    Cookies.remove('token');
-  }
-}
-
 window.addEventListener('unauthorized', () => {
   // Force the user to re-authenticate.
   window.location.reload();
@@ -47,6 +36,18 @@ router.beforeEach(async (to) => {
   }
 
   if (!store.state.authToken) {
+    const existingToken = Cookies.get('token');
+    if (existingToken) {
+      // Verify token
+      if (await authVerify()) {
+        store.dispatch('setAuthToken', existingToken);
+        store.dispatch('setIsAdmin', true);
+        return;
+      } else {
+        Cookies.remove('token');
+      }
+    }
+    
     const password = prompt('Password:');
     const { data, error } = await auth(password);
     if (error) {
