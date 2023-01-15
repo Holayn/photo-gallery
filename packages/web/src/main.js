@@ -9,7 +9,7 @@ import Source from './views/Source.vue';
 import store from './store'
 
 import Cookies from 'js-cookie'
-import { auth } from './services/api';
+import { auth, authVerify } from './services/api';
 
 const routes = [
   { path: '/', redirect: { name: 'albums' } },
@@ -23,6 +23,22 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
+});
+
+const existingToken = Cookies.get('token');
+if (existingToken) {
+  // Verify token
+  if (await authVerify()) {
+    store.dispatch('setAuthToken', existingToken);
+    store.dispatch('setIsAdmin', true);
+  } else {
+    Cookies.remove('token');
+  }
+}
+
+window.addEventListener('unauthorized', () => {
+  // Force the user to re-authenticate.
+  window.location.reload();
 });
 
 router.beforeEach(async (to) => {

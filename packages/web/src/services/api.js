@@ -20,6 +20,11 @@ export function auth(password) {
     }),
   });
 }
+export async function authVerify() {
+  const res = await fetcher.fetch(`${BASE}/auth/verify`);
+
+  return !res.error;
+}
 
 export async function getSources() {
   return (await fetcher.fetch(`${BASE}/sources`)).data;

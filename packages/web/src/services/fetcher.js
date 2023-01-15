@@ -26,6 +26,9 @@ const fetcher = {
             }
           }
         } else {
+          if (res.status === 401) {
+            window.dispatchEvent(new CustomEvent('unauthorized'));
+          }
           return {
             error: {
               message: getError(res.status),
