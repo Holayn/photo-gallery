@@ -33,10 +33,39 @@
     </swiper>
 
     <Modal v-if="showMetadata" @close="(showMetadata = false)">
-      <div class="grid grid-cols-3 gap-x-6 gap-y-2">
-        <div v-for="meta in currentPhotoMetadata" :key="meta.label">
-          <div class="text-sm">{{ meta.label }}</div>
-          <div>{{ meta.value }}</div>
+      <div class="grid gap-4">
+        <div>{{ currentPhotoMetadata.date?.date }} - {{ currentPhotoMetadata.date?.time }}</div>
+        <div>
+          <h2 class="text-sm text-slate-600">Location</h2>
+          <div v-if="!currentPhotoMetadata.location?.unknown">
+            <p v-if="loadingLocationInfo">loading...</p>
+            <p v-else>
+              <a class="text-black underline" :href="currentPhotoLocationLink" target="_blank">{{ currentPhotoLocationInfo }}</a>
+            </p>
+            <p class="text-sm text-slate-600">{{ currentPhotoMetadata.location?.lat }}, {{ currentPhotoMetadata.location?.long }}. {{ currentPhotoMetadata.location?.altitude }}</p>
+          </div>
+          <div v-else>
+            Unknown
+          </div>
+        </div>
+        <div>
+          <h2 class="text-sm text-slate-600">Details</h2>
+          <div>
+            <div>{{ currentPhotoMetadata.fileName }}</div>
+            <div class="text-sm text-slate-600">
+              <div class="flex gap-2">
+                <p>{{ currentPhotoMetadata.width }} x {{ currentPhotoMetadata.height }}</p>
+                <p>{{ currentPhotoMetadata.orientation }}</p>
+                <p>{{ currentPhotoMetadata.fileSize }}</p>
+              </div>
+              <p>
+                {{ currentPhotoMetadata.device }}
+              </p>
+              <p class="text-xs">
+                {{ currentPhotoMetadata.path }}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </Modal>
@@ -46,13 +75,17 @@
 <script>
 import { Keyboard, Virtual, Zoom } from 'swiper';
 import { Swiper, SwiperSlide } from 'swiper/vue';
-
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import dayjs from 'dayjs';
+import LocalizedFormat from 'dayjs/plugin/localizedFormat';
+dayjs.extend(LocalizedFormat);
 
 import LightboxSlide from './LightboxSlide.vue';
 import Modal from './Modal.vue';
+
+import { getLocationInfo } from '../services/api';
 
 export default {
   name: 'Lightbox',
@@ -74,17 +107,63 @@ export default {
   data() {
     return {
       swiper: null,
-      tippy: null,
 
+      currentPhotoLocationInfo: null,
+      loadingLocationInfo: false,
       showMetadata: false,
+
+      isOpen: false,
     }
   },
   computed: {
     currentPhotoMetadata() {
-      const metadata = this.$store.state.photos[this.$store.state.lightbox.photoIndex].metadata;
-      metadata.date = new Date(metadata.date);
-      return ['date', 'fileName', 'fileSize', 'width', 'height', 'orientation'].map(field => ({ label: field, value: metadata[field] }));
-    }
+      if (this.$store.state.photos[this.$store.state.lightbox.photoIndex]) {
+        const { date, fileName, fileSize, width, height, orientation, location, device } = this.$store.state.photos[this.$store.state.lightbox.photoIndex].metadata;
+        const parsedDate = dayjs(date);
+        return {
+          date: {
+            date: parsedDate.format('LL'),
+            time: parsedDate.format('LTS'),
+          },
+          fileName,
+          fileSize,
+          width,
+          height,
+          orientation,
+          location,
+          device,
+          path: this.$store.state.photos[this.$store.state.lightbox.photoIndex].sourceFileId,
+        };
+      } else {
+        return {};
+      }
+    },
+    currentPhotoLocationLink() {
+      return `https://www.google.com/maps/place/${this.currentPhotoMetadata.location.lat},${this.currentPhotoMetadata.location.long}`;
+    },
+  },
+  watch: {
+    showMetadata: {
+      immediate: true,
+      async handler() {
+        if (this.showMetadata && !this.currentPhotoMetadata.location?.unknown) {
+          this.loadingLocationInfo = true;
+          const { lat, long } = this.currentPhotoMetadata.location;
+          try {
+            const response = await getLocationInfo(lat, long);
+            if (response) {
+              this.currentPhotoLocationInfo = response.label;
+            }
+          } finally {
+            this.loadingLocationInfo = false;
+          }
+        }
+      }
+    },
+    isOpen() {
+      this.currentPhotoLocationInfo = null;
+      this.showMetadata = false;
+    },
   },
   mounted() {
     window.addEventListener('keyup', (e) => {
@@ -109,6 +188,8 @@ export default {
       document.body.style.position = '';
       this.stopCurrentVideo();
       this.$emit('close');
+
+      this.isOpen = false;
     },
     open() {
       document.body.style.position = 'fixed';
@@ -120,7 +201,9 @@ export default {
         appHeight();
       });
 
-      this.swiper.slideTo(this.$store.state.lightbox.photoIndex, 0)
+      this.swiper.slideTo(this.$store.state.lightbox.photoIndex, 0);
+
+      this.isOpen = true;
     },
     stopCurrentVideo() {
       document.querySelector(`#video-${this.$store.state.lightbox.photoIndex}`)?.pause();

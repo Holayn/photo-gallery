@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 
 const AlbumService = require('../services/album');
 const ApiService = require('../services/api');
@@ -135,8 +136,6 @@ router.get('/album/photos', requiredParams(['id']), AuthController.authAlbum, as
   const start = parseInt(req.query.start) || 0;
   const num = parseInt(req.query.num) || DEFAULT_NUM_TO_LOAD;
 
-  if (!albumId) { missingParam(res, 'id'); return; }
-
   res.send(ApiService.getAlbumFiles(albumId, start, start + num));
 }));
 
@@ -165,6 +164,19 @@ router.post('/album', AuthController.authAdmin, asyncHandler(async (req, res) =>
   }
   
   res.sendStatus(200);
+}));
+
+router.get('/location', requiredParams(['lat', 'long']), asyncHandler(async (req, res) => {
+  const { lat, long } = req.query;
+  try {
+    const { data } = await axios(`http://api.positionstack.com/v1/reverse?access_key=${process.env.POSITIONSTACK_APIKEY}&query=${lat},${long}`);
+    if (data) {
+      const [result] = data.data;
+      res.send(result);
+    }
+  } catch (e) {
+    res.sendStatus(400);
+  }
 }));
 
 module.exports = router;

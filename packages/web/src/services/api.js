@@ -104,6 +104,10 @@ export function addToAlbum(albumId, files) {
   });
 }
 
+export async function getLocationInfo(lat, long) {
+  return (await fetcher.fetch(`${BASE}/location?lat=${lat}&long=${long}`)).data;
+}
+
 export function toPhotoUrl(photo, size, albumToken) {
   return `${BASE}/photo?sourceFileId=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}${attachAlbumToken(albumToken)}`;
 }

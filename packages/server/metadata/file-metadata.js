@@ -13,6 +13,8 @@ class FileMetadata {
     appleLivePhoto,
     fileSize,
     fileName,
+    location,
+    device,
   }) {
     this.date = date;
     this.caption = caption;
@@ -27,6 +29,8 @@ class FileMetadata {
     this.appleLivePhoto = appleLivePhoto;
     this.fileSize = fileSize;
     this.fileName = fileName;
+    this.location = location;
+    this.device = device;
 
     if (orientation === 'Rotate 90 CW' && this.width > this.height) {
       this.width = height;
