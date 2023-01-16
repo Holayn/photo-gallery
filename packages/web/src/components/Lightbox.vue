@@ -176,10 +176,7 @@ export default {
     activeIndexChange({ activeIndex }) {
       this.stopCurrentVideo();
       this.$store.state.lightbox.photoIndex = activeIndex;
-
-      if (this.tippy) {
-        this.tippy.hide();
-      }
+      this.showMetadata = false;
     },
     afterInit(e) {
       this.swiper = e;
