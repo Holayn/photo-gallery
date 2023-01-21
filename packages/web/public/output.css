@@ -557,6 +557,10 @@ video {
   margin-top: 0.5rem !important;
 }
 
+.mb-64 {
+  margin-bottom: 16rem !important;
+}
+
 .flex {
   display: flex !important;
 }
@@ -732,6 +736,10 @@ video {
 
 .pb-4 {
   padding-bottom: 1rem !important;
+}
+
+.pb-64 {
+  padding-bottom: 16rem !important;
 }
 
 .text-3xl {

@@ -23,7 +23,7 @@
       </div>
     </div>
 
-    <div id="media" class="justified-gallery">
+    <div id="media" class="justified-gallery">  
       <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" @click.prevent>
         <img :src="photo.urls[getGalleryPhotoSize()]" @click="isSelectionMode ? select(photo) : openSlides(i)">
         <div v-if="photo.metadata.video" class="overlay">
@@ -38,11 +38,6 @@
           </div>
         </div>
       </a>
-    </div>
-    <div style="height: 200px;">
-      <div v-if="allPhotosDisplaying && hasMorePhotos && infiniteScrollEnabled" style="display: flex; align-items: center; justify-content: center; height: 100%;">
-        <button style="padding: 8px 16px; background-color: var(--theme-color-main); border: none;" @click="renderMore">Load more images</button>
-      </div>
     </div>
 
     
@@ -69,7 +64,7 @@ import Modal from '../components/Modal.vue';
 
 const GALLERY_ROW_HEIGHT = 200;
 const GALLERY_ROW_HEIGHT_MOBILE = 80;
-const AVERAGE_IMAGE_WIDTH = 200;
+const AVERAGE_IMAGE_WIDTH = 180;
 const IMAGE_WIDTH_MOBILE = 80;
 
 export default {
@@ -129,7 +124,8 @@ export default {
       });
     },
     lightboxIndex() {
-      if (this.lightboxIndex + this.infiniteScrollNumImages >= this.galleryIndex) {
+      // Handling for navigating the lightbox past loaded gallery thumbnails.
+      if (this.lightboxIndex + 1 >= this.galleryIndex) {
         setTimeout(() => {
           // Delay this slightly to prevent blocking other resources from loading first.
           // This is in the background when this is called.
@@ -158,9 +154,9 @@ export default {
   },
   methods: {
     init() {
-      const numImagesCanFitOnPage = this.calculateNumImagesFitOnPage();
-      this.galleryIndex = numImagesCanFitOnPage;
-      this.infiniteScrollNumImages = numImagesCanFitOnPage;
+      const numImages = this.estimateNumImagesFitOnPage();
+      this.galleryIndex = numImages;
+      this.infiniteScrollNumImages = numImages;
 
       setTimeout(() => {
         window.$('#media').justifiedGallery({
@@ -177,40 +173,11 @@ export default {
     },
     estimateNumImagesFitOnPage() {
       const { innerWidth, innerHeight } = window;
-      const rows = Math.ceil((innerHeight * 2) / this.galleryRowHeight) + 2;
+      const rows = Math.ceil((innerHeight) / this.galleryRowHeight);
       const widthOfImage = isMobileScreen() ? IMAGE_WIDTH_MOBILE : AVERAGE_IMAGE_WIDTH;
       const imagesPerRow = Math.ceil(innerWidth / widthOfImage);
 
       return rows * imagesPerRow;
-    },
-    calculateNumImagesFitOnPage() {
-      let num = 0;
-
-      const { innerWidth, innerHeight } = window;
-
-      const rows = Math.ceil(innerHeight / this.galleryRowHeight);
-
-      let currWidth = 0;
-      const totalWidth = innerWidth * rows;
-
-      for (let i = 0; i < this.$store.state.photos.length; i++) {
-        let thumbnailWidth = null;
-        if (isMobileScreen()) {
-          thumbnailWidth = IMAGE_WIDTH_MOBILE;
-        } else {
-          const { width, height } = this.$store.state.photos[i].metadata;
-          thumbnailWidth = (width / height) * this.galleryRowHeight;
-        }
-
-        if (currWidth >= totalWidth || currWidth + thumbnailWidth >= totalWidth) {
-          break;
-        }
-
-        currWidth += thumbnailWidth;
-        num++;
-      }
-
-      return num;
     },
     handleInfiniteScroll() {
       this.infiniteScrollBound = this.infiniteScroll.bind(this);
@@ -227,7 +194,6 @@ export default {
 
         this.infiniteScrollBeforeHeight = window.document.documentElement.scrollHeight;
         await this.renderMore();
-        
       }
 
       // Re-enable infinite scrolling once the user has scrolled down past where the infinite scrolling was originally triggered.
