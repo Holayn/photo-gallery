@@ -20,7 +20,11 @@ class Source {
   }
 
   static getSourceByPathOrAlias(path, alias) {
-    return new Source(DB.prepare('SELECT * FROM source WHERE path = ? OR alias = ?').get(path, alias));
+    const record = DB.prepare('SELECT * FROM source WHERE path = ? OR alias = ?').get(path, alias);
+    if (record) {
+      return new Source(record);
+    }
+    return null;
   }
 
   static getSourceByAlias(alias) {

@@ -13,10 +13,10 @@ class SourceService {
    * @returns {String} message
    */
    addSource(sourcePath, alias) {
-    const existingSource = Source.getSourceByPathOrAlias(alias, sourcePath);
+    const existingSource = Source.getSourceByPathOrAlias(sourcePath, alias);
 
     if (!existingSource) {
-      Source.insert(alias, sourcePath);
+      Source.insert(sourcePath, alias);
       logger.info(`${alias} added with source path: ${sourcePath}.`);
     } else {
       logger.error(`Path (${sourcePath}) or alias (${alias}) already exists.`);
