@@ -228,7 +228,7 @@ export default {
     },
     async infiniteScroll() {
       if (this.infiniteScrollEnabled) {
-        const boundaryOffset = window.innerHeight / 4;
+        const boundaryOffset = window.innerHeight / 3;
         const boundary = window.document.documentElement.scrollHeight - boundaryOffset;
         const viewingWindowBottom = window.scrollY + window.innerHeight;
         const isPastBoundary = viewingWindowBottom > boundary;
