@@ -101,7 +101,7 @@ export default {
         document.title = this.album.name;
 
         this.$store.dispatch('clearPhotos');
-        const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage(), this.albumToken);
+        const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage() * 2, this.albumToken);
         this.$store.dispatch('addPhotos', { photos });
 
         this.loading = false;
@@ -125,7 +125,7 @@ export default {
       this.loading = true;
 
       try {
-        const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage(), this.albumToken);
+        const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage() * 2, this.albumToken);
 
         this.loading = false;
 

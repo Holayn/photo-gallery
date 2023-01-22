@@ -57,7 +57,7 @@ export default {
       document.title = this.source.alias;
 
       this.$store.dispatch('clearPhotos');
-      const { info, photos } = await getPhotosFromSource(this.sourceId, 0, this.$refs.gallery.estimateNumImagesFitOnPage());
+      const { info, photos } = await getPhotosFromSource(this.sourceId, 0, this.$refs.gallery.estimateNumImagesFitOnPage() * 2);
       this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
 
       this.loading = false;
@@ -79,7 +79,7 @@ export default {
       this.loading = true;
 
       try {
-        const { info, photos } = await getPhotosFromSource(this.sourceId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage());
+        const { info, photos } = await getPhotosFromSource(this.sourceId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage() * 2);
 
         this.loading = false;
 
