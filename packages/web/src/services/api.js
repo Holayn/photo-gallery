@@ -9,6 +9,22 @@ export const PHOTO_SIZES = {
   THUMB: 'thumb',
 }
 
+class ApiError extends Error {
+  constructor(status, description, ...params) {
+    // Pass remaining arguments (including vendor specific ones) to parent constructor
+    super(...params);
+
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ApiError);
+    }
+
+    this.name = "ApiError";
+    this.status = status;
+    this.description = description;
+  }
+}
+
 export function auth(password) {
   return fetcher.fetch(`${BASE}/auth`, {
     method: 'POST',
@@ -21,7 +37,7 @@ export function auth(password) {
   });
 }
 export async function authVerify() {
-  const res = await fetcher.fetch(`${BASE}/auth/verify`);
+  const res = await fetcher.fetch(`${BASE}/auth/verify`, { redirectOn401: false });
 
   return !res.error;
 }
@@ -30,7 +46,12 @@ export async function getSources() {
   return (await fetcher.fetch(`${BASE}/sources`)).data;
 }
 export async function getSource(sourceId) {
-  return (await fetcher.fetch(`${BASE}/source/info?id=${sourceId}`)).data;
+  const res = await fetcher.fetch(`${BASE}/source/info?id=${sourceId}`);
+  if (res.data) {
+    return res.data;
+  } else if (res.error) {
+    throw new ApiError(res.error.status);
+  }
 }
 export async function getPhotosFromSource(sourceId, start, num) {
   const res = await fetcher.fetch(`${BASE}/source/photos?id=${sourceId}&start=${start}&num=${Math.ceil(num)}`);
@@ -41,7 +62,7 @@ export async function getPhotosFromSource(sourceId, start, num) {
       photos: files,
     }
   } else if (res.error) {
-    throw new Error(res.error.message);
+    throw new ApiError(res.error.status);
   }
 }
 
@@ -57,7 +78,7 @@ export async function getPhotosFromAlbum(albumId, start, num, albumToken) {
       photos: files,
     }
   } else if (res.error) {
-    throw new Error(res.error.message);
+    throw new ApiError(res.error.status);
   }
 }
 export async function getAlbums() {
@@ -68,15 +89,7 @@ export async function getAlbum(albumId, albumToken) {
   if (res.data) {
     return res.data;
   } else if (res.error) {
-    if (albumToken) {
-      return {
-        error: 'Bad album link.',
-      };
-    } else {
-      return {
-        error: res.error.message,
-      };
-    }
+    throw new ApiError(res.error.status, albumToken ? 'Bad album link' : null);
   }
 }
 export function createAlbum(name, files) {

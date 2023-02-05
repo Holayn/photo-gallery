@@ -26,6 +26,8 @@ const router = createRouter({
 });
 
 window.addEventListener('unauthorized', () => {
+  Cookies.remove('token');
+
   // Force the user to re-authenticate.
   window.location.reload();
 });
@@ -49,18 +51,24 @@ router.beforeEach(async (to) => {
     }
     
     const password = prompt('Password:');
-    const { data, error } = await auth(password);
-    if (error) {
-      alert('Authentication failed.');
-      return false;
+    if (password !== null) {
+      const { data, error } = await auth(password);
+      if (error) {
+        alert('Authentication failed.');
+        return false;
+      } else {
+        const { token } = data;
+        store.dispatch('setAuthToken', token);
+        store.dispatch('setIsAdmin', true);
+        Cookies.set('token', token, { 
+          sameSite: 'Strict', 
+          secure: true
+        });
+      }
     } else {
-      const { token } = data;
-      store.dispatch('setAuthToken', token);
-      store.dispatch('setIsAdmin', true);
-      Cookies.set('token', token, { 
-        sameSite: 'Strict', 
-        secure: true
-      });
+      alert('Password is required.');
+      window.location.reload();
+      return false;
     }
   }
 });

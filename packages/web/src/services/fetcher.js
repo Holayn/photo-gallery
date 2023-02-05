@@ -10,7 +10,7 @@ function getError(status) {
 }
 
 const fetcher = {
-  fetch(url, options) {
+  fetch(url, options = {}) {
     return window.fetch(url, options)
       .then(async res => {
         if (res.ok) {
@@ -19,6 +19,8 @@ const fetcher = {
               data: await res.json(),
               status: res.status,
             }
+          } else if (options.blob) {
+            return res.blob();
           } else {
             return {
               data: true,
@@ -26,7 +28,7 @@ const fetcher = {
             }
           }
         } else {
-          if (res.status === 401) {
+          if (res.status === 401 && options.redirectOn401 !== false) {
             window.dispatchEvent(new CustomEvent('unauthorized'));
           }
           return {
