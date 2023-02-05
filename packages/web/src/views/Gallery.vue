@@ -25,7 +25,7 @@
 
     <div id="media" class="justified-gallery">  
       <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" @click.prevent>
-        <img :src="photo.urls[getGalleryPhotoSize()]" @click="isSelectionMode ? select(photo) : openSlides(i)" @load="rendered(i)" @error="rendered(i)">
+        <img :src="photo.data?.preview" @click="isSelectionMode ? select(photo) : openSlides(i)" @load="rendered(i)" @error="rendered(i)">
         <div v-if="photo.metadata.video" class="overlay">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </div>
@@ -63,7 +63,7 @@
 
 <script>
 import { PHOTO_SIZES, getAlbums, createAlbum, addToAlbum } from '../services/api';
-import { getGalleryPhotoSize, isMobileScreen } from '../utils';
+import { getGalleryPhotoSize, isMobileScreen, loadPhotoToBase64 } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
@@ -162,18 +162,14 @@ export default {
         this.numPhotosToLoad = photosToLoad.length;
         const loadPromises = photosToLoad.map(photo => {
           return new Promise((resolve, reject) => {
-            const img = new Image();
             const url = photo.urls[getGalleryPhotoSize()];
-            img.addEventListener('load', () => {
+
+            loadPhotoToBase64(url).then(data => {
+              if (!photo.data) photo.data = {};
+              photo.data.preview = data;
               this.numPhotosToLoad--;
-              console.debug(`Loaded ${url}`);
               resolve();
-            });
-            img.addEventListener('error', () => {
-              console.error(`Error loading ${url}`);
-              resolve();
-            });
-            img.src = url;
+            })
           });
         });
 
@@ -183,11 +179,12 @@ export default {
         await Promise.all(loadPromises);
 
         console.debug('loadPhotos(): photos loaded.');
-        this.loadingPhotos = false;
         this.loadedPhotoIndex = this.galleryIndex;
 
         setTimeout(() => {
-          window.$('#media').justifiedGallery('norewind');
+          window.$('#media').justifiedGallery('norewind').on('jg.complete', () => {
+            this.loadingPhotos = false;
+          });
         });
       }
     },
