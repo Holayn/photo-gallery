@@ -94,23 +94,18 @@ export default {
     try {
       const album = await getAlbum(this.albumId, this.albumToken);
       this.loadingAlbumInfo = false;
-      if (album.error) { 
-        alert(album.error);
-      } else {
-        this.album = album;
-        document.title = this.album.name;
+      this.album = album;
+      document.title = this.album.name;
 
-        this.$store.dispatch('clearPhotos');
-        const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage() * 2, this.albumToken);
-        this.$store.dispatch('addPhotos', { photos });
+      this.$store.dispatch('clearPhotos');
+      const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage() * 2, this.albumToken);
+      this.$store.dispatch('addPhotos', { photos });
 
-        this.loading = false;
-          
-        this.hasMorePhotos = info.hasMorePhotos;
+      this.loading = false;
+        
+      this.hasMorePhotos = info.hasMorePhotos;
 
-        this.$refs.gallery.init();
-      }
-      
+      this.$refs.gallery.init();
     } catch(e) {
       alert('An error occurred.');
       throw e;

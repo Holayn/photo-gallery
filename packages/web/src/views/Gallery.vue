@@ -174,7 +174,9 @@ export default {
         });
 
         // Weird Chrome bug where the last photo isn't fetched, so don't wait for it.
-        loadPromises.pop();
+        if (loadPromises.length > 1) {
+          loadPromises.pop();
+        }
 
         await Promise.all(loadPromises);
 
