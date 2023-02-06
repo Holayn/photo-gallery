@@ -155,8 +155,8 @@ export default {
   },
   methods: {
     async loadPhotos() {
-      console.debug('loadPhotos(): loading photos...');
       if (this.galleryIndex > this.loadedPhotoIndex) {
+        console.debug('loadPhotos(): loading photos...');
         this.loadingPhotos = true;
         const photosToLoad = this.$store.state.photos.slice(this.loadedPhotoIndex, this.galleryIndex);
         this.numPhotosToLoad = photosToLoad.length;
