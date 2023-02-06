@@ -5,7 +5,7 @@
         <template #heading>
           <h1 class="flex-auto text-5xl">
             <Loading v-if="loadingSourceInfo"></Loading>
-            <span v-else>{{ title }} <span v-if="directory">({{ directory }})</span></span>
+            <span v-else>{{ title }} <p v-if="directory" class="text-xl">({{ directory }})</p></span>
           </h1>
         </template>
       </Gallery>

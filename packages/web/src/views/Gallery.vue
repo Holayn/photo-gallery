@@ -1,10 +1,10 @@
 <template>
   <div ref="gallery">
-    <div class="px-8 flex items-center gap-8">
-      <div class="flex-auto">
+    <div class="px-4 md:px-8 md:flex md:gap-8 items-center">
+      <div class="flex-auto break-all">
         <slot name="heading"></slot>
       </div>
-      <div v-if="$store.state.isAdmin">
+      <div v-if="$store.state.isAdmin" class="flex gap-4 justify-end pb-4">
         <div v-if="isSelectionMode" class="flex gap-2 items-center">
           <div>Selected: {{ Object.keys(selected).length }}</div>
           <button class="px-2 py-1 bg-orange-100" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Existing Album</button>
@@ -17,8 +17,6 @@
         <button v-else @click="toggleSelect()">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
         </button>
-      </div>
-      <div>
         <slot name="controls"></slot>
       </div>
     </div>
