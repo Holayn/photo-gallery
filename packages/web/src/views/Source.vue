@@ -22,6 +22,7 @@ import Loading from '../components/Loading.vue';
 import Gallery from './Gallery.vue';
 
 import { getPhotosFromSource, getSource } from '../services/api';
+import { setDocumentTitle } from '../utils';
 
 export default {
   name: 'Source',
@@ -55,7 +56,7 @@ export default {
     try {
       this.source = await getSource(this.sourceId);
       this.loadingSourceInfo = false;
-      document.title = this.source.alias;
+      setDocumentTitle(this.source.alias);
 
       this.$store.dispatch('clearPhotos');
       const { info, photos } = await getPhotosFromSource(

@@ -40,6 +40,7 @@ import Modal from '../components/Modal.vue';
 import Gallery from './Gallery.vue';
 
 import { getPhotosFromAlbum, getAlbum } from '../services/api';
+import { setDocumentTitle } from '../utils';
 
 export default {
   name: 'Album',
@@ -95,7 +96,8 @@ export default {
       const album = await getAlbum(this.albumId, this.albumToken);
       this.loadingAlbumInfo = false;
       this.album = album;
-      document.title = this.album.name;
+      
+      setDocumentTitle(this.album.name);
 
       this.$store.dispatch('clearPhotos');
       const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage() * 2, this.albumToken);

@@ -1,6 +1,11 @@
 import { PHOTO_SIZES } from './services/api';
 import fetcher from './services/fetcher';
 
+const BASE_TITLE = 'Photos';
+export function setDocumentTitle(title) {
+  document.title = `${title} - ${BASE_TITLE}`;
+}
+
 export function isMobileScreen() {
   return window.innerHeight < 800 && window.innerWidth < 500;
 }

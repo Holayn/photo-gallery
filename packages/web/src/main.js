@@ -11,6 +11,7 @@ import store from './store'
 
 import Cookies from 'js-cookie'
 import { auth, authVerify } from './services/api';
+import { setDocumentTitle } from './utils';
 
 const routes = [
   { path: '/', redirect: { name: 'albums' } },
@@ -35,6 +36,7 @@ window.addEventListener('unauthorized', () => {
 });
 
 router.beforeEach(async (to) => {
+  setDocumentTitle(to.name.substring(0, 1).toUpperCase() + to.name.substring(1));
   if (to.name === 'album' && to.query.albumToken) {
     return true;
   }
