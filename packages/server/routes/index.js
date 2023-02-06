@@ -66,7 +66,7 @@ router.get('/auth/verify', AuthController.authAdmin, asyncHandler(async (req, re
 router.get('/sources', AuthController.authAdmin, asyncHandler(async (req, res) => {
   res.send(SourceService.findAll());
 }));
-router.get('/source/info', AuthController.authAdmin, asyncHandler(async (req, res) => {
+router.get('/source/info', requiredParams(['id']), AuthController.authAdmin, asyncHandler(async (req, res) => {
   const id = req.query.id;
   res.send(SourceService.getSource(id));
 }));
@@ -83,15 +83,18 @@ router.get('/source/info', AuthController.authAdmin, asyncHandler(async (req, re
  *  }[]
  * }
  */
-router.get('/source/photos', AuthController.authAdmin, asyncHandler(async (req, res) => {
+router.get('/source/photos', requiredParams(['id']), AuthController.authAdmin, asyncHandler(async (req, res) => {
   const sourceId = parseInt(req.query.id);
-
-  if (!sourceId) { missingParam(res, 'id'); return; }
-
   const start = parseInt(req.query.start) || 0;
   const num = parseInt(req.query.num) || DEFAULT_NUM_TO_LOAD;
+  const directory = req.query.directory || null;
 
-  res.send(ApiService.getSourceFiles(sourceId, start, num));
+  res.send(ApiService.getSourceFiles(sourceId, start, num, directory));
+}));
+router.get('/source/directories', requiredParams(['id']), asyncHandler(async (req, res) => {
+  const sourceId = parseInt(req.query.id);
+
+  res.send(ApiService.getDirectories(sourceId));
 }));
 
 router.get('/photo', requiredParams(['sourceFileId', 'sourceId', 'size']), AuthController.authPhoto, asyncHandler(async (req, res) => {
@@ -150,7 +153,7 @@ router.get('/album/photos', requiredParams(['id']), AuthController.authAlbum, as
  *  }[]
  * }
  */
-router.post('/album', AuthController.authAdmin, asyncHandler(async (req, res) => {
+router.post('/album', requiredBody(['name', 'files', 'albumId']), AuthController.authAdmin, asyncHandler(async (req, res) => {
   const name = req.body.name;
   const files = req.body.files;
   const albumId = req.body.albumId;

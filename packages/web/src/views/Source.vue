@@ -5,7 +5,7 @@
         <template #heading>
           <h1 class="flex-auto text-5xl">
             <Loading v-if="loadingSourceInfo"></Loading>
-            <span v-else>{{ title }}</span>
+            <span v-else>{{ title }} <span v-if="directory">({{ directory }})</span></span>
           </h1>
         </template>
       </Gallery>
@@ -30,6 +30,7 @@ export default {
     Loading,
   },
   props: {
+    directory: String,
     sourceId: String,
   },
   data() {
@@ -57,11 +58,14 @@ export default {
       document.title = this.source.alias;
 
       this.$store.dispatch('clearPhotos');
-      const { info, photos } = await getPhotosFromSource(this.sourceId, 0, this.$refs.gallery.estimateNumImagesFitOnPage() * 2);
+      const { info, photos } = await getPhotosFromSource(
+        this.sourceId, 
+        0, 
+        this.$refs.gallery.estimateNumImagesFitOnPage() * 2, 
+        this.directory
+      );
       this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
 
-      this.loading = false;
-        
       this.hasMorePhotos = info.hasMorePhotos;
 
       this.$refs.gallery.init();
@@ -79,7 +83,12 @@ export default {
       this.loading = true;
 
       try {
-        const { info, photos } = await getPhotosFromSource(this.sourceId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage() * 2);
+        const { info, photos } = await getPhotosFromSource(
+          this.sourceId, 
+          this.$store.state.photos.length, 
+          this.$refs.gallery.estimateNumImagesFitOnPage() * 2, 
+          this.directory
+        );
 
         this.loading = false;
 

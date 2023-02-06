@@ -73,11 +73,11 @@ class SourceService {
     return Source.findAll();
   }
 
-  findFilesFrom(sourceId, start, num) {
+  findFilesFrom(sourceId, start, num, directory) {
     const source = Source.get(sourceId);
     if (source.type === 'local') {
       const dbSource = new DbSource(source);
-      const dbSourceFiles = dbSource.findFilesFrom(start, num);
+      const dbSourceFiles = dbSource.findFilesFrom(start, num, directory);
       return dbSourceFiles.map(({ date, path, metadata }) => ({
         date,
         sourceId: this.id,
@@ -106,6 +106,14 @@ class SourceService {
     if (source.type === 'local') {
       const dbSource = new DbSource(source);
       return dbSource.getFileData(id, size);
+    }
+  }
+
+  getDirectories(sourceId) {
+    const source = Source.get(sourceId);
+    if (source.type === 'local') {
+      const dbSource = new DbSource(source);
+      return dbSource.getDirectories();
     }
   }
 }

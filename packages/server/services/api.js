@@ -20,8 +20,8 @@ function getAlbumFiles(albumId, start, num) {
   }
 }
 
-function getSourceFiles(sourceId, start, num) {
-  const files = SourceService.findFilesFrom(sourceId, start, num);
+function getSourceFiles(sourceId, start, num, directory) {
+  const files = SourceService.findFilesFrom(sourceId, start, num, directory);
 
   return {
     info: {
@@ -38,7 +38,12 @@ function getSourceFiles(sourceId, start, num) {
   }
 }
 
+function getDirectories(sourceId) {
+  return SourceService.getDirectories(sourceId);
+}
+
 module.exports = {
   getAlbumFiles,
+  getDirectories,
   getSourceFiles,
 }

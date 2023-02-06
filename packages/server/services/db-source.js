@@ -36,7 +36,28 @@ class DbSource {
     }
   }
 
-  findFilesFrom(start, num) {
+  getDirectories() {
+    const records = this.db.prepare(`
+      SELECT path FROM ${FILES_TABLE_NAME} 
+      WHERE processed != 0
+    `).all();
+    const paths = new Set();
+    records.forEach(r => {
+      const split = r.path.split('/');
+      const directories = split.slice(0, split.length - 1);
+      paths.add(directories.join('/'));
+    });
+    return [...paths];
+  }
+
+  findFilesFrom(start, num, directory) {
+    if (directory) {
+      return this.db.prepare(`
+        SELECT * FROM ${FILES_TABLE_NAME} 
+        WHERE processed != 0 AND path LIKE '${directory}%'
+        ORDER BY date DESC LIMIT ?, ?
+      `).all(start, num).map(f => new DbSourceFile(f));
+    }
     return this.db.prepare(`
       SELECT * FROM ${FILES_TABLE_NAME} 
       WHERE processed != 0

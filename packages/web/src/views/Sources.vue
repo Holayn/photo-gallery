@@ -3,9 +3,13 @@
     <h1 class="text-5xl">Sources</h1>
     <div class="mt-4">
       <Loading v-if="loading"></Loading>
-      <div v-else class="flex flex-wrap gap-4">
-        <div v-for="source in sources" :key="source.id" class="px-6 py-4 bg-orange-100 rounded-md cursor-pointer" @click="openSource(source)">
-          {{ source.alias }} ({{ source.path }})
+      <div v-else class="grid gap-4 w-full">
+        <div v-for="source in sources" :key="source.id" class="flex gap-8 px-6 py-4 bg-orange-100 rounded-md">
+          <p class="flex-auto">{{ source.alias }} ({{ source.path }})</p>
+          <div class="flex gap-4">
+            <button @click="openSource(source)">View All</button>
+            <button  @click="openSource(source, true)">View By Directory</button>
+          </div>
         </div>
       </div>
     </div>
@@ -33,8 +37,12 @@ export default {
     this.loading = false;
   },
   methods: {
-    openSource(source) {
-      this.$router.push({ name: 'source', params: { sourceId: source.id } });
+    openSource(source, directory) {
+      if (directory) {
+        this.$router.push({ name: 'sourceDirectories', params: { sourceId: source.id } });
+      } else {
+        this.$router.push({ name: 'source', params: { sourceId: source.id } });
+      }
     },
   },
 }

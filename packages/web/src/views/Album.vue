@@ -101,8 +101,6 @@ export default {
       const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage() * 2, this.albumToken);
       this.$store.dispatch('addPhotos', { photos });
 
-      this.loading = false;
-        
       this.hasMorePhotos = info.hasMorePhotos;
 
       this.$refs.gallery.init();
