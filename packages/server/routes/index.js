@@ -153,12 +153,12 @@ router.get('/album/photos', requiredParams(['id']), AuthController.authAlbum, as
  *  }[]
  * }
  */
-router.post('/album', requiredBody(['name', 'files', 'albumId']), AuthController.authAdmin, asyncHandler(async (req, res) => {
+router.post('/album', requiredBody(['files']), AuthController.authAdmin, asyncHandler(async (req, res) => {
   const name = req.body.name;
   const files = req.body.files;
   const albumId = req.body.albumId;
 
-  if (!name && !albumId) { throw new Error('Missing parameter: name.'); }
+  if (!name && !albumId) { requiredBody(['name', 'albumId']); }
   
   if (albumId) {
     AlbumService.addToAlbum(albumId, files);
