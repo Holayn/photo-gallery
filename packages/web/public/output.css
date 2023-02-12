@@ -780,6 +780,10 @@ video {
   padding-bottom: 1rem !important;
 }
 
+.text-center {
+  text-align: center !important;
+}
+
 .text-3xl {
   font-size: 1.875rem !important;
   line-height: 2.25rem !important;

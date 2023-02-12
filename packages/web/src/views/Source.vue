@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="mt-4">
-      <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer">
+      <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer" :show-date-selection="true" @date="onDateUpdate($event)">
         <template #heading>
           <h1 class="flex-auto text-5xl">
             <Loading v-if="loadingSourceInfo"></Loading>
@@ -41,6 +41,7 @@ export default {
       loading: false,
       loadingSourceInfo: false,
 
+      date: null,
       source: null,
     };
   },
@@ -57,19 +58,7 @@ export default {
       this.source = await getSource(this.sourceId);
       this.loadingSourceInfo = false;
       setDocumentTitle(this.source.alias);
-
-      this.$store.dispatch('clearPhotos');
-      const { info, photos } = await getPhotosFromSource(
-        this.sourceId, 
-        0, 
-        this.$refs.gallery.estimateNumImagesFitOnPage() * 2, 
-        this.directory
-      );
-      this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
-
-      this.hasMorePhotos = info.hasMorePhotos;
-
-      this.$refs.gallery.init();
+      await this.init();
     } catch(e) {
       alert('An error occurred.');
       throw e;
@@ -79,6 +68,26 @@ export default {
     }
   },
   methods: {
+    async init(re) {
+      this.$store.dispatch('clearPhotos');
+
+      if (re) {
+        this.$refs.gallery.reset();
+      }
+
+      const { info, photos } = await getPhotosFromSource(
+        this.sourceId, 
+        0, 
+        this.$refs.gallery.estimateNumImagesFitOnPage() * 2, 
+        this.date,
+        this.directory
+      );
+      this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
+
+      this.hasMorePhotos = info.hasMorePhotos;
+
+      this.$refs.gallery.init();
+    },
     async loadMoreFromServer() {
       console.debug('loading more photo info from server...');
       this.loading = true;
@@ -88,6 +97,7 @@ export default {
           this.sourceId, 
           this.$store.state.photos.length, 
           this.$refs.gallery.estimateNumImagesFitOnPage() * 2, 
+          this.date,
           this.directory
         );
 
@@ -102,6 +112,13 @@ export default {
         throw e;
       } finally {
         this.loading = false;
+      }
+    },
+    onDateUpdate(date) {
+      // Only update the date and call init if the date actually changed.
+      if (date !== this.date) {
+        this.date = date;
+        this.init(true);
       }
     },
   }

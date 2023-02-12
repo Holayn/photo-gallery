@@ -61,8 +61,8 @@ export async function getSourceDirectories(sourceId) {
     throw new ApiError(res.error.status);
   }
 }
-export async function getPhotosFromSource(sourceId, start, num, directory) {
-  const res = await fetcher.fetch(`${BASE}/source/photos?id=${sourceId}&start=${start}&num=${Math.ceil(num)}${directory ? `&directory=${directory}` : ''}`);
+export async function getPhotosFromSource(sourceId, start, num, date, directory) {
+  const res = await fetcher.fetch(`${BASE}/source/photos?id=${sourceId}&start=${start}&num=${Math.ceil(num)}${date ? `&date=${date}` : ''}${directory ? `&directory=${directory}` : ''}`);
   if (res.data) {
     const { info, files } = res.data;
     return {

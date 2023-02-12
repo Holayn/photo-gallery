@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const dayjs = require('dayjs');
 
 const AlbumService = require('../services/album');
 const ApiService = require('../services/api');
@@ -88,8 +89,9 @@ router.get('/source/photos', requiredParams(['id']), AuthController.authAdmin, a
   const start = parseInt(req.query.start) || 0;
   const num = parseInt(req.query.num) || DEFAULT_NUM_TO_LOAD;
   const directory = req.query.directory || null;
+  const date = req.query.date ? dayjs(req.query.date, 'YYYY-MM-DD').valueOf() : null;
 
-  res.send(ApiService.getSourceFiles(sourceId, start, num, directory));
+  res.send(ApiService.getSourceFiles(sourceId, start, num, date, directory));
 }));
 router.get('/source/directories', requiredParams(['id']), asyncHandler(async (req, res) => {
   const sourceId = parseInt(req.query.id);

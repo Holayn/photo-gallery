@@ -20,8 +20,8 @@ function getAlbumFiles(albumId, start, num) {
   }
 }
 
-function getSourceFiles(sourceId, start, num, directory) {
-  const files = SourceService.findFilesFrom(sourceId, start, num, directory);
+function getSourceFiles(sourceId, start, num, date, directory) {
+  const files = SourceService.findFilesFrom(sourceId, start, num, date, directory);
 
   return {
     info: {

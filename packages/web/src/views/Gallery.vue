@@ -15,9 +15,14 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
-          <button v-else @click="toggleSelect()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-          </button>
+          <div v-else class="flex items-center"> 
+            <div v-if="showDateSelection" class="mr-8"> 
+              <input v-model="date" type="date" @blur="onDateBlur">
+            </div>
+            <button @click="toggleSelect()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+            </button>
+          </div>
           <slot name="controls"></slot>
         </div>
       </Teleport>
@@ -47,6 +52,9 @@
       </div>
     </div>
 
+    <div v-if="noPhotos" class="text-center">No photos found.</div>
+
+    
     
     <Lightbox ref="lightbox" v-show="showLightbox" @close="closeLightbox()"></Lightbox>
 
@@ -84,10 +92,12 @@ export default {
   props: {
     hasMorePhotos: Boolean,
     loadMore: Function,
+    showDateSelection: Boolean,
   },
   data() {
     return {
       albums: [],
+      date: null,
 
       galleryIndex: 0,
       galleryImageRefs: [],
@@ -100,6 +110,7 @@ export default {
 
       loadedPhotoIndex: 0,
       loadingPhotos: false,
+      noPhotos: false,
       numPhotosToLoad: 0,
 
       scrollPosition: 0,
@@ -154,7 +165,7 @@ export default {
     this.disableInfiniteScroll();
   },
   methods: {
-    async loadPhotos() {
+    async loadPhotos(firstLoad) {
       if (this.galleryIndex > this.loadedPhotoIndex) {
         console.debug('loadPhotos(): loading photos...');
         this.loadingPhotos = true;
@@ -183,28 +194,41 @@ export default {
         console.debug('loadPhotos(): photos loaded.');
         this.loadedPhotoIndex = this.galleryIndex;
 
-        setTimeout(() => {
-          window.$('#media').justifiedGallery('norewind').on('jg.complete', () => {
-            this.loadingPhotos = false;
+        if (!this.loadedPhotos.length) {
+          this.noPhotos = true;
+          this.loadingPhotos = false;
+        } else {
+          if (firstLoad) {
+            setTimeout(() => {
+              window.$('#media').justifiedGallery({
+                rowHeight: this.galleryRowHeight,
+                maxRowHeight: this.galleryRowHeight,
+              });
+
+              this.handleInfiniteScroll();
+            });
+          }
+
+          setTimeout(() => {
+            window.$('#media').justifiedGallery('norewind').on('jg.complete', () => {
+              this.loadingPhotos = false;
+            });
           });
-        });
+        }
       }
     },
-    init() {
+    reset() {
+      window.$('#media').justifiedGallery('destroy');
+      this.loadedPhotoIndex = 0;
+      this.galleryIndex = 0;
+      this.noPhotos = false;
+    },
+    async init() {
       const numImages = this.estimateNumImagesFitOnPage();
       this.galleryIndex = numImages;
       this.infiniteScrollNumImages = numImages;
 
-      this.loadPhotos();
-
-      setTimeout(() => {
-        window.$('#media').justifiedGallery({
-          rowHeight: this.galleryRowHeight,
-          maxRowHeight: this.galleryRowHeight,
-        });
-
-        this.handleInfiniteScroll();
-      });
+      this.loadPhotos(true);
     },
     openSlides(i) {
       this.$store.state.lightbox.photoIndex = i;
@@ -219,7 +243,12 @@ export default {
       return rows * imagesPerRow;
     },
     handleInfiniteScroll() {
-      this.infiniteScrollBound = this.infiniteScroll.bind(this);
+      if (!this.infiniteScrollBound) {
+        this.infiniteScrollBound = this.infiniteScroll.bind(this);
+        this.enableInfiniteScroll();
+      }
+    },
+    enableInfiniteScroll() {
       window.addEventListener('scroll', this.infiniteScrollBound);
     },
     disableInfiniteScroll() {
@@ -300,6 +329,7 @@ export default {
     openLightbox() {
       this.scrollPosition = window.pageYOffset;
       this.showLightbox = true;
+      this.disableInfiniteScroll();
     },
     closeLightbox() {
       this.showLightbox = false;
@@ -307,6 +337,7 @@ export default {
         window.scrollTo(0, this.scrollPosition);
         setTimeout(() => {
           this.scrollCurrentImageIntoView();
+          this.enableInfiniteScroll();
         });
       });
     },
@@ -364,6 +395,10 @@ export default {
       }
 
       this.loadingCreateAlbum = false;
+    },
+
+    onDateBlur() {
+      this.$emit('date', this.date);
     },
   },
 }

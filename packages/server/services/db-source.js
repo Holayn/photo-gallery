@@ -50,13 +50,18 @@ class DbSource {
     return [...paths];
   }
 
-  findFilesFrom(start, num, directory) {
-    if (directory) {
-      return this.db.prepare(`
+  findFilesFrom(start, num, date, directory) {
+    return this.db.prepare(`
         SELECT * FROM ${FILES_TABLE_NAME} 
-        WHERE processed != 0 AND path LIKE '${directory}%'
+        WHERE 
+        processed != 0 
+        ${directory ? `AND path LIKE '${directory}%'` : ''} 
+        ${date ? `AND date < ${date}` : ''} 
         ORDER BY date DESC LIMIT ?, ?
       `).all(start, num).map(f => new DbSourceFile(f));
+
+    if (directory) {
+      
     }
     return this.db.prepare(`
       SELECT * FROM ${FILES_TABLE_NAME} 
