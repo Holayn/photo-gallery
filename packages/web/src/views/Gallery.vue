@@ -54,7 +54,7 @@
 
     <div v-if="noPhotos" class="text-center">No photos found.</div>
 
-    
+
     
     <Lightbox ref="lightbox" v-show="showLightbox" @close="closeLightbox()"></Lightbox>
 
@@ -199,14 +199,12 @@ export default {
           this.loadingPhotos = false;
         } else {
           if (firstLoad) {
-            setTimeout(() => {
-              window.$('#media').justifiedGallery({
-                rowHeight: this.galleryRowHeight,
-                maxRowHeight: this.galleryRowHeight,
-              });
-
-              this.handleInfiniteScroll();
+            window.$('#media').justifiedGallery({
+              rowHeight: this.galleryRowHeight,
+              maxRowHeight: this.galleryRowHeight,
             });
+
+            this.handleInfiniteScroll();
           }
 
           setTimeout(() => {
