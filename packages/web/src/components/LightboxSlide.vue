@@ -6,8 +6,11 @@
         <Loading></Loading>
       </div>
     </div>
-    <div v-show="!loading" style="display: flex; justify-content: center; width: 100vw; height: 100vh;">
+    <div v-else="!loading" style="display: flex; justify-content: center; width: 100vw; height: 100vh;">
       <img :src="large" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+      <!-- HACK: Force browser to render base64 image. -->
+      <!-- Intermittent issue of where the browser just refuses to render the image. -->
+      <img :src="large" style="width: 0px; height: 0px;">
     </div>
   </div>
   <div v-else-if="photo.metadata.video" style="display: flex; align-items: center; justify-content: center; height: 100%;">
@@ -39,11 +42,6 @@ export default {
       large: null,
       preview: null,
     }
-  },
-  computed: {
-    token() {
-      return this.$store.state.token;
-    },
   },
   async mounted() {
     if (this.photo.data?.preview) {
