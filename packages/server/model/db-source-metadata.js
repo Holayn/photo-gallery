@@ -8,7 +8,7 @@ const path = require('path')
 const MIME_VIDEO_REGEX = /^video\/.*$/
 
 // standard EXIF date format, which is different from ISO8601
-const EXIF_DATE_FORMAT = 'YYYY:MM:DD HH:mm:ssZ'
+const EXIF_DATE_FORMAT = 'YYYY:MM:DD HH:mm:ss'
 
 // infer dates from files with a date-looking filename
 const FILENAME_DATE_REGEX = /\d{4}[_\-.\s]?(\d{2}[_\-.\s]?){5}\..{3,4}/
