@@ -1,6 +1,8 @@
 const express = require('express');
 const axios = require('axios');
 const dayjs = require('dayjs');
+const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 
 const AlbumService = require('../services/album');
 const ApiService = require('../services/api');
@@ -50,11 +52,35 @@ const requiredBody = (properties) => {
 const DEFAULT_NUM_TO_LOAD = 50;
 
 const router = express.Router();
+router.use(session({
+  cookie: { 
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    secure: process.env.ENV !== 'development',
+  },
+  name: 'session',
+  resave: false,
+  rolling: true,
+
+  saveUninitialized: false,
+  secret: AuthService.getSecret(),
+  store: new SQLiteStore({
+    db: 'sessions.db',
+  }),
+}));
 
 router.post('/auth', requiredBody(['password']), asyncHandler(async (req, res) => {
   if (UserService.isValidUser('admin', req.body.password)) {
-    res.send({
-      token: await AuthService.generateToken('admin'),
+    req.session.regenerate(err => {
+      if (err) next(err);
+      req.session.user = {
+        name: 'admin',
+        userAgent: req.headers['user-agent'],
+      }
+      req.session.save(err => {
+        if (err) return next(err);
+        res.sendStatus(200);
+      });
     });
   } else {
     res.sendStatus(401);

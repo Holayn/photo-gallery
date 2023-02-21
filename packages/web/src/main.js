@@ -29,8 +29,6 @@ const router = createRouter({
 });
 
 window.addEventListener('unauthorized', () => {
-  Cookies.remove('token');
-
   // Force the user to re-authenticate.
   window.location.reload();
 });
@@ -41,33 +39,21 @@ router.beforeEach(async (to) => {
     return true;
   }
 
-  if (!store.state.authToken) {
-    const existingToken = Cookies.get('token');
-    if (existingToken) {
+  if (store.state.isAdmin === null) {
       // Verify token
-      if (await authVerify()) {
-        store.dispatch('setAuthToken', existingToken);
-        store.dispatch('setIsAdmin', true);
-        return;
-      } else {
-        Cookies.remove('token');
-      }
+    if (await authVerify()) {
+      store.dispatch('setIsAdmin', true);
+      return;
     }
     
     const password = prompt('Password:');
     if (password !== null) {
-      const { data, error } = await auth(password);
+      const { error } = await auth(password);
       if (error) {
         alert('Authentication failed.');
         return false;
       } else {
-        const { token } = data;
-        store.dispatch('setAuthToken', token);
         store.dispatch('setIsAdmin', true);
-        Cookies.set('token', token, { 
-          sameSite: 'Strict', 
-          secure: true
-        });
       }
     } else {
       alert('Password is required.');
