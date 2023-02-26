@@ -59,6 +59,7 @@ router.use(session({
     secure: process.env.ENV !== 'development',
   },
   name: 'session',
+  proxy: true,
   resave: false,
   rolling: true,
 
