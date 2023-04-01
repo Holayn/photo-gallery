@@ -31,6 +31,7 @@ app.use(helmet.contentSecurityPolicy({
     upgradeInsecureRequests: null,
   },
 }));
+app.set('trust proxy', '127.0.0.1');
 
 const morganMiddleware = morgan(
   ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"',

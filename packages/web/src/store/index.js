@@ -12,7 +12,7 @@ export default createStore({
     },
 
     authToken: '',
-    isAdmin: false,
+    isAdmin: null,
   },
   actions: {
     addPhotos(context, { photos, sourceId = null }) {
