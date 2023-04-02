@@ -9,8 +9,7 @@ import Source from './views/Source.vue';
 import SourceDirectories from './views/SourceDirectories.vue';
 import store from './store'
 
-import Cookies from 'js-cookie'
-import { auth, authVerify } from './services/api';
+import { auth, authVerify, error } from './services/api';
 import { setDocumentTitle } from './utils';
 
 const routes = [
@@ -63,7 +62,14 @@ router.beforeEach(async (to) => {
   }
 });
 
-createApp(App)
+const app = createApp(App);
+
+app.config.errorHandler = (err, instance, info) => {
+  error(err);
+}
+
+app
   .use(store)
   .use(router)
   .mount('#app');
+

@@ -25,6 +25,18 @@ class ApiError extends Error {
   }
 }
 
+export function error(error) {
+  return fetcher.fetch(`${BASE}/client-error`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      error: `${error.message}\n\nstack:\n${error.stack}`,
+    }),
+  });
+}
+
 export function auth(password) {
   return fetcher.fetch(`${BASE}/auth`, {
     method: 'POST',

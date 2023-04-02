@@ -1,5 +1,11 @@
+const axios = require('axios');
 const { createLogger, format, transports } = require('winston');
 require('winston-daily-rotate-file');
+require('dotenv').config();
+
+const infoAndWarnFilter = format((info, opts) => {
+  return info.level === "info" || info.level === "warn" ? info : false;
+});
 
 class Logger {
   _logger;
@@ -16,10 +22,14 @@ class Logger {
     this._logger.http(message, data);
   }
 
-  error(message, data) {
+  error(message, data, email = true) {
     if (!this._logger) { throw new Error('Logger not initialized!'); }
 
     this._logger.error(message, data);
+
+    if (email) {
+      this._emailError(message);
+    }
   }
 
   init(isServerLogger) {
@@ -46,6 +56,7 @@ class Logger {
           level: 'info',
           maxSize: '20m',
           maxFiles: '14d',
+          format: format.combine(infoAndWarnFilter(), format.timestamp()),
         }),
         new transports.DailyRotateFile({ 
           filename: `./log/%DATE%.log`,
@@ -54,6 +65,22 @@ class Logger {
         }),
       ] : [new transports.Console()],
     });
+  }
+
+  async _emailError(error) {
+    try {
+      await axios(process.env.EMAIL_SERVICE_URL, {
+        method: 'post',
+        data: {
+          emailFrom: 'kai452589@gmail.com',
+          emailTo: 'kai452589@gmail.com',
+          subject: 'photo-gallery server error',
+          text: error,
+        },
+      });
+    } catch (e) {
+      this._logger.error(e, {}, false);
+    }
   }
 }
 

@@ -71,6 +71,19 @@ router.use(session({
   }),
 }));
 
+router.post('/client-error', asyncHandler(async (req, res) => {
+  await axios(process.env.EMAIL_SERVICE_URL, {
+    method: 'post',
+    data: {
+      emailFrom: 'kai452589@gmail.com',
+      emailTo: 'kai452589@gmail.com',
+      subject: 'photo-gallery web error',
+      text: req.body.error,
+    },
+  });
+  res.sendStatus(200);
+}));
+
 router.post('/auth', requiredBody(['password']), asyncHandler(async (req, res) => {
   if (UserService.isValidUser('admin', req.body.password)) {
     req.session.regenerate(err => {

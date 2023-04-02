@@ -47,7 +47,6 @@ app.use('/', express.static(path.join(__dirname, '../web/dist')));
 app.use('/api', routes);
 
 app.use((err, req, res, next) => {
-  console.error(err);
   logger.error(err);
   res.sendStatus(500);
   next();
