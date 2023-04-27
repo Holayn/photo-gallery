@@ -98,7 +98,10 @@ router.post('/auth', requiredBody(['password']), asyncHandler(async (req, res) =
       });
     });
   } else {
-    res.sendStatus(401);
+    // A failed auth shouldn't result in a 401, because the user wasn't denied access to this route.
+    res.send({
+      success: false,
+    });
   }
 }));
 router.get('/auth/verify', AuthController.authAdmin, asyncHandler(async (req, res) => {

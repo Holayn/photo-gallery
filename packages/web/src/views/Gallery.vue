@@ -4,7 +4,7 @@
       <div class="flex-auto break-all">
         <slot name="heading"></slot>
       </div>
-      <Teleport to="#header">
+      <Teleport to="#headerAdditionalControls">
         <div v-if="$store.state.isAdmin" class="flex gap-4 justify-end">
           <div v-if="isSelectionMode" class="flex gap-2 items-center">
             <div>Selected: {{ Object.keys(selected).length }}</div>
