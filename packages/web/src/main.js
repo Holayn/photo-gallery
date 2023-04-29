@@ -13,6 +13,8 @@ import store from './store'
 import { authVerify, error } from './services/api';
 import { setDocumentTitle } from './utils';
 
+import './style.css';
+
 const routes = [
   { name: 'home', path: '/', redirect: { name: 'albums' } },
   { name: 'all', path: '/gallery', component: Gallery },
