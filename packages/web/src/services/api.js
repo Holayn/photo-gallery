@@ -26,8 +26,9 @@ class ApiError extends Error {
 }
 
 function apiFilesResponseToPhotos(files) {
-  return files.map(({ date, sourceFileId, metadata }) => ({ 
+  return files.map(({ date, sourceId, sourceFileId, metadata }) => ({ 
     date, 
+    sourceId,
     sourceFileId, 
     metadata: {
       date: metadata.date,
