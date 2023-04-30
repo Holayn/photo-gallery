@@ -4,7 +4,10 @@
       <Loading></Loading>
     </div>
     <div v-else>
-      <h1 class="text-5xl">Directories ({{ source?.alias }})</h1>
+      <h1 class="flex flex-col">
+        <div class="text-5xl">Directories</div>
+        <div class=text-xl>({{ source?.alias }})</div>
+      </h1>
       <div class="mt-4 pb-4">
         <Loading v-if="loadingDirectories"></Loading>
         <div v-else class="flex flex-col items-start gap-2">
