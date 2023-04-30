@@ -25,6 +25,28 @@ class ApiError extends Error {
   }
 }
 
+function apiFilesResponseToPhotos(files) {
+  return files.map(({ date, sourceFileId, metadata }) => ({ 
+    date, 
+    sourceFileId, 
+    metadata: {
+      date: metadata.date,
+      video: metadata.video || false,
+      orientation: metadata.orientation,
+      width: metadata.with,
+      height: metadata.height,
+      fileSize: metadata.fileSize,
+      fileName: metadata.fileName,
+      location: {
+        lat: metadata.location.lat,
+        long: metadata.location.long,
+        altitude: metadata.location.altitude,
+      },
+      device: metadata.device,
+    },
+  }))
+}
+
 export function error(error) {
   return fetcher.fetch(`${BASE}/client-error`, {
     method: 'POST',
@@ -55,12 +77,19 @@ export async function authVerify() {
 }
 
 export async function getSources() {
-  return (await fetcher.fetch(`${BASE}/sources`)).data;
+  const res = await fetcher.fetch(`${BASE}/sources`);
+  if (res.data) {
+    return res.data.map(({ id, alias, path }) => ({ id, alias, path }));
+  }
 }
 export async function getSource(sourceId) {
   const res = await fetcher.fetch(`${BASE}/source/info?id=${sourceId}`);
   if (res.data) {
-    return res.data;
+    return {
+      id: res.data.id,
+      alias: res.data.alias,
+      path: res.data.path,
+    }
   } else if (res.error) {
     throw new ApiError(res.error.status);
   }
@@ -79,7 +108,7 @@ export async function getPhotosFromSource(sourceId, start, num, date, directory)
     const { info, files } = res.data;
     return {
       info,
-      photos: files,
+      photos: apiFilesResponseToPhotos(files),
     }
   } else if (res.error) {
     throw new ApiError(res.error.status);
@@ -95,19 +124,26 @@ export async function getPhotosFromAlbum(albumId, start, num, albumToken) {
     const { info, files } = res.data;
     return {
       info,
-      photos: files,
+      photos: apiFilesResponseToPhotos(files),
     }
   } else if (res.error) {
     throw new ApiError(res.error.status);
   }
 }
 export async function getAlbums() {
-  return (await fetcher.fetch(`${BASE}/albums`)).data;
+  const res = await fetcher.fetch(`${BASE}/albums`);
+  if (res.data) {
+    return res.data.map(({ id, name }) => ({ id, name }));
+  }
 }
 export async function getAlbum(albumId, albumToken) {
   const res = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${attachAlbumToken(albumToken)}`);
   if (res.data) {
-    return res.data;
+    return {
+      id: res.data.id,
+      name: res.data.name,
+      token: res.data.token,
+    }
   } else if (res.error) {
     throw new ApiError(res.error.status, albumToken ? 'Bad album link' : null);
   }
@@ -138,7 +174,12 @@ export function addToAlbum(albumId, files) {
 }
 
 export async function getLocationInfo(lat, long) {
-  return (await fetcher.fetch(`${BASE}/location?lat=${lat}&long=${long}`)).data;
+  const res = await fetcher.fetch(`${BASE}/location?lat=${lat}&long=${long}`);
+  if (res.data) {
+    return {
+      label: res.data.label,
+    }
+  }
 }
 
 export function toPhotoUrl(photo, size, albumToken) {
