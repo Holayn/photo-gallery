@@ -4,11 +4,11 @@
     <div class="mt-4">
       <Loading v-if="loading"></Loading>
       <div v-else class="grid gap-4 w-full min-w-0">
-        <div v-for="source in sources" :key="source.id" class="flex flex-wrap gap-8 px-6 py-4 bg-orange-100 rounded-md">
+        <div v-for="source in sources" :key="source.id" class="flex flex-wrap px-6 py-4 bg-slate-50">
           <p class="flex-auto">{{ source.alias }} ({{ source.path }})</p>
-          <div class="flex gap-4">
-            <button @click="openSource(source)">View All</button>
-            <button  @click="openSource(source, true)">View By Directory</button>
+          <div class="flex gap-4 mt-2">
+            <a class="btn" @click="openSource(source)">View All</a>
+            <a class="btn" @click="openSource(source, true)">View By Directory</a>
           </div>
         </div>
       </div>

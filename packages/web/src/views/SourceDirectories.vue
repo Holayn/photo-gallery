@@ -7,10 +7,10 @@
       <h1 class="text-5xl">Directories ({{ source?.alias }})</h1>
       <div class="mt-4 pb-4">
         <Loading v-if="loadingDirectories"></Loading>
-        <div v-else class="grid gap-2">
-          <button v-for="directory in directories" :key="source.id" class="px-6 py-2 bg-orange-100 rounded-md cursor-pointer" @click="openSourceDirectory(directory)">
-            <p>{{ directory }}</p>
-          </button>
+        <div v-else class="flex gap-2">
+          <a v-for="directory in directories" :key="directory.id" class="btn px-6 py-2 h-full" @click="openSourceDirectory(directory)">
+            {{ directory }}
+          </a>
         </div>
       </div>
     </div>

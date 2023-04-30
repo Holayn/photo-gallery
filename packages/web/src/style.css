@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .input {
+    @apply border border-gray-200 h-8
+  }
+
+  .btn {
+    @apply px-4 py-1 h-8 bg-orange-100 rounded-md cursor-pointer
+  }
+}

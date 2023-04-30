@@ -8,7 +8,10 @@
         <div id="headerAdditionalControls"></div>
       </header>
 
-      <router-view></router-view>
+      <div class="py-12">
+        <router-view></router-view>
+      </div>
+     
 
       <nav v-if="showSidebar" class="fixed z-50 top-0 left-0 w-full h-full bg-black/25" @click="showSidebar = false">
         <div class="bg-white px-8 py-4 h-full" style="width: 256px;" @click.stop>

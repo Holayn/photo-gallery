@@ -8,8 +8,8 @@
         <div v-if="$store.state.isAdmin" class="flex gap-4 justify-end">
           <div v-if="isSelectionMode" class="flex gap-2 items-center">
             <div>Selected: {{ Object.keys(selected).length }}</div>
-            <button class="px-2 py-1 h-full bg-orange-100" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Existing Album</button>
-            <button class="px-2 py-1 h-full bg-orange-100" :disabled="!Object.keys(selected).length" @click="createAlbumFromSelected()">Create Album</button>
+            <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Existing Album</button>
+            <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="createAlbumFromSelected()">Create Album</button>
             <Loading v-if="loadingCreateAlbum"></Loading>
             <button @click="toggleSelect()">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -28,7 +28,7 @@
       </Teleport>
     </div>
 
-    <div id="media" class="justified-gallery">  
+    <div id="media" class="justified-gallery mt-4">  
       <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" @click.prevent>
         <img :src="photo.data?.preview" @click="isSelectionMode ? select(photo) : openSlides(i)" @load="rendered(i)" @error="rendered(i)">
         <div v-if="photo.metadata.video" class="overlay">
@@ -61,9 +61,9 @@
     <Modal v-if="showAddToExistingAlbum" @close="showAddToExistingAlbum = false">
       <Loading v-if="loadingAlbums"></Loading>
       <div v-else class="grid grid-cols-3 gap-1">
-        <div v-for="album in albums" :key="album.id" class="px-6 py-4 bg-orange-100 rounded-md cursor-pointer" @click="addToAlbumFromSelected(album.id)">
+        <button v-for="album in albums" :key="album.id" class="btn px-6 py-4" @click="addToAlbumFromSelected(album.id)">
           {{ album.name }}
-        </div>
+        </button>
       </div>
     </Modal>
   </div>
