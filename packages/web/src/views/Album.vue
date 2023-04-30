@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="mt-4">
-      <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer">
+      <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer" :show-lightbox="showLightbox">
         <template #heading>
           <h1 class="flex-auto text-5xl">
             <Loading v-if="loadingAlbumInfo"></Loading>
@@ -51,6 +51,10 @@ export default {
   },
   props: {
     albumId: String,
+    showLightbox: {
+      type: Boolean,
+      default: false,
+    }
   },
   data() {
     return {

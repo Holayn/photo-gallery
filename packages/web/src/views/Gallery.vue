@@ -93,6 +93,10 @@ export default {
     hasMorePhotos: Boolean,
     loadMore: Function,
     showDateSelection: Boolean,
+    showLightbox: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -115,7 +119,6 @@ export default {
 
       scrollPosition: 0,
       showAddToExistingAlbum: false,
-      showLightbox: false,
 
       isSelectionMode: false,
       selected: {},
@@ -326,11 +329,11 @@ export default {
 
     openLightbox() {
       this.scrollPosition = window.pageYOffset;
-      this.showLightbox = true;
       this.disableInfiniteScroll();
+      this.$router.push({ path: this.$route.path, query: { showLightbox: true } });
     },
     closeLightbox() {
-      this.showLightbox = false;
+      this.$router.push({ path: this.$route.path });
       this.$nextTick(() => {
         window.scrollTo(0, this.scrollPosition);
         setTimeout(() => {

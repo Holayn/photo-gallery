@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="mt-4">
-      <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer" :show-date-selection="true" @date="onDateUpdate($event)">
+      <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer" :show-date-selection="true" :show-lightbox="showLightbox" @date="onDateUpdate($event)">
         <template #heading>
           <h1 class="flex-auto text-5xl">
             <Loading v-if="loadingSourceInfo"></Loading>
@@ -32,6 +32,10 @@ export default {
   },
   props: {
     directory: String,
+    showLightbox: {
+      type: Boolean,
+      default: false,
+    },
     sourceId: String,
   },
   data() {

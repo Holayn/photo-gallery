@@ -11,7 +11,7 @@ import SourceDirectories from './views/SourceDirectories.vue';
 import store from './store'
 
 import { authVerify, error } from './services/api';
-import { setDocumentTitle } from './utils';
+import { removeURLParameter, setDocumentTitle } from './utils';
 
 import './style.css';
 
@@ -19,12 +19,21 @@ const routes = [
   { name: 'home', path: '/', redirect: { name: 'albums' } },
   { name: 'all', path: '/gallery', component: Gallery },
   { name: 'albums', path: '/albums', component: Albums },
-  { name: 'album', path: '/album/:albumId', component: Album, props: true },
+  { name: 'album', path: '/album/:albumId', component: Album, props: route => ({
+    ...route.params,
+    showLightbox: route.query.showLightbox === 'true',
+  })},
   { name: 'login', path: '/login', component: Login },
   { name: 'sources', path: '/sources', component: Sources },
-  { name: 'source', path: '/source/:sourceId/:directory?', component: Source, props: true },
+  { name: 'source', path: '/source/:sourceId/:directory?', component: Source, props: route => ({
+    ...route.params,
+    showLightbox: route.query.showLightbox === 'true',
+  })},
   { name: 'sourceDirectories', path: '/source/:sourceId/directories', component: SourceDirectories, props: true },
 ];
+
+// Ensure the page isn't loaded with this query parameter set.
+history.replaceState({}, "", removeURLParameter(location.href, 'showLightbox'));
 
 const router = createRouter({
   history: createWebHashHistory(),
