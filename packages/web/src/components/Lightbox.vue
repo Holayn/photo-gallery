@@ -65,6 +65,9 @@
                 {{ currentPhotoMetadata.path }}
               </p>
             </div>
+            <div>
+              <a class="text-sm underline" :href="currentPhotoOriginalUrl" target="_blank">View Original</a>
+            </div>
           </div>
         </div>
       </div>
@@ -86,7 +89,7 @@ dayjs.extend(LocalizedFormat);
 import LightboxSlide from './LightboxSlide.vue';
 import Modal from './Modal.vue';
 
-import { getLocationInfo } from '../services/api';
+import { getLocationInfo, PHOTO_SIZES } from '../services/api';
 
 export default {
   name: 'Lightbox',
@@ -117,9 +120,12 @@ export default {
     }
   },
   computed: {
+    currentPhoto() {
+      return this.$store.state.photos[this.$store.state.lightbox.photoIndex];
+    },
     currentPhotoMetadata() {
-      if (this.$store.state.photos[this.$store.state.lightbox.photoIndex]) {
-        const { date, fileName, fileSize, width, height, orientation, location, device } = this.$store.state.photos[this.$store.state.lightbox.photoIndex].metadata;
+      if (this.currentPhoto) {
+        const { date, fileName, fileSize, width, height, orientation, location, device } = this.currentPhoto.metadata;
         const parsedDate = dayjs(date);
         return {
           date: {
@@ -133,7 +139,7 @@ export default {
           orientation,
           location,
           device,
-          path: this.$store.state.photos[this.$store.state.lightbox.photoIndex].sourceFileId,
+          path: this.currentPhoto.sourceFileId,
         };
       } else {
         return {};
@@ -142,6 +148,9 @@ export default {
     currentPhotoLocationLink() {
       return `https://www.google.com/maps/place/${this.currentPhotoMetadata.location.lat},${this.currentPhotoMetadata.location.long}`;
     },
+    currentPhotoOriginalUrl() {
+      return this.currentPhoto.urls[PHOTO_SIZES.ORIGINAL];
+    }
   },
   watch: {
     showMetadata: {
