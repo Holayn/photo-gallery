@@ -1,5 +1,5 @@
 class FileMetadata {
-  constructor ({
+  constructor({
     date,
     video,
     orientation,
@@ -22,7 +22,7 @@ class FileMetadata {
     this.location = location;
     this.device = device;
 
-    if (orientation === 'Rotate 90 CW' && this.width > this.height) {
+    if (orientation === "Rotate 90 CW" && this.width > this.height) {
       this.width = height;
       this.height = width;
     }

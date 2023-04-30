@@ -1,18 +1,18 @@
-const DbSource = require('./db-source');
-const logger = require('../logger');
+const DbSource = require("./db-source");
+const logger = require("../logger");
 
-const Source = require('../model/source');
-const File = require('../model/file');
-const FileMetadata = require('../metadata/file-metadata');
+const Source = require("../model/source");
+const File = require("../model/file");
+const FileMetadata = require("../metadata/file-metadata");
 
-class SourceService {
+module.exports = {
   /**
-   * 
-   * @param {String} source 
+   *
+   * @param {String} source
    * @param {String} alias
    * @returns {String} message
    */
-   addSource(sourcePath, alias) {
+  addSource(sourcePath, alias) {
     const existingSource = Source.getSourceByPathOrAlias(sourcePath, alias);
 
     if (!existingSource) {
@@ -21,7 +21,7 @@ class SourceService {
     } else {
       logger.error(`Path (${sourcePath}) or alias (${alias}) already exists.`);
     }
-  }
+  },
 
   async syncSource(alias) {
     logger.info(`Syncing ${alias}...`);
@@ -29,27 +29,29 @@ class SourceService {
     if (source) {
       const stats = {
         updated: 0,
-      }
-      
+      };
+
       // Get all files from this source.
       const files = File.findBySourceId(source.id);
 
       // Then update its info using info from the DbSource.
       const dbSource = new DbSource(source);
 
-      files.forEach(f => {
+      files.forEach((f) => {
         const dbSourceFile = dbSource.getFile(f.sourceFileId);
         if (dbSourceFile) {
           let diff = false;
 
           if (f.date !== dbSourceFile.date) {
             diff = true;
-            f.date = dbSourceFile.date;
           }
 
           if (diff) {
-            File.update(f);
-            stats.updated++;
+            File.update({
+              ...f,
+              date: dbSourceFile.date,
+            });
+            stats.updated += 1;
             logger.info(`Updating file #${f.id} (${f.sourceFileId}).`);
           }
         }
@@ -59,37 +61,44 @@ class SourceService {
     } else {
       logger.error(`Source with alias ${alias} does not exist.`);
     }
-  }
+  },
 
-  deleteSource(alias) {
-    console.log('Not implemented');
-  }
+  deleteSource() {
+    console.log("Not implemented");
+  },
 
   getSource(sourceId) {
     return Source.get(sourceId);
-  }
+  },
 
   findAll() {
     return Source.findAll();
-  }
+  },
 
-  findFilesFrom(sourceId, start, num, date, directory) {
+  findFilesFrom(sourceId, start, num, startDateRange, directory) {
     const source = Source.get(sourceId);
-    if (source.type === 'local') {
+    if (source.type === "local") {
       const dbSource = new DbSource(source);
-      const dbSourceFiles = dbSource.findFilesFrom(start, num, date, directory);
+      const dbSourceFiles = dbSource.findFilesFrom(
+        start,
+        num,
+        startDateRange,
+        directory
+      );
       return dbSourceFiles.map(({ date, path, metadata }) => ({
         date,
-        sourceId: this.id,
+        sourceId,
         sourceFileId: path,
         metadata: new FileMetadata(metadata),
       }));
     }
-  }
+
+    throw new Error("Unexpected source type");
+  },
 
   getSourceFile(sourceId, sourceFileId) {
     const source = Source.get(sourceId);
-    if (source.type === 'local') {
+    if (source.type === "local") {
       const dbSource = new DbSource(source);
       const dbSourceFile = dbSource.getFile(sourceFileId);
       return {
@@ -99,23 +108,27 @@ class SourceService {
         metadata: new FileMetadata(dbSourceFile.metadata),
       };
     }
-  }
+
+    throw new Error("Unexpected source type");
+  },
 
   getSourceFileData(sourceId, id, size) {
     const source = Source.get(sourceId);
-    if (source.type === 'local') {
+    if (source.type === "local") {
       const dbSource = new DbSource(source);
       return dbSource.getFileData(id, size);
     }
-  }
+
+    throw new Error("Unexpected source type");
+  },
 
   getDirectories(sourceId) {
     const source = Source.get(sourceId);
-    if (source.type === 'local') {
+    if (source.type === "local") {
       const dbSource = new DbSource(source);
       return dbSource.getDirectories();
     }
-  }
-}
 
-module.exports = new SourceService();
+    throw new Error("Unexpected source type");
+  },
+};

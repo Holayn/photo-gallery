@@ -1,5 +1,5 @@
-const AlbumService = require('./album');
-const SourceService = require('./source');
+const AlbumService = require("./album");
+const SourceService = require("./source");
 
 function getAlbumFiles(albumId, start, num) {
   const files = AlbumService.getAlbumFiles(albumId, start, num);
@@ -8,34 +8,41 @@ function getAlbumFiles(albumId, start, num) {
     info: {
       hasMorePhotos: files.length >= num,
     },
-    files: files.map(f => {
-      const { date, sourceId, sourceFileId, metadata } = SourceService.getSourceFile(f.sourceId, f.sourceFileId);
+    files: files.map((f) => {
+      const { date, sourceId, sourceFileId, metadata } =
+        SourceService.getSourceFile(f.sourceId, f.sourceFileId);
       return {
-        date, 
-        sourceId, 
-        sourceFileId, 
+        date,
+        sourceId,
+        sourceFileId,
         metadata,
-      }
+      };
     }),
-  }
+  };
 }
 
-function getSourceFiles(sourceId, start, num, date, directory) {
-  const files = SourceService.findFilesFrom(sourceId, start, num, date, directory);
+function getSourceFiles(sourceId, start, num, startDateRange, directory) {
+  const files = SourceService.findFilesFrom(
+    sourceId,
+    start,
+    num,
+    startDateRange,
+    directory
+  );
 
   return {
     info: {
       hasMorePhotos: files.length >= num,
     },
-    files: files.map(({ date, sourceId, sourceFileId, metadata }) => {
-      return {
-        date, 
-        sourceId, 
-        sourceFileId, 
+    files: files.map(
+      ({ date, sourceId: fileSourceId, sourceFileId, metadata }) => ({
+        date,
+        sourceId: fileSourceId,
+        sourceFileId,
         metadata,
-      }
-    }),
-  }
+      })
+    ),
+  };
 }
 
 function getDirectories(sourceId) {
@@ -46,4 +53,4 @@ module.exports = {
   getAlbumFiles,
   getDirectories,
   getSourceFiles,
-}
+};

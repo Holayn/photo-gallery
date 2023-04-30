@@ -1,8 +1,7 @@
-const AlbumService = require('../services/album');
-const Album = require('../model/album');
-const AlbumFile = require('../model/album-file');
-const File = require('../model/file');
-
+const AlbumService = require("../services/album");
+const Album = require("../model/album");
+const AlbumFile = require("../model/album-file");
+const File = require("../model/file");
 
 async function validateAdmin(req) {
   return req.session.user;
@@ -18,9 +17,9 @@ const AuthController = {
   },
 
   async authPhoto(req, res, next) {
-    const sourceFileId = req.query.sourceFileId;
-    const sourceId = req.query.sourceId;
-    const albumToken = req.query.albumToken;
+    const { sourceFileId } = req.query;
+    const { sourceId } = req.query;
+    const { albumToken } = req.query;
 
     if (albumToken) {
       const file = File.getBySource(sourceId, sourceFileId);
@@ -47,7 +46,7 @@ const AuthController = {
   },
 
   async authAlbum(req, res, next) {
-    const albumToken = req.query.albumToken;
+    const { albumToken } = req.query;
 
     if (albumToken) {
       const albumId = req.query.id;
@@ -63,6 +62,6 @@ const AuthController = {
       res.sendStatus(401);
     }
   },
-}
+};
 
 module.exports = AuthController;

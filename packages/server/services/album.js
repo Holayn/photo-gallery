@@ -1,10 +1,10 @@
-const crypto = require('crypto');
+const crypto = require("crypto");
 
-const SourceService = require('./source');
+const SourceService = require("./source");
 
-const Album = require('../model/album');
-const AlbumFile = require('../model/album-file');
-const File = require('../model/file');
+const Album = require("../model/album");
+const AlbumFile = require("../model/album-file");
+const File = require("../model/file");
 
 module.exports = {
   createAlbum(name, files = {}) {
@@ -13,20 +13,26 @@ module.exports = {
   },
 
   addToAlbum(albumId, files = {}) {
-    for (const file in files) {
+    Object.keys(files).forEach((file) => {
       const f = files[file];
       const existingFile = File.getBySource(f.sourceId, f.sourceFileId);
       if (existingFile) {
-        const existsInAlbum = AlbumFile.getByAlbumIdFileId(albumId, existingFile.id);
+        const existsInAlbum = AlbumFile.getByAlbumIdFileId(
+          albumId,
+          existingFile.id
+        );
         if (!existsInAlbum) {
           AlbumFile.insert(albumId, existingFile.id);
         }
       } else {
-        const sourceFile = SourceService.getSourceFile(f.sourceId, f.sourceFileId);
+        const sourceFile = SourceService.getSourceFile(
+          f.sourceId,
+          f.sourceFileId
+        );
         const newFileId = File.insert(sourceFile);
         AlbumFile.insert(albumId, newFileId);
       }
-    }
+    });
   },
 
   findAllAlbums() {
@@ -39,11 +45,11 @@ module.exports = {
 
   getAlbumFiles(id, start, num) {
     const albumFiles = AlbumFile.findByAlbumId(id);
-    const fileIds = albumFiles.map(f => f.file_id);
+    const fileIds = albumFiles.map((f) => f.file_id);
     return File.findByIds(fileIds, start, num);
   },
-}
+};
 
 function generateAlbumToken() {
-  return crypto.randomBytes(16).toString('hex');
+  return crypto.randomBytes(16).toString("hex");
 }

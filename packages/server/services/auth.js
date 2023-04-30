@@ -1,7 +1,7 @@
-require('dotenv').config();
+require("dotenv").config();
 
 if (!process.env.SESSION_SECRET) {
-  throw new Error('SESSION_SECRET not defined in .env!');
+  throw new Error("SESSION_SECRET not defined in .env!");
 }
 
 function getSecret() {
@@ -10,4 +10,4 @@ function getSecret() {
 
 module.exports = {
   getSecret,
-}
+};

@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "start": "node index.js",
-    "dev": "ENV=development nodemon --inspect index.js"
+    "dev": "ENV=development nodemon --inspect index.js",
+    "lint": "prettier --write . && eslint ./ --fix"
   },
   "dependencies": {
     "axios": "^1.2.2",
@@ -25,6 +26,11 @@
     "yargs": "^17.5.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.19"
+    "eslint": "^8.39.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "nodemon": "^2.0.19",
+    "prettier": "^2.8.8"
   }
 }
