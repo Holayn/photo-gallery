@@ -8,6 +8,6 @@
   }
 
   .btn {
-    @apply px-4 py-1 h-8 bg-orange-100 rounded-md cursor-pointer
+    @apply px-4 py-1 bg-orange-100 rounded-md cursor-pointer
   }
 }

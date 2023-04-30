@@ -3,10 +3,10 @@
     <h1 class="text-5xl">Albums</h1>
     <div class="mt-4">
       <Loading v-if="loading"></Loading>
-      <div v-else class="flex flex-wrap gap-4">
-        <a v-for="album in albums" :key="album.id" class="btn px-6 py-4 h-full" @click="openAlbum(album)">
+      <div v-else class="flex flex-col items-start gap-2">
+        <div v-for="album in albums" :key="album.id" class="btn block px-8 py-2" @click="openAlbum(album)">
           {{ album.name }}
-        </a>
+        </div>
       </div>
     </div>
   </div>
