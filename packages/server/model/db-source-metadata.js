@@ -1,8 +1,6 @@
-const _ = require('lodash')
 const dayjs = require('dayjs')
 const customParseFormat = require('dayjs/plugin/customParseFormat')
 dayjs.extend(customParseFormat)
-const path = require('path')
 
 // mime type for videos
 const MIME_VIDEO_REGEX = /^video\/.*$/
@@ -10,38 +8,19 @@ const MIME_VIDEO_REGEX = /^video\/.*$/
 // standard EXIF date format, which is different from ISO8601
 const EXIF_DATE_FORMAT = 'YYYY:MM:DD HH:mm:ss'
 
-// infer dates from files with a date-looking filename
-const FILENAME_DATE_REGEX = /\d{4}[_\-.\s]?(\d{2}[_\-.\s]?){5}\..{3,4}/
-
-// dayjs ignores non-numeric characters when parsing
-const FILENAME_DATE_FORMAT = 'YYYYMMDD HHmmss'
-
 class DbSourceMetadata {
-  constructor (exiftool, opts) {
-    // standardise metadata
-    this.date = getDate(exiftool)
-    this.caption = caption(exiftool)
-    this.keywords = keywords(exiftool)
-    this.people = people(exiftool)
-    this.video = video(exiftool)
-    this.animated = animated(exiftool)
-    this.rating = rating(exiftool)
-    const size = dimensions(exiftool)
+  constructor (exif) {
+    this.date = getDate(exif)
+    this.video = video(exif)
+    const size = dimensions(exif)
     this.width = size.width
     this.height = size.height
-    this.orientation = tagValue(exiftool, 'EXIF', 'Orientation');
-    this.exif = opts ? (opts.embedExif ? exiftool.EXIF : undefined) : undefined
-    this.appleLivePhoto = !!tagValue(exiftool, 'QuickTime', 'LivePhotoAuto');
-    this.fileSize = tagValue(exiftool, 'File', 'FileSize');
-    this.fileName = tagValue(exiftool, 'File', 'FileName');
-    this.location = getLocation(exiftool);
-    this.device = getDevice(exiftool);
-    // metadata could also include fields like
-    //  - lat = 51.5
-    //  - long = 0.12
-    //  - country = "England"
-    //  - city = "London"
-    //  - aperture = 1.8
+    this.orientation = tagValue(exif, 'EXIF', 'Orientation');
+    this.appleLivePhoto = !!tagValue(exif, 'QuickTime', 'LivePhotoAuto');
+    this.fileSize = tagValue(exif, 'File', 'FileSize');
+    this.fileName = tagValue(exif, 'File', 'FileName');
+    this.location = getLocation(exif);
+    this.device = getDevice(exif);
   }
 }
 
@@ -49,9 +28,6 @@ function getDate (exif) {
   // first, check if there's a valid date in the metadata
   const metadate = getMetaDate(exif)
   if (metadate) return metadate.valueOf()
-  // next, check if the filename looks like a date
-  const namedate = getFilenameDate(exif)
-  if (namedate) return namedate.valueOf()
   // otherwise, fallback to the last modified date
   return dayjs(exif.File.FileModifyDate, EXIF_DATE_FORMAT).valueOf()
 }
@@ -67,25 +43,6 @@ function getMetaDate (exif) {
     if (parsed.isValid()) return parsed
   }
   return null
-}
-
-function getFilenameDate (exif) {
-  const filename = path.basename(exif.SourceFile)
-  if (FILENAME_DATE_REGEX.test(filename)) {
-    const parsed = dayjs(filename, FILENAME_DATE_FORMAT)
-    if (parsed.isValid()) return parsed
-  }
-  return null
-}
-
-function caption (exif) {
-  return tagValue(exif, 'EXIF', 'ImageDescription') ||
-    tagValue(exif, 'IPTC', 'Caption-Abstract') ||
-    tagValue(exif, 'IPTC', 'Headline') ||
-    tagValue(exif, 'XMP', 'Description') ||
-    tagValue(exif, 'XMP', 'Title') ||
-    tagValue(exif, 'XMP', 'Label') ||
-    tagValue(exif, 'QuickTime', 'Title')
 }
 
 function getLocation(exif) {
@@ -117,41 +74,13 @@ function getDevice(exif) {
   ;
 }
 
-function keywords (exif) {
-  const sources = [
-    tagValue(exif, 'IPTC', 'Keywords'),
-    tagValue(exif, 'XMP', 'Subject')
-  ]
-  return _.chain(sources).flatMap(makeArray).uniq().value()
-}
-
-function people (exif) {
-  return tagValue(exif, 'XMP', 'PersonInImage') || []
-}
-
 function video (exif) {
   return MIME_VIDEO_REGEX.test(exif.File['MIMEType'])
-}
-
-function animated (exif) {
-  if (exif.File['MIMEType'] !== 'image/gif') return false
-  if (exif.GIF && exif.GIF.FrameCount > 0) return true
-  return false
-}
-
-function rating (exif) {
-  if (!exif.XMP) return 0
-  return exif.XMP['Rating'] || 0
 }
 
 function tagValue (exif, type, name) {
   if (!exif[type]) return null
   return exif[type][name]
-}
-
-function makeArray (value) {
-  if (!value) return []
-  return Array.isArray(value) ? value : value.split(',')
 }
 
 function dimensions (exif) {

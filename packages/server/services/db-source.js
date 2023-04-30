@@ -59,15 +59,6 @@ class DbSource {
         ${date ? `AND date < ${date}` : ''} 
         ORDER BY date DESC LIMIT ?, ?
       `).all(start, num).map(f => new DbSourceFile(f));
-
-    if (directory) {
-      
-    }
-    return this.db.prepare(`
-      SELECT * FROM ${FILES_TABLE_NAME} 
-      WHERE processed != 0
-      ORDER BY date DESC LIMIT ?, ?
-    `).all(start, num).map(f => new DbSourceFile(f));
   }
 
   /**
