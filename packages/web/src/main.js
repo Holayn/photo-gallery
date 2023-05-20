@@ -11,19 +11,24 @@ import SourceDirectories from './views/SourceDirectories.vue';
 import store from './store'
 
 import { authVerify, error } from './services/api';
-import { removeURLParameter, setDocumentTitle } from './utils';
+import { setDocumentTitle } from './utils';
 
 import './style.css';
 
 const routes = [
-  { name: 'home', path: '/', redirect: { name: 'albums' } },
+  { name: 'home', path: '/', redirect: () => {
+    if (store.state.isAdmin === null) {
+      return { name: 'login' };
+    }
+    return { name: 'albums' };
+  } },
   { name: 'all', path: '/gallery', component: Gallery },
   { name: 'albums', path: '/albums', component: Albums },
   { name: 'album', path: '/album/:albumId', component: Album, props: route => ({
     ...route.params,
     showLightbox: route.query.showLightbox === 'true',
   })},
-  { name: 'login', path: '/login', component: Login },
+  { name: 'login', path: '/login', component: Login, props: route => route.query },
   { name: 'sources', path: '/sources', component: Sources },
   { name: 'source', path: '/source/:sourceId/:directory?', component: Source, props: route => ({
     ...route.params,
@@ -31,9 +36,6 @@ const routes = [
   })},
   { name: 'sourceDirectories', path: '/source/:sourceId/directories', component: SourceDirectories, props: true },
 ];
-
-// Ensure the page isn't loaded with this query parameter set.
-history.replaceState({}, "", removeURLParameter(location.href, 'showLightbox'));
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -60,7 +62,12 @@ router.beforeEach(async (to) => {
     if (await authVerify()) {
       store.dispatch('setIsAdmin', true);
     } else {
-      router.push({ name: 'login' });
+      router.push({ 
+        name: 'login', 
+        query: { 
+          next: to.path,
+        },
+      });
     }
   }
 });

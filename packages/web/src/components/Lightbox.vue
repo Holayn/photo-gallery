@@ -182,6 +182,9 @@ export default {
       }
     });
   },
+  beforeUnmount() {
+    this.close();
+  },
   methods: {
     activeIndexChange({ activeIndex }) {
       this.stopCurrentVideo();
@@ -192,14 +195,12 @@ export default {
       this.swiper = e;
     },
     close() {
-      document.body.style.position = '';
       this.stopCurrentVideo();
       this.$emit('close');
 
       this.isOpen = false;
     },
     open() {
-      document.body.style.position = 'fixed';
       setTimeout(() => {
         const appHeight = () => {
           document.documentElement.style.setProperty('--lightbox-height', `${window.innerHeight}px`);

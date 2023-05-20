@@ -150,15 +150,17 @@ export default {
     },
     showLightbox() {
       if (this.showLightbox) {
-        document.body.style.overflow = 'hidden';
-        this.$refs.lightbox.open();
+        this.openLightbox();
       }
       else {
-        document.body.style.overflow = '';
+        this.closeLightbox();
       }
     },
   },
   created() {
+    // Ensure the page isn't loaded with this query parameter set.
+    this.removeLightboxParam(true);
+
     this.getGalleryPhotoSize = getGalleryPhotoSize;
   },
   beforeUpdate() {
@@ -311,7 +313,7 @@ export default {
     },
     scrollCurrentImageIntoView() {
       const galleryPhoto = this.galleryImageRefs[this.lightboxIndex];
-      if (!this.isScrolledIntoView(galleryPhoto)) {
+      if (galleryPhoto && !this.isScrolledIntoView(galleryPhoto)) {
         galleryPhoto.scrollIntoView();
         window.scrollBy(0, -1 * window.innerHeight / 2);
       }
@@ -325,10 +327,15 @@ export default {
     openLightbox() {
       this.scrollPosition = window.pageYOffset;
       this.disableInfiniteScroll();
+      document.body.style.position = 'fixed';
+      document.body.style.overflow = 'hidden';
+      this.$refs.lightbox.open();
       this.$router.push({ path: this.$route.path, query: { showLightbox: true } });
     },
     closeLightbox() {
-      this.$router.push({ path: this.$route.path });
+      this.removeLightboxParam();
+      document.body.style.position = '';
+      document.body.style.overflow = '';
       this.$nextTick(() => {
         window.scrollTo(0, this.scrollPosition);
         setTimeout(() => {
@@ -336,6 +343,15 @@ export default {
           this.enableInfiniteScroll();
         });
       });
+    },
+    removeLightboxParam(replace) {
+      const queryParams = { ...this.$route.query };
+      delete queryParams.showLightbox;
+      if (replace) {
+        this.$router.replace({ path: this.$route.path, query: queryParams });
+      } else {
+        this.$router.push({ path: this.$route.path, query: queryParams });
+      }
     },
 
     toggleSelect() {

@@ -21,6 +21,12 @@ export default {
   components: {
     Loading,
   },
+  props: {
+    next: {
+      type: String,
+      default: null,
+    },
+  },
   data() {
     return {
       isBadLogin: false,
@@ -38,7 +44,12 @@ export default {
           this.isBadLogin = true;
         } else {
           this.$store.dispatch('setIsAdmin', true);
-          this.$router.push({ name: 'home' });
+
+          if (this.next !== null) {
+            this.$router.push({ path: this.next });
+          } else {
+            this.$router.push({ name: 'home' });
+          }
         }
         this.loading = false;
       }
