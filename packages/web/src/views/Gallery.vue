@@ -187,11 +187,6 @@ export default {
           });
         });
 
-        // Weird Chrome bug where the last photo isn't fetched, so don't wait for it.
-        if (loadPromises.length > 1) {
-          loadPromises.pop();
-        }
-
         await Promise.all(loadPromises);
 
         console.debug('loadPhotos(): photos loaded.');
