@@ -36,7 +36,9 @@
         <div id="headerAdditionalControls"></div>
       </header>
 
-      <router-view></router-view>
+      <div class="py-12">
+        <router-view></router-view>
+      </div>
     </div>
   </div>
 </template>
