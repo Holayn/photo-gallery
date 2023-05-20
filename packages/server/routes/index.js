@@ -152,9 +152,9 @@ router.get(
   requiredParams(["id"]),
   AuthController.authAdmin,
   asyncHandler(async (req, res) => {
-    const sourceId = parseInt(req.query.id, 16);
-    const start = parseInt(req.query.start, 16) || 0;
-    const num = parseInt(req.query.num, 16) || DEFAULT_NUM_TO_LOAD;
+    const sourceId = parseInt(req.query.id, 10);
+    const start = parseInt(req.query.start, 10) || 0;
+    const num = parseInt(req.query.num, 10) || DEFAULT_NUM_TO_LOAD;
     const directory = req.query.directory || null;
     const date = req.query.date
       ? dayjs(req.query.date, "YYYY-MM-DD").valueOf()
@@ -167,7 +167,7 @@ router.get(
   "/source/directories",
   requiredParams(["id"]),
   asyncHandler(async (req, res) => {
-    const sourceId = parseInt(req.query.id, 16);
+    const sourceId = parseInt(req.query.id, 10);
 
     res.send(ApiService.getDirectories(sourceId));
   })
@@ -234,8 +234,8 @@ router.get(
   AuthController.authAlbum,
   asyncHandler(async (req, res) => {
     const albumId = req.query.id;
-    const start = parseInt(req.query.start, 16) || 0;
-    const num = parseInt(req.query.num, 16) || DEFAULT_NUM_TO_LOAD;
+    const start = parseInt(req.query.start, 10) || 0;
+    const num = parseInt(req.query.num, 10) || DEFAULT_NUM_TO_LOAD;
 
     res.send(ApiService.getAlbumFiles(albumId, start, start + num));
   })
