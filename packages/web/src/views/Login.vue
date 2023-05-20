@@ -1,10 +1,10 @@
 <template>
   <div class="flex flex-col items-center px-4 md:px-8">
-    <form class="mt-8 max-w-lg">
+    <form class="mt-8 max-w-lg" @submit.prevent="login">
       <label for="password">Password</label>
       <input id="password" class="input w-full mt-1" v-model="password" type="password">
       <div class="mt-4">
-        <button class="btn w-full" type="submit" @click="login">Login</button>
+        <button class="btn w-full" type="submit">Login</button>
       </div>
     </form>
     <Loading v-if="loading"></Loading>
