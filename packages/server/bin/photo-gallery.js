@@ -1,7 +1,7 @@
 const yargs = require("yargs");
 
+const { filesMoved } = require('./files-moved');
 const logger = require("../logger");
-
 logger.init();
 
 const SourceService = require("../services/source");
@@ -63,4 +63,24 @@ yargs(args)
     (options) => {
       SourceService.deleteSource(options.alias);
     }
-  ).argv;
+  )
+  .command(
+    "files-moved",
+    "Update the source id and file id of files when they get moved",
+    {
+      from: {
+        demand: true,
+        description: "Alias for the from source",
+        type: "string",
+      },
+      to: {
+        demand: true,
+        description: "Alias for the to source",
+        type: "string",
+      },
+    },
+    (options) => {
+      filesMoved(options.from, options.to);
+    }
+  )
+  .argv;

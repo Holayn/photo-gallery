@@ -33,6 +33,17 @@ class File {
     return lastInsertRowid;
   }
 
+  static update(file) {
+    DB.prepare(
+      `UPDATE file SET date = @date, source_id = @sourceId, source_file_id = @sourceFileId WHERE id = @id`
+    ).run({
+      id: file.id,
+      date: file.date,
+      sourceFileId: file.sourceFileId,
+      sourceId: file.sourceId,
+    });
+  }
+
   static get(id) {
     const fileRecord = DB.prepare("SELECT * FROM file WHERE id = ?").get(id);
     return dbRecordToFile(fileRecord);

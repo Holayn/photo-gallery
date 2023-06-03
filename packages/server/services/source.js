@@ -101,12 +101,16 @@ module.exports = {
     if (source.type === "local") {
       const dbSource = new DbSource(source);
       const dbSourceFile = dbSource.getFile(sourceFileId);
-      return {
-        date: dbSourceFile.date,
-        sourceId,
-        sourceFileId,
-        metadata: new FileMetadata(dbSourceFile.metadata),
-      };
+      if (dbSourceFile) {
+        return {
+          date: dbSourceFile.date,
+          sourceId,
+          sourceFileId,
+          metadata: new FileMetadata(dbSourceFile.metadata),
+        };
+      } else { 
+        return null;
+      }
     }
 
     throw new Error("Unexpected source type");

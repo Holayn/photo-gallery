@@ -84,7 +84,20 @@ class DbSource {
     const fileRecord = this.db
       .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE path = ?`)
       .get(id);
-    return new DbSourceFile(fileRecord);
+    if (fileRecord) {
+      return new DbSourceFile(fileRecord);
+    }
+    return null;
+  }
+
+  findFilesMatching(path) {
+    // Extract filename from path.
+    const parts = path.split('/');
+    const filename = parts[parts.length - 1];
+    return this.db
+      .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE path LIKE '%${filename}'`)
+      .all()
+      .map((f) => new DbSourceFile(f));
   }
 
   async getFileData(id, size) {
