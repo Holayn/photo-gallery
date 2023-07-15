@@ -83,13 +83,17 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/zoom';
 import dayjs from 'dayjs';
-import LocalizedFormat from 'dayjs/plugin/localizedFormat';
-dayjs.extend(LocalizedFormat);
+import localizedFormat from 'dayjs/plugin/localizedFormat';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import LightboxSlide from './LightboxSlide.vue';
 import Modal from './Modal.vue';
 
 import { getLocationInfo, PHOTO_SIZES } from '../services/api';
+
+const DATE_FORMAT = 'YYYY:MM:DD HH:mm:ss';
+dayjs.extend(localizedFormat);
+dayjs.extend(customParseFormat);
 
 export default {
   name: 'Lightbox',
@@ -126,7 +130,7 @@ export default {
     currentPhotoMetadata() {
       if (this.currentPhoto) {
         const { date, fileName, fileSize, width, height, orientation, location, device } = this.currentPhoto.metadata;
-        const parsedDate = dayjs(date);
+        const parsedDate = dayjs(date, DATE_FORMAT);
         return {
           date: {
             date: parsedDate.format('LL'),
