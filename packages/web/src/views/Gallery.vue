@@ -125,9 +125,6 @@ export default {
     };
   },
   computed: {
-    allPhotosDisplaying() {
-      return this.galleryIndex === this.$store.state.photos.length;
-    },
     galleryRowHeight() {
       return isMobileScreen() ? GALLERY_ROW_HEIGHT_MOBILE : GALLERY_ROW_HEIGHT;
     },
@@ -158,9 +155,6 @@ export default {
     },
   },
   created() {
-    // Ensure the page isn't loaded with this query parameter set.
-    this.removeLightboxParam(true);
-
     this.getGalleryPhotoSize = getGalleryPhotoSize;
   },
   beforeUpdate() {
@@ -330,10 +324,8 @@ export default {
       document.body.style.position = 'fixed';
       document.body.style.overflow = 'hidden';
       this.$refs.lightbox.open();
-      this.$router.push({ path: this.$route.path, query: { showLightbox: true } });
     },
     closeLightbox() {
-      this.removeLightboxParam();
       document.body.style.position = '';
       document.body.style.overflow = '';
       this.$nextTick(() => {
@@ -343,15 +335,6 @@ export default {
           this.enableInfiniteScroll();
         });
       });
-    },
-    removeLightboxParam(replace) {
-      const queryParams = { ...this.$route.query };
-      delete queryParams.showLightbox;
-      if (replace) {
-        this.$router.replace({ path: this.$route.path, query: queryParams });
-      } else {
-        this.$router.push({ path: this.$route.path, query: queryParams });
-      }
     },
 
     toggleSelect() {

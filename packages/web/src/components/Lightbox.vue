@@ -179,6 +179,10 @@ export default {
       this.showMetadata = false;
     },
   },
+  created() {
+    // Ensure the page isn't loaded with this query parameter set.
+    this.removeLightboxParam(true);
+  },
   mounted() {
     window.addEventListener('keyup', (e) => {
       if (e.key === 'Escape') {
@@ -201,10 +205,13 @@ export default {
     close() {
       this.stopCurrentVideo();
       this.$emit('close');
+      this.removeLightboxParam();
 
       this.isOpen = false;
     },
     open() {
+      this.$router.push({ path: this.$route.path, query: { showLightbox: true } });
+      
       setTimeout(() => {
         const appHeight = () => {
           document.documentElement.style.setProperty('--lightbox-height', `${window.innerHeight}px`);
@@ -219,6 +226,16 @@ export default {
     },
     stopCurrentVideo() {
       document.querySelector(`#video-${this.$store.state.lightbox.photoIndex}`)?.pause();
+    },
+
+    removeLightboxParam(replace) {
+      const queryParams = { ...this.$route.query };
+      delete queryParams.showLightbox;
+      if (replace) {
+        this.$router.replace({ path: this.$route.path, query: queryParams });
+      } else {
+        this.$router.push({ path: this.$route.path, query: queryParams });
+      }
     },
   },
 }
