@@ -30,7 +30,7 @@
 
     <div id="media" class="justified-gallery mt-4">  
       <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" @click.prevent>
-        <img :src="photo.data?.preview" @click="isSelectionMode ? select(photo) : openSlides(i)" @load="rendered(i)" @error="rendered(i)">
+        <img :src="photo.data?.preview" @click="isSelectionMode ? select(photo) : openLightbox(i)">
         <div v-if="photo.metadata.video" class="overlay">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </div>
@@ -52,9 +52,7 @@
       </div>
     </div>
 
-    <div v-if="noPhotos" class="text-center">No photos found.</div>
-
-
+    <div v-if="isNoPhotos" class="text-center">No photos found.</div>
     
     <Lightbox ref="lightbox" v-show="showLightbox" @close="closeLightbox()"></Lightbox>
 
@@ -70,17 +68,16 @@
 </template>
 
 <script>
-import { PHOTO_SIZES, getAlbums, createAlbum, addToAlbum } from '../services/api';
-import { getGalleryPhotoSize, isMobileScreen, loadPhotoToBase64 } from '../utils';
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+
+import { getAlbums, createAlbum, addToAlbum } from '../services/api';
+import { DIMENSIONS, getGalleryPhotoSize, isMobileScreen, loadPhotoToBase64 } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
 import Modal from '../components/Modal.vue';
-
-const GALLERY_ROW_HEIGHT = 200;
-const GALLERY_ROW_HEIGHT_MOBILE = 80;
-const AVERAGE_IMAGE_WIDTH = 180;
-const IMAGE_WIDTH_MOBILE = 80;
+import { useInfiniteScroll } from '../composables/infinite-scroll';
 
 export default {
   name: 'Gallery',
@@ -98,41 +95,64 @@ export default {
       default: false,
     },
   },
+  setup(props) {
+    const store = useStore();
+
+    const { 
+      enable,
+      disable,
+      reset,
+      scroll,
+      scrolling,
+      scrollIndex,
+    } = useInfiniteScroll({
+      photos: computed(() => store.state.photos),
+      canLoadMore: props.hasMorePhotos,
+      loadMore: props.loadMore,
+    });
+
+    return { 
+      infiniteScrollEnable: enable,
+      infiniteScrollDisable: disable,
+      infiniteScrollReset: reset,
+      scroll,
+      scrolling,
+      scrollIndex,
+    };
+  },
   data() {
     return {
-      albums: [],
       date: null,
 
-      galleryIndex: 0,
       galleryImageRefs: [],
-      infiniteScrollEnabled: false,
-      infiniteScrollNumImages: null,
+
+      albums: [],
       loadingCreateAlbum: false,
       loadingAlbums: false,
-      renderingMore: false,
-      PHOTO_SIZES,
+      showAddToExistingAlbum: false,
 
       loadedPhotoIndex: 0,
       loadingPhotos: false,
-      noPhotos: false,
       numPhotosToLoad: 0,
 
       scrollPosition: 0,
-      showAddToExistingAlbum: false,
 
       isSelectionMode: false,
       selected: {},
     };
   },
   computed: {
-    galleryRowHeight() {
-      return isMobileScreen() ? GALLERY_ROW_HEIGHT_MOBILE : GALLERY_ROW_HEIGHT;
-    },
     loadedPhotos() {
       return this.$store.state.photos?.slice(0, this.loadedPhotoIndex);
     },
     lightboxIndex() {
       return this.$store.state.lightbox.photoIndex;
+    },
+    isNoPhotos() {
+      return !this.scrolling && this.numPhotos === 0;
+    },
+    numPhotos() {
+      return this.$store.state.photos.length;
     },
     token() {
       return this.$store.state.token;
@@ -141,8 +161,8 @@ export default {
   watch: {
     lightboxIndex() {
       // Handling for navigating the lightbox past loaded gallery thumbnails.
-      if (this.lightboxIndex + 1 >= this.galleryIndex) {
-        this.renderMore();
+      if (this.lightboxIndex + 1 >= this.scrollIndex) {
+        this.scroll();
       }
     },
     showLightbox() {
@@ -153,150 +173,64 @@ export default {
         this.closeLightbox();
       }
     },
+    scrollIndex() {
+      this.loadPhotos();
+    },
   },
-  created() {
-    this.getGalleryPhotoSize = getGalleryPhotoSize;
+  mounted() {
+    // Need to initialize this plugin.
+    window.$('#media').justifiedGallery({
+      rowHeight: isMobileScreen() ? DIMENSIONS.IMAGE_HEIGHT_MOBILE : DIMENSIONS.IMAGE_HEIGHT,
+      maxRowHeight: isMobileScreen() ? DIMENSIONS.IMAGE_HEIGHT_MOBILE : DIMENSIONS.IMAGE_HEIGHT,
+    });
+
+    this.scroll();
   },
   beforeUpdate() {
     this.galleryImageRefs = [];
   },
   beforeUnmount() {
-    this.disableInfiniteScroll();
+    this.infiniteScrollDisable();
   },
   methods: {
-    async loadPhotos(firstLoad) {
-      if (this.galleryIndex > this.loadedPhotoIndex) {
-        console.debug('loadPhotos(): loading photos...');
-        this.loadingPhotos = true;
-        const photosToLoad = this.$store.state.photos.slice(this.loadedPhotoIndex, this.galleryIndex);
-        this.numPhotosToLoad = photosToLoad.length;
-        const loadPromises = photosToLoad.map(photo => {
-          return new Promise((resolve, reject) => {
-            const url = photo.urls[getGalleryPhotoSize()];
+    async loadPhotos() {
+      console.debug('loadPhotos(): loading photos...');
+      this.loadingPhotos = true;
+      const photosToLoad = this.$store.state.photos.slice(this.loadedPhotoIndex, this.scrollIndex);
+      this.numPhotosToLoad = photosToLoad.length;
+      this.loadedPhotoIndex = this.scrollIndex;
+      const loadPromises = photosToLoad.map(photo => {
+        return new Promise((resolve) => {
+          const url = photo.urls[getGalleryPhotoSize()];
 
-            loadPhotoToBase64(url).then(data => {
-              if (!photo.data) photo.data = {};
-              photo.data.preview = data;
-              this.numPhotosToLoad--;
-              resolve();
-            })
+          loadPhotoToBase64(url).then(data => {
+            if (!photo.data) photo.data = {};
+            photo.data.preview = data;
+            this.numPhotosToLoad--;
+            resolve();
+          })
+        });
+      });
+
+      await Promise.all(loadPromises);
+
+      console.debug('loadPhotos(): photos loaded.');
+
+      if (!this.loadedPhotos.length) {
+        this.loadingPhotos = false;
+      } else {
+        setTimeout(() => {
+          window.$('#media').justifiedGallery({
+            rowHeight: isMobileScreen() ? DIMENSIONS.IMAGE_HEIGHT_MOBILE : DIMENSIONS.IMAGE_HEIGHT,
+            maxRowHeight: isMobileScreen() ? DIMENSIONS.IMAGE_HEIGHT_MOBILE : DIMENSIONS.IMAGE_HEIGHT,
+          }).on('jg.complete', () => {
+            this.loadingPhotos = false;
+            this.infiniteScrollEnable();
           });
         });
-
-        await Promise.all(loadPromises);
-
-        console.debug('loadPhotos(): photos loaded.');
-        this.loadedPhotoIndex = this.galleryIndex;
-
-        if (!this.loadedPhotos.length) {
-          this.noPhotos = true;
-          this.loadingPhotos = false;
-        } else {
-          if (firstLoad) {
-            window.$('#media').justifiedGallery({
-              rowHeight: this.galleryRowHeight,
-              maxRowHeight: this.galleryRowHeight,
-            });
-
-            this.handleInfiniteScroll();
-          }
-
-          setTimeout(() => {
-            window.$('#media').justifiedGallery('norewind').on('jg.complete', () => {
-              this.loadingPhotos = false;
-            });
-          });
-        }
       }
     },
-    reset() {
-      window.$('#media').justifiedGallery('destroy');
-      this.loadedPhotoIndex = 0;
-      this.galleryIndex = 0;
-      this.noPhotos = false;
-    },
-    async init() {
-      const numImages = this.estimateNumImagesFitOnPage();
-      this.galleryIndex = numImages;
-      this.infiniteScrollNumImages = numImages;
 
-      this.loadPhotos(true);
-    },
-    openSlides(i) {
-      this.$store.state.lightbox.photoIndex = i;
-      this.openLightbox();
-    },
-    estimateNumImagesFitOnPage() {
-      const { innerWidth, innerHeight } = window;
-      const rows = Math.ceil((innerHeight) / this.galleryRowHeight);
-      const widthOfImage = isMobileScreen() ? IMAGE_WIDTH_MOBILE : AVERAGE_IMAGE_WIDTH;
-      const imagesPerRow = Math.ceil(innerWidth / widthOfImage);
-
-      return rows * imagesPerRow;
-    },
-    handleInfiniteScroll() {
-      if (!this.infiniteScrollBound) {
-        this.infiniteScrollBound = this.infiniteScroll.bind(this);
-        this.enableInfiniteScroll();
-      }
-    },
-    enableInfiniteScroll() {
-      window.addEventListener('scroll', this.infiniteScrollBound);
-    },
-    disableInfiniteScroll() {
-      window.removeEventListener('scroll', this.infiniteScrollBound);
-    },
-    async infiniteScroll() {
-      if (this.infiniteScrollEnabled) {
-        const boundaryOffset = window.innerHeight / 3;
-        const boundary = window.document.documentElement.scrollHeight - boundaryOffset;
-        const viewingWindowBottom = window.scrollY + window.innerHeight;
-        const isPastBoundary = viewingWindowBottom > boundary;
-        if (isPastBoundary) {
-          this.infiniteScrollEnabled = false;
-          await this.renderMore();
-        }
-      }
-    },
-    rendered(photoIndexRendered) {
-      // Somehow, rendered is being called twice in rapid succession for each photo. Probably has something to do with the gallery library.
-      setTimeout(() => {
-        if (photoIndexRendered === this.loadedPhotos.length - 1) {
-          // Last photo has finished rendering, allow for infinite scrolling.
-          console.debug('rendered(): infinite scroll enabled.');
-          this.infiniteScrollEnabled = true;
-        }
-      }, 100);
-    },
-    async renderMore() {
-      if (this.renderingMore) { return; }
-
-      console.debug('adding more images for rendering...');
-      this.renderingMore = true;
-
-      const originalIndex = this.galleryIndex;
-
-      if (this.galleryIndex === this.$store.state.photos.length && this.hasMorePhotos) {
-        await this.loadMore();
-      }
-
-      let newGalleryIndex = this.galleryIndex;
-
-      for (let i = this.galleryIndex, j = 0; i < this.$store.state.photos.length && j < this.infiniteScrollNumImages; i++, j++) {
-        newGalleryIndex++;
-
-        // If we haven't reached infiniteScrollNumImages but there are no more photos, we need to load the next page from the server.
-        if (newGalleryIndex === this.$store.state.photos.length && j < this.infiniteScrollNumImages - 1) {
-          await this.loadMore();
-        }
-      }
-
-      console.debug(`added ${newGalleryIndex - originalIndex} more images for rendering.`);
-      this.galleryIndex = newGalleryIndex;
-      this.renderingMore = false;
-
-      this.loadPhotos();
-    },
     isScrolledIntoView(el) {
       const rect = el.getBoundingClientRect();
       const elemTop = rect.top;
@@ -318,9 +252,12 @@ export default {
       }
     },
 
-    openLightbox() {
+    openLightbox(index) {
+      if (index) {
+        this.$store.state.lightbox.photoIndex = i;
+      }
       this.scrollPosition = window.pageYOffset;
-      this.disableInfiniteScroll();
+      this.infiniteScrollDisable();
       document.body.style.position = 'fixed';
       document.body.style.overflow = 'hidden';
       this.$refs.lightbox.open();
@@ -332,7 +269,7 @@ export default {
         window.scrollTo(0, this.scrollPosition);
         setTimeout(() => {
           this.scrollCurrentImageIntoView();
-          this.enableInfiniteScroll();
+          this.infiniteScrollEnable();
         });
       });
     },
@@ -394,6 +331,13 @@ export default {
 
     onDateBlur() {
       this.$emit('date', this.date);
+      this.reset();
+    },
+
+    reset() {
+      this.loadedPhotoIndex = 0;
+      this.$store.dispatch('clearPhotos');
+      this.infiniteScrollReset();
     },
   },
 }

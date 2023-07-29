@@ -14,7 +14,7 @@
           </button>
         </template>
       </Gallery>
-      <div v-if="loading" class="flex flex-col items-center justify-center pb-4">
+      <div v-if="loadingPhotoInfo" class="flex flex-col items-center justify-center pb-4">
         <Loading></Loading>
         <p>Retrieving photo info</p>
       </div>
@@ -40,7 +40,7 @@ import Modal from '../components/Modal.vue';
 import Gallery from './Gallery.vue';
 
 import { getPhotosFromAlbum, getAlbum } from '../services/api';
-import { setDocumentTitle } from '../utils';
+import { estimateNumImagesFitOnPage, setDocumentTitle } from '../utils';
 
 export default {
   name: 'Album',
@@ -58,12 +58,12 @@ export default {
   },
   data() {
     return {
-      hasMorePhotos: false,
+      hasMorePhotos: true,
       
       isModalAlbumLinkShowing: false,
       isModalAlbumLinkCopied: false,
 
-      loading: false,
+      loadingPhotoInfo: false,
       loadingAlbumInfo: false,
 
       album: null,
@@ -93,40 +93,30 @@ export default {
   async mounted() {
     this.$store.dispatch('setAlbumToken', this.albumToken);
 
-    this.loading = true;
-    this.loadingAlbumInfo = true;
-
     try {
-      const album = await getAlbum(this.albumId, this.albumToken);
+      this.loadingAlbumInfo = true;
+      this.album = await getAlbum(this.albumId, this.albumToken);
       this.loadingAlbumInfo = false;
-      this.album = album;
-      
+
       setDocumentTitle(this.album.name);
-
-      this.$store.dispatch('clearPhotos');
-      const { info, photos } = await getPhotosFromAlbum(this.albumId, 0, this.$refs.gallery.estimateNumImagesFitOnPage() * 2, this.albumToken);
-      this.$store.dispatch('addPhotos', { photos });
-
-      this.hasMorePhotos = info.hasMorePhotos;
-
-      this.$refs.gallery.init();
     } catch(e) {
       alert('An error occurred.');
       throw e;
     } finally {
       this.loadingAlbumInfo = false;
-      this.loading = false;
     }
+  },
+  beforeUnmount() {
+    this.$store.dispatch('clearPhotos');
   },
   methods: {
     async loadMoreFromServer() {
       console.debug('loading more photo info from server...');
-      this.loading = true;
 
       try {
-        const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, this.$refs.gallery.estimateNumImagesFitOnPage() * 2, this.albumToken);
-
-        this.loading = false;
+        this.loadingPhotoInfo = true;
+        const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, estimateNumImagesFitOnPage() * 2, this.albumToken);
+        this.loadingPhotoInfo = false;
 
         this.hasMorePhotos = info.hasMorePhotos;
         this.$store.dispatch('addPhotos', { photos });
@@ -136,7 +126,7 @@ export default {
         alert('An error occurred.');
         throw e;
       } finally {
-        this.loading = false;
+        this.loadingPhotoInfo = false;
       }
     },
     showModalAlbumLink() {
