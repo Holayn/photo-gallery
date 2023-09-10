@@ -254,9 +254,9 @@ export default {
 
     openLightbox(index) {
       if (index) {
-        this.$store.state.lightbox.photoIndex = i;
+        this.$store.state.lightbox.photoIndex = index;
       }
-      this.scrollPosition = window.pageYOffset;
+      this.scrollPosition = window.scrollY;
       this.infiniteScrollDisable();
       document.body.style.position = 'fixed';
       document.body.style.overflow = 'hidden';
