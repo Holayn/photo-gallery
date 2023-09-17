@@ -3,9 +3,12 @@
     <h1 class="text-5xl">Albums</h1>
     <div class="mt-4">
       <Loading v-if="loading"></Loading>
-      <div v-else class="flex flex-col items-start gap-2">
-        <div v-for="album in albums" :key="album.id" class="btn block px-8 py-2" @click="openAlbum(album)">
-          {{ album.name }}
+      <div v-else class="grid gap-2">
+        <div v-for="album in albums" :key="album.id">
+          <button class="py-2 px-4 bg-slate-50 flex w-full text-left" @click="openAlbum(album)">
+            <div class="flex-auto">{{ album.name }}</div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
         </div>
       </div>
     </div>

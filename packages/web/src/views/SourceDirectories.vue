@@ -10,10 +10,13 @@
       </h1>
       <div class="mt-4 pb-4">
         <Loading v-if="loadingDirectories"></Loading>
-        <div v-else class="flex flex-col items-start gap-2">
-          <a v-for="directory in directories" :key="directory.id" class="btn px-6 py-2" @click="openSourceDirectory(directory)">
-            {{ directory }}
-          </a>
+        <div v-else class="grid gap-2">
+          <button v-for="directory in directories" :key="directory.id" class="flex items-center py-2 px-4 bg-slate-50 w-full text-left" @click="openSourceDirectory(directory)">
+            <div class="flex-auto">{{ directory }}</div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          </button>
         </div>
       </div>
     </div>

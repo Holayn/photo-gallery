@@ -5,13 +5,16 @@
         <template #heading>
           <h1 class="flex-auto text-5xl">
             <Loading v-if="loadingSourceInfo"></Loading>
-            <span v-else>{{ title }} <p v-if="directory" class="text-xl">({{ directory }})</p></span>
+            <template v-else>
+              <div>{{ title }}</div>
+              <div v-if="directory" class="text-xl mt-1">({{ directory }})</div>
+            </template>
           </h1>
         </template>
       </Gallery>
       <div v-if="loadingPhotoInfo" class="flex flex-col items-center justify-center pb-4">
         <Loading></Loading>
-        <p>Retrieving photo info</p>
+        <div>Retrieving photo info</div>
       </div>
     </div>
   </div>

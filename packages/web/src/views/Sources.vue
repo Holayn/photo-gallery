@@ -3,12 +3,20 @@
     <h1 class="text-5xl">Sources</h1>
     <div class="mt-4">
       <Loading v-if="loading"></Loading>
-      <div v-else class="grid gap-4 w-full min-w-0">
-        <div v-for="source in sources" :key="source.id" class="flex flex-wrap px-6 py-4 bg-slate-50">
-          <p class="flex-auto">{{ source.alias }} ({{ source.path }})</p>
-          <div class="flex gap-4 mt-2">
-            <a class="btn" @click="openSource(source)">View All</a>
-            <a class="btn" @click="openSource(source, true)">View By Directory</a>
+      <div v-else class="grid gap-4 md:gap-2">
+        <div v-for="source in sources" :key="source.id">
+          <div class="flex gap-1">
+            <button class="flex items-center py-2 px-4 bg-slate-50 w-full text-left" @click="openSource(source)">
+              <div class="flex-auto">{{ source.alias }}</div>
+              <div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              </div>
+            </button>
+            <button class="flex items-center gap-1 py-2 px-4 bg-slate-50" @click="openSource(source, true)">
+              <div class="flex-auto whitespace-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              </div>
+            </button>
           </div>
         </div>
       </div>
