@@ -253,7 +253,7 @@ export default {
     },
 
     openLightbox(index) {
-      if (index) {
+      if (index !== null && index !== undefined) {
         this.$store.state.lightbox.photoIndex = index;
       }
       this.scrollPosition = window.scrollY;
