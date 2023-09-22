@@ -50,7 +50,7 @@ function getLocation(exif) {
     return {
       lat,
       long,
-      altitude: `${Math.round(altNum)}${altUnit} ${exif.EXIF?.GPSAlTitudeRef}`,
+      altitude: `${Math.round(altNum)}${altUnit} ${exif.EXIF?.GPSAltitudeRef || ''}`,
     };
   }
   return {
