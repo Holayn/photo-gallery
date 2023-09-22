@@ -37,16 +37,16 @@
         <div>{{ currentPhotoMetadata.date?.date }} - {{ currentPhotoMetadata.date?.time }}</div>
         <div>
           <h2 class="text-sm text-slate-600">Location</h2>
-          <div v-if="!currentPhotoMetadata.location?.unknown">
-            <p v-if="loadingLocationInfo">loading...</p>
-            <p v-else>
-              <a class="text-black underline" :href="currentPhotoLocationLink" target="_blank">{{ currentPhotoLocationInfo }}</a>
-            </p>
-            <p class="text-sm text-slate-600">{{ currentPhotoMetadata.location?.lat }}, {{ currentPhotoMetadata.location?.long }}. {{ currentPhotoMetadata.location?.altitude }}</p>
+          <div v-if="location">
+            <div>
+              <a class="text-black underline" :href="location.link" target="_blank">{{ loadingLocationInfo ? 'loading...' : currentPhotoLocationInfo ?? 'Unknown' }}</a>
+            </div>
+            <div class="text-sm text-slate-600">
+              <div>lat:{{ location.lat ?? '--' }}, long:{{ location.long ?? '--' }},</div>
+              <div>alt:{{ location.altitude ?? '--' }}</div>
+            </div>
           </div>
-          <div v-else>
-            Unknown
-          </div>
+          <div v-else>Unknown</div>
         </div>
         <div>
           <h2 class="text-sm text-slate-600">Details</h2>
@@ -128,49 +128,53 @@ export default {
       return this.$store.state.photos[this.$store.state.lightbox.photoIndex];
     },
     currentPhotoMetadata() {
-      if (this.currentPhoto) {
-        const { date, fileName, fileSize, width, height, orientation, location, device } = this.currentPhoto.metadata;
-        const parsedDate = dayjs(date, DATE_FORMAT);
-        return {
-          date: {
-            date: parsedDate.format('LL'),
-            time: parsedDate.format('LTS'),
-          },
-          fileName,
-          fileSize,
-          width,
-          height,
-          orientation,
-          location,
-          device,
-          path: this.currentPhoto.sourceFileId,
-        };
-      } else {
-        return {};
-      }
-    },
-    currentPhotoLocationLink() {
-      return `https://www.google.com/maps/place/${this.currentPhotoMetadata.location.lat},${this.currentPhotoMetadata.location.long}`;
+      const { date, fileName, fileSize, width, height, orientation, location, device } = this.currentPhoto.metadata;
+      const parsedDate = dayjs(date, DATE_FORMAT);
+      return {
+        date: {
+          date: parsedDate.format('LL'),
+          time: parsedDate.format('LTS'),
+        },
+        fileName,
+        fileSize,
+        width,
+        height,
+        orientation,
+        location,
+        device,
+        path: this.currentPhoto.sourceFileId,
+      };
     },
     currentPhotoOriginalUrl() {
       return this.currentPhoto.urls[PHOTO_SIZES.ORIGINAL];
-    }
+    },
+    location() {
+      if (this.currentPhotoMetadata.location?.unknown) {
+        return null;
+      } else if (this.currentPhotoMetadata.location) {
+        if (this.currentPhotoMetadata.location.lat == null && this.currentPhotoMetadata.location.long == null) {
+          return null;
+        } else {
+          return {
+            ...this.currentPhotoMetadata.location,
+            link: `https://www.google.com/maps/place/${this.currentPhotoMetadata.location.lat},${this.currentPhotoMetadata.location.long}`,
+          };
+        }
+      }
+    },
   },
   watch: {
-    showMetadata: {
-      immediate: true,
-      async handler() {
-        if (this.showMetadata && !this.currentPhotoMetadata.location?.unknown) {
-          this.loadingLocationInfo = true;
-          const { lat, long } = this.currentPhotoMetadata.location;
-          try {
-            const response = await getLocationInfo(lat, long);
-            if (response) {
-              this.currentPhotoLocationInfo = response.label;
-            }
-          } finally {
-            this.loadingLocationInfo = false;
+    async showMetadata() {
+      if (this.showMetadata && this.location) {
+        this.loadingLocationInfo = true;
+        const { lat, long } = this.location;
+        try {
+          const response = await getLocationInfo(lat, long);
+          if (response) {
+            this.currentPhotoLocationInfo = response.label;
           }
+        } finally {
+          this.loadingLocationInfo = false;
         }
       }
     },
