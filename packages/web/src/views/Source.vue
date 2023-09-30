@@ -63,7 +63,7 @@ export default {
       this.source = await getSource(this.sourceId);
       this.loadingSourceInfo = false;
       
-      setDocumentTitle(this.source.alias);
+      setDocumentTitle(this.directory ? `${this.source.alias} (${this.directory})` : this.source.alias);
     } catch(e) {
       alert('An error occurred.');
       throw e;

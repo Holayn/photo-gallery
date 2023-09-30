@@ -48,8 +48,6 @@ window.addEventListener('unauthorized', () => {
 });
 
 router.beforeEach(async (to) => {
-  setDocumentTitle(to.name.substring(0, 1).toUpperCase() + to.name.substring(1));
-
   if (to.name === 'album' && to.query.albumToken) {
     return true;
   }
@@ -69,6 +67,13 @@ router.beforeEach(async (to) => {
         },
       });
     }
+  }
+});
+
+router.afterEach((to, from) => {
+  if (to.name !== from.name) {
+    // Sometimes there can be route changes to the same route (e.g., a route query parameter change).
+    setDocumentTitle(to.name.substring(0, 1).toUpperCase() + to.name.substring(1));
   }
 });
 
