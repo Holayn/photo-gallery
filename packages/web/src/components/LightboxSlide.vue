@@ -14,7 +14,7 @@
     </div>
   </div>
   <div v-else-if="photo.metadata.video" class="flex items-center justify-center h-full">
-    <video :id="'video-' + index" class="video-js w-screen h-screen" controls preload="auto" :poster="preview">
+    <video ref="video" class="w-screen h-screen" controls preload="auto" :poster="preview">
       <source :src="photo.urls[PHOTO_SIZES.LARGE]" type="video/mp4"/>
     </video>
   </div>
@@ -32,6 +32,10 @@ export default {
     Loading,
   },
   props: {
+    active: {
+      type: Boolean,
+      default: false,
+    },
     photo: Object,
     index: Number,
   },
@@ -41,6 +45,13 @@ export default {
       PHOTO_SIZES,
       large: null,
       preview: null,
+    }
+  },
+  watch: {
+    active() {
+      if (!this.active) {
+        this.stopVideo();
+      }
     }
   },
   async mounted() {
@@ -62,10 +73,16 @@ export default {
       });
     }
   },
+  beforeUnmount() {
+    this.stopVideo();
+  },
   methods: {
     getGalleryPhotoSize,
     loaded() {
       this.loading = false;
+    },
+    stopVideo() {
+      this.$refs.video?.pause();
     },
   },
 }

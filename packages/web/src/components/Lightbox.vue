@@ -9,15 +9,16 @@
       </div>
     </div>
     <swiper
-      :centered-slides="true"
       :keyboard="{enabled: true, onlyInViewport: false}"
       :modules="modules"
       :space-between="50"
-      :virtual="true"
-      :zoom="true"
       :threshold="10"
-      @activeIndexChange="activeIndexChange"
-      @afterInit="afterInit"
+      :initial-slide="$store.state.lightbox.photoIndex"
+      centered-slides
+      virtual
+      zoom
+      @activeIndexChange="_swiperOnActiveIndexChange"
+      @afterInit="_swiperOnAfterInit"
     >
       <swiper-slide
         v-for="(photo, index) in $store.state.photos"
@@ -26,6 +27,7 @@
         :zoom="true"
       >
         <lightbox-slide
+          :active="index === $store.state.lightbox.photoIndex"
           :index="index"
           :photo="photo"
         ></lightbox-slide>
@@ -76,7 +78,7 @@
 </template>
 
 <script>
-import { Keyboard, Virtual, Zoom } from 'swiper';
+import { Keyboard, Virtual, Zoom } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -119,8 +121,6 @@ export default {
       currentPhotoLocationInfo: null,
       loadingLocationInfo: false,
       showMetadata: false,
-
-      isOpen: false,
     }
   },
   computed: {
@@ -178,77 +178,42 @@ export default {
         }
       }
     },
-    isOpen() {
-      this.currentPhotoLocationInfo = null;
-      this.showMetadata = false;
-    },
-  },
-  created() {
-    // Ensure the page isn't loaded with this query parameter set.
-    this.removeLightboxParam(true);
   },
   mounted() {
-    window.addEventListener('keyup', (e) => {
-      if (e.key === 'Escape') {
-        this.close();
-      }
-    });
+    this.handleEscapeKey();
   },
   beforeUnmount() {
     this.close();
   },
   methods: {
-    activeIndexChange({ activeIndex }) {
-      this.stopCurrentVideo();
-      this.$store.state.lightbox.photoIndex = activeIndex;
-      this.showMetadata = false;
-    },
-    afterInit(e) {
-      this.swiper = e;
-    },
     close() {
-      this.stopCurrentVideo();
       this.$emit('close');
-      this.removeLightboxParam();
-
-      this.isOpen = false;
     },
-    open() {
-      this.$router.push({ path: this.$route.path, query: { showLightbox: true } });
-      
+
+    handleEscapeKey() {
+      window.addEventListener('keyup', (e) => {
+        if (e.key === 'Escape') {
+          this.close();
+        }
+      });
+    },
+
+    _swiperOnAfterInit() {
       setTimeout(() => {
-        const appHeight = () => {
-          document.documentElement.style.setProperty('--lightbox-height', `${window.innerHeight}px`);
-        };
+        const appHeight = () => document.documentElement.style.setProperty('--lightbox-height', `${window.innerHeight}px`);
         window.addEventListener('resize', appHeight);
         appHeight();
       });
-
-      this.swiper.slideTo(this.$store.state.lightbox.photoIndex, 0);
-
-      this.isOpen = true;
     },
-    stopCurrentVideo() {
-      document.querySelector(`#video-${this.$store.state.lightbox.photoIndex}`)?.pause();
-    },
-
-    removeLightboxParam(replace) {
-      const queryParams = { ...this.$route.query };
-      delete queryParams.showLightbox;
-      if (replace) {
-        this.$router.replace({ path: this.$route.path, query: queryParams });
-      } else {
-        this.$router.push({ path: this.$route.path, query: queryParams });
-      }
+    _swiperOnActiveIndexChange({ activeIndex }) {
+      this.$store.state.lightbox.photoIndex = activeIndex;
+      this.showMetadata = false;
     },
   },
 }
 </script>
 <style scoped>
   .lightbox {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     position: fixed;
     background-color: black;
     z-index: 99;

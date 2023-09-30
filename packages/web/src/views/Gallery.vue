@@ -54,7 +54,7 @@
 
     <div v-if="isNoPhotos" class="text-center">No photos found.</div>
     
-    <Lightbox ref="lightbox" v-show="showLightbox" @close="closeLightbox()"></Lightbox>
+    <Lightbox v-if="isShowLightbox" @close="closeLightbox()"></Lightbox>
 
     <Modal v-if="showAddToExistingAlbum" @close="showAddToExistingAlbum = false">
       <Loading v-if="loadingAlbums"></Loading>
@@ -139,6 +139,8 @@ export default {
 
       isSelectionMode: false,
       selected: {},
+
+      isShowLightbox: false,
     };
   },
   computed: {
@@ -168,14 +170,20 @@ export default {
     showLightbox() {
       if (this.showLightbox) {
         this.openLightbox();
-      }
-      else {
+      } else {
         this.closeLightbox();
       }
+    },
+    isShowLightbox() {
+      this.updateLightboxQueryParam();
     },
     scrollIndex() {
       this.loadPhotos();
     },
+  },
+  created() {
+    // Ensure the page isn't loaded with this query parameter set.
+    this.removeLightboxParam(true);
   },
   mounted() {
     // Need to initialize this plugin.
@@ -253,25 +261,52 @@ export default {
     },
 
     openLightbox(index) {
-      if (index !== null && index !== undefined) {
-        this.$store.state.lightbox.photoIndex = index;
+      if (!this.isShowLightbox) {
+        this.isShowLightbox = true;
+
+        document.body.style.position = 'fixed';
+        document.body.style.overflow = 'hidden';
+
+        if (index !== null && index !== undefined) {
+          this.$store.state.lightbox.photoIndex = index;
+        }
+
+        this.scrollPosition = window.scrollY;
+        this.infiniteScrollDisable();
       }
-      this.scrollPosition = window.scrollY;
-      this.infiniteScrollDisable();
-      document.body.style.position = 'fixed';
-      document.body.style.overflow = 'hidden';
-      this.$refs.lightbox.open();
     },
     closeLightbox() {
-      document.body.style.position = '';
-      document.body.style.overflow = '';
-      this.$nextTick(() => {
-        window.scrollTo(0, this.scrollPosition);
-        setTimeout(() => {
-          this.scrollCurrentImageIntoView();
-          this.infiniteScrollEnable();
+      if (this.isShowLightbox) {
+        this.isShowLightbox = false;
+
+        document.body.style.position = '';
+        document.body.style.overflow = '';
+
+        this.$nextTick(() => {
+          window.scrollTo(0, this.scrollPosition);
+          setTimeout(() => {
+            this.scrollCurrentImageIntoView();
+            this.infiniteScrollEnable();
+          });
         });
-      });
+      }
+    },
+
+    updateLightboxQueryParam() {
+      if (this.isShowLightbox && !this.$route.query.showLightbox) {
+        this.$router.push({ path: this.$route.path, query: { showLightbox: true } });
+      } else if (!this.isShowLightbox) {
+        this.removeLightboxParam();
+      }
+    },
+    removeLightboxParam(replace) {
+      const queryParams = { ...this.$route.query };
+      delete queryParams.showLightbox;
+      if (replace) {
+        this.$router.replace({ path: this.$route.path, query: queryParams });
+      } else {
+        this.$router.push({ path: this.$route.path, query: queryParams });
+      }
     },
 
     toggleSelect() {

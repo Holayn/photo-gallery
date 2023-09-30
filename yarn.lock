@@ -7326,7 +7326,7 @@ __metadata:
     eslint-plugin-vue: ^9.9.0
     js-cookie: ^3.0.1
     postcss: ^8.4.23
-    swiper: ^9.2.4
+    swiper: ^10.0.0
     tailwindcss: ^3.3.2
     vite: ^4.3.3
     vue: ^3.2.45
@@ -8508,13 +8508,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ssr-window@npm:^4.0.2":
-  version: 4.0.2
-  resolution: "ssr-window@npm:4.0.2"
-  checksum: df182600927f4f3225224cf8c02338ea637c9750519505bbfb9a9236741a2a7ec088386fb948bca7b447b8303d9109e7dc7672e3de041c79ac2a0e03665af7d2
-  languageName: node
-  linkType: hard
-
 "ssri@npm:^10.0.0":
   version: 10.0.5
   resolution: "ssri@npm:10.0.5"
@@ -8770,12 +8763,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"swiper@npm:^9.2.4":
-  version: 9.4.1
-  resolution: "swiper@npm:9.4.1"
-  dependencies:
-    ssr-window: ^4.0.2
-  checksum: 1180b3b766f25cbe636fafbb56adbddf8a240077c504a335a62d1773f4452df1bd9ca09bccfe86478c3b9401879c4e8f7ed3824e74299f8b48953e8fc7f08bc3
+"swiper@npm:^10.0.0":
+  version: 10.3.1
+  resolution: "swiper@npm:10.3.1"
+  checksum: 9a785930ca0ab0683d7e5e116c25a38e1f8818d6f9e93848125bdf3e1874e12a6c3b9f4e9c54668e4accc2440a6f031de98cfc01a1b0068c77f8de4115034e4d
   languageName: node
   linkType: hard
 
