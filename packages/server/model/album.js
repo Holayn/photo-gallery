@@ -31,7 +31,10 @@ class Album {
   }
 
   static get(id) {
-    return new Album(DB.prepare("SELECT * FROM album WHERE id = ?").get(id));
+    const record = DB.prepare("SELECT * FROM album WHERE id = ?").get(id);
+    if (record) {
+      return new Album(record);
+    }
   }
 
   static getByToken(token) {

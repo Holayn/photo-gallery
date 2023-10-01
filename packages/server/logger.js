@@ -46,10 +46,7 @@ class Logger {
         format.timestamp(),
         format.align(),
         format.printf(
-          ({ level, message, timestamp, stack, ...meta }) =>
-            `${timestamp} ${level}: ${message}${
-              Object.keys(meta).length ? ` - ${JSON.stringify(meta)}` : ""
-            }${stack ? `\n${stack}` : ""}`
+          ({ level, message, timestamp, stack }) => `${timestamp} ${level}: ${message}${stack ? `\n${stack}` : ""}`
         )
       ),
       transports: isServerLogger
@@ -90,7 +87,7 @@ class Logger {
         },
       });
     } catch (e) {
-      this.logger.error(e, {}, false);
+      this.logger.error(e, {});
     }
   }
 }

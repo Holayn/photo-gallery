@@ -211,7 +211,12 @@ router.get(
   AuthController.authAlbum,
   asyncHandler(async (req, res) => {
     const albumId = req.query.id;
-    res.send(AlbumService.getAlbum(albumId));
+    const album = AlbumService.getAlbum(albumId);
+    if (album) {
+      res.send(album);
+    } else {
+      res.status(404).send('Album not found.');
+    }
   })
 );
 /**
