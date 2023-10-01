@@ -1,5 +1,7 @@
 <template>
-  <div class="loader"></div>
+  <div>
+    <div class="loader"></div>
+  </div>
 </template>
 
 <script>
@@ -9,14 +11,9 @@ export default {
 </script>
 
 <style scoped>
-  .loader,
-  .loader:after {
-    border-radius: 50%;
-    width: 2.5rem;
-    height: 2.5rem;
-  }
   .loader {
-    margin: 60px auto;
+    width: 100%;
+    height: 100%;
     font-size: 10px;
     position: relative;
     text-indent: -9999em;
@@ -24,6 +21,7 @@ export default {
     border-right: 0.25rem solid rgba(255, 255, 255, 0.2);
     border-bottom: 0.25rem solid rgba(255, 255, 255, 0.2);
     border-left: 0.25rem solid var(--theme-color-main);
+    border-radius: 50%;
     -webkit-transform: translateZ(0);
     -ms-transform: translateZ(0);
     transform: translateZ(0);

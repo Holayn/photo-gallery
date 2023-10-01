@@ -6,11 +6,15 @@
       </div>
       <Teleport to="#headerAdditionalControls">
         <div v-if="$store.state.isAdmin" class="flex gap-4 justify-end">
-          <div v-if="isSelectionMode" class="flex gap-2 items-center">
+          <div v-if="isSelectionMode" class="flex flex-col md:flex-row items-end md:items-center gap-2">
             <div>Selected: {{ Object.keys(selected).length }}</div>
             <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Existing Album</button>
-            <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="createAlbumFromSelected()">Create Album</button>
-            <Loading v-if="loadingCreateAlbum"></Loading>
+            <div class="relative">
+              <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="createAlbumFromSelected()">Create Album</button>
+              <div class="absolute top-0 left-0 flex justify-center">
+                <Loading v-if="loadingCreateAlbum" class="h-8 w-8"></Loading>
+              </div>
+            </div>
             <button @click="toggleSelect()">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
@@ -57,11 +61,16 @@
     <Lightbox v-if="isShowLightbox" @close="closeLightbox()"></Lightbox>
 
     <Modal v-if="showAddToExistingAlbum" @close="showAddToExistingAlbum = false">
-      <Loading v-if="loadingAlbums"></Loading>
-      <div v-else class="grid grid-cols-3 gap-1">
-        <button v-for="album in albums" :key="album.id" class="btn px-6 py-4" @click="addToAlbumFromSelected(album.id)">
-          {{ album.name }}
-        </button>
+      <div class="w-[500px] max-w-full">
+        <div v-if="loadingAlbums" class="flex justify-center">
+          <Loading class="w-16 h-16"></Loading>
+        </div>
+        <div v-else class="grid gap-2">
+          <button v-for="album in albums" :key="album.id" class="py-2 px-4 bg-slate-50 flex w-full text-left" @click="addToAlbumFromSelected(album.id)">
+            <div class="flex-auto">{{ album.name }}</div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
       </div>
     </Modal>
   </div>
@@ -349,16 +358,15 @@ export default {
       const albumName = prompt('Enter album name');
       if (!albumName) {
         alert('Album name required.');
-        return;
-      }
-
-      try {
-        await createAlbum(albumName, Object.values(this.selected));
-        alert(`Album "${albumName}" created.`);
-        this.selected = {};
-        this.isSelectionMode = false;
-      } catch (e) {
-        alert(e);
+      } else {
+        try {
+          await createAlbum(albumName, Object.values(this.selected));
+          alert(`Album "${albumName}" created.`);
+          this.selected = {};
+          this.isSelectionMode = false;
+        } catch (e) {
+          alert(e);
+        }
       }
 
       this.loadingCreateAlbum = false;

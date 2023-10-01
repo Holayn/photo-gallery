@@ -3,7 +3,7 @@
     <div class="mt-4">
       <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer" :show-date-selection="true" :show-lightbox="showLightbox" @date="onDateUpdate($event)">
         <template #heading>
-          <h1 class="flex-auto text-5xl">
+          <h1 class="flex-auto text-3xl md:text-5xl">
             <Loading v-if="loadingSourceInfo"></Loading>
             <template v-else>
               <div>{{ title }}</div>

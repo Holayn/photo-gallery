@@ -1,6 +1,6 @@
 <template>
   <div class="fixed z-50 top-0 w-screen h-screen flex items-center justify-center bg-black/75" @click="$emit('close')">
-    <div class="m-4 bg-white" :class="{ 'w-full': full, 'm-16': full }" @click.stop>
+    <div class="m-16 bg-white min-w-0" :class="{ 'w-full': full, 'm-16': full, 'md:m-32': full }" @click.stop>
       <div class="p-4 h-full">
         <div class="flex justify-end">
           <div>
@@ -18,6 +18,11 @@
 <script>
 export default {
   name: 'Modal',
-  props: ['full'],
+  props: {
+    full: {
+      type: Boolean,
+      default: false,
+    }
+  },
 }
 </script>

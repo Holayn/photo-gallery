@@ -3,7 +3,7 @@
     <div class="mt-4">
       <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer" :show-lightbox="showLightbox">
         <template #heading>
-          <h1 class="flex-auto text-5xl">
+          <h1 class="flex-auto text-3xl md:text-5xl">
             <Loading v-if="loadingAlbumInfo"></Loading>
             <span v-else>{{ title }}</span>
           </h1>
