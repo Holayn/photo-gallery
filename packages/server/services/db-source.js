@@ -82,7 +82,7 @@ class DbSource {
 
   getFile(id) {
     const fileRecord = this.db
-      .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE path = ?`)
+      .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE id = ?`)
       .get(id);
     if (fileRecord) {
       return new DbSourceFile(fileRecord);
@@ -102,7 +102,7 @@ class DbSource {
 
   async getFileData(id, size) {
     const fileRecord = this.db
-      .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE path = ?`)
+      .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE id = ?`)
       .get(id);
 
     if (!fileRecord) {
@@ -153,8 +153,9 @@ class DbSource {
 }
 
 class DbSourceFile {
-  constructor({ path: dbSourceFilePath, date, metadata, sourceId }) {
-    this.path = dbSourceFilePath;
+  constructor({ id, path, date, metadata, sourceId }) {
+    this.id = id;
+    this.path = path;
     this.date = date;
     this.metadata = new DbSourceMetadata(JSON.parse(metadata));
     this.sourceId = sourceId;

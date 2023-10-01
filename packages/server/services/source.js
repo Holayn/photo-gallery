@@ -85,10 +85,10 @@ module.exports = {
         startDateRange,
         directory
       );
-      return dbSourceFiles.map(({ date, path, metadata }) => ({
+      return dbSourceFiles.map(({ id, date, metadata }) => ({
         date,
         sourceId,
-        sourceFileId: path,
+        sourceFileId: id,
         metadata: new FileMetadata(metadata),
       }));
     }

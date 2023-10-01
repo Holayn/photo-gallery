@@ -1,7 +1,7 @@
 const DB = require("../services/db");
 
 DB.exec(
-  "CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, timestamp_added INTEGER, date INTEGER, source_id INTEGER, source_file_id TEXT, FOREIGN KEY(source_id) REFERENCES source(id))"
+  "CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, timestamp_added INTEGER, date INTEGER, source_id INTEGER, source_file_id INTEGER, FOREIGN KEY(source_id) REFERENCES source(id))"
 );
 
 function dbRecordToFile(dbRecord) {
