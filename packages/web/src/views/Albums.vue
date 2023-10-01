@@ -2,7 +2,7 @@
   <div class="px-8">
     <h1 class="text-5xl">Albums</h1>
     <div class="mt-4">
-      <Loading v-if="loading"></Loading>
+      <Loading v-if="loading" class="w-16 h-16"></Loading>
       <div v-else class="grid gap-2">
         <div v-for="album in albums" :key="album.id">
           <button class="py-2 px-4 bg-slate-50 flex w-full text-left" @click="openAlbum(album)">

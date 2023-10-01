@@ -4,7 +4,9 @@
       <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer" :show-date-selection="true" :show-lightbox="showLightbox" @date="onDateUpdate($event)">
         <template #heading>
           <h1 class="flex-auto text-3xl md:text-5xl">
-            <Loading v-if="loadingSourceInfo"></Loading>
+            <div v-if="showLoadingSourceInfo" class="flex justify-center">
+              <Loading class="w-16 h-16"></Loading>
+            </div>
             <template v-else>
               <div>{{ title }}</div>
               <div v-if="directory" class="text-xl mt-1">({{ directory }})</div>
@@ -13,7 +15,7 @@
         </template>
       </Gallery>
       <div v-if="loadingPhotoInfo" class="flex flex-col items-center justify-center pb-4">
-        <Loading></Loading>
+        <Loading class="w-16 h-16"></Loading>
         <div>Retrieving photo info</div>
       </div>
     </div>
@@ -53,6 +55,9 @@ export default {
     };
   },
   computed: {
+    showLoadingSourceInfo() {
+      return this.loadingSourceInfo && !this.loadingPhotoInfo;
+    },
     title() {
       return this.source?.alias;
     },

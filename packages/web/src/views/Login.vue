@@ -7,7 +7,7 @@
         <button class="btn w-full" type="submit">Login</button>
       </div>
     </form>
-    <Loading v-if="loading"></Loading>
+    <Loading v-if="loading" class="w-16 h-16"></Loading>
     <p v-if="isBadLogin" class="mt-2">Incorrect password.</p>
   </div>
 </template>

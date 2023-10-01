@@ -4,7 +4,9 @@
       <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer" :show-lightbox="showLightbox">
         <template #heading>
           <h1 class="flex-auto text-3xl md:text-5xl">
-            <Loading v-if="loadingAlbumInfo"></Loading>
+            <div v-if="showLoadingAlbumInfo" class="flex justify-center">
+              <Loading class="w-16 h-16"></Loading>
+            </div>
             <span v-else>{{ title }}</span>
           </h1>
         </template>
@@ -15,7 +17,7 @@
         </template>
       </Gallery>
       <div v-if="loadingPhotoInfo" class="flex flex-col items-center justify-center pb-4">
-        <Loading></Loading>
+        <Loading class="w-16 h-16"></Loading>
         <p>Retrieving photo info</p>
       </div>
     </div>
@@ -75,6 +77,9 @@ export default {
     },
     albumLink() {
       return `${window.location.href.split('?')[0]}?albumToken=${this.album.token}`;
+    },
+    showLoadingAlbumInfo() {
+      return this.loadingAlbumInfo && !this.loadingPhotoInfo;
     },
     title() {
       return this.album?.name;
