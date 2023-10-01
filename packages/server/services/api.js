@@ -9,8 +9,8 @@ function getAlbumFiles(albumId, start, num) {
       hasMorePhotos: files.length >= num,
     },
     files: files
-      .map((f) => SourceService.getSourceFile(f.sourceId, f.sourceFileId))
-      .filter((f) => !!f)
+      .map((f) => ({ ...SourceService.getSourceFile(f.sourceId, f.sourceFileId), sourceId: f.sourceId }))
+      .filter((f) => !!f.sourceFileId)
       .map(({ date, sourceId, sourceFileId = null, metadata }) => {
         return {
           date,
@@ -36,9 +36,8 @@ function getSourceFiles(sourceId, start, num, startDateRange, directory) {
       hasMorePhotos: files.length >= num,
     },
     files: files.map(
-      ({ date, sourceId, sourceFileId = null, metadata }) => ({
+      ({ date, sourceFileId = null, metadata }) => ({
         date,
-        sourceId,
         sourceFileId,
         metadata,
       })

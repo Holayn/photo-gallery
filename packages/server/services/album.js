@@ -29,7 +29,10 @@ module.exports = {
           f.sourceId,
           f.sourceFileId
         );
-        const newFileId = File.insert(sourceFile);
+        const newFileId = File.insert({
+          ...sourceFile,
+          sourceId: f.sourceId,
+        });
         AlbumFile.insert(albumId, newFileId);
       }
     });

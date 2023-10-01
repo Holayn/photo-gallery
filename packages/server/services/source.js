@@ -87,7 +87,6 @@ module.exports = {
       );
       return dbSourceFiles.map(({ id, date, metadata }) => ({
         date,
-        sourceId,
         sourceFileId: id,
         metadata: new FileMetadata(metadata),
       }));
@@ -104,7 +103,6 @@ module.exports = {
       if (dbSourceFile) {
         return {
           date: dbSourceFile.date,
-          sourceId,
           sourceFileId,
           metadata: new FileMetadata(dbSourceFile.metadata),
         };
