@@ -55,16 +55,12 @@
           <div>
             <div>{{ currentPhotoMetadata.fileName }}</div>
             <div class="text-sm text-slate-600">
-              <div class="flex gap-2">
-                <p>{{ currentPhotoMetadata.width }} x {{ currentPhotoMetadata.height }}</p>
-                <p>{{ currentPhotoMetadata.orientation }}</p>
+              <div class="grid md:grid-cols-2 gap-x-2">
+                <p>{{ currentPhotoMetadata.width }} x {{ currentPhotoMetadata.height }}, {{ currentPhotoMetadata.orientation }}</p>
                 <p>{{ currentPhotoMetadata.fileSize }}</p>
               </div>
               <p>
                 {{ currentPhotoMetadata.device }}
-              </p>
-              <p class="text-xs">
-                {{ currentPhotoMetadata.path }}
               </p>
             </div>
             <div>
@@ -142,7 +138,6 @@ export default {
         orientation,
         location,
         device,
-        path: this.currentPhoto.sourceFileId,
       };
     },
     currentPhotoOriginalUrl() {

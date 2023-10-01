@@ -11,7 +11,7 @@
             <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Existing Album</button>
             <div class="relative">
               <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="createAlbumFromSelected()">Create Album</button>
-              <div class="absolute top-0 left-0 flex justify-center">
+              <div class="absolute top-0 left-0 flex justify-center w-full">
                 <Loading v-if="loadingCreateAlbum" class="h-8 w-8"></Loading>
               </div>
             </div>
