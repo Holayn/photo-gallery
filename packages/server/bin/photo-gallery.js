@@ -1,6 +1,6 @@
 const yargs = require("yargs");
 
-const { filesMoved } = require('./files-moved');
+const { filesMoved } = require('../services/files-moved');
 const logger = require("../logger");
 logger.init();
 

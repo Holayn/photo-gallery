@@ -90,12 +90,9 @@ class DbSource {
     return null;
   }
 
-  findFilesMatching(path) {
-    // Extract filename from path.
-    const parts = path.split('/');
-    const filename = parts[parts.length - 1];
+  findFilesMatching(file) {
     return this.db
-      .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE path LIKE '%${filename}'`)
+      .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE file_name = ${file.fileName} AND file_date = ${file.fileDate}`)
       .all()
       .map((f) => new DbSourceFile(f));
   }
@@ -153,10 +150,12 @@ class DbSource {
 }
 
 class DbSourceFile {
-  constructor({ id, path, date, metadata, sourceId }) {
+  constructor({ id, path, file_name, file_date, date, metadata, sourceId }) {
     this.id = id;
     this.path = path;
     this.date = date;
+    this.fileName = file_name;
+    this.fileDate = file_date;
     this.metadata = new DbSourceMetadata(JSON.parse(metadata));
     this.sourceId = sourceId;
   }
