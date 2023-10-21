@@ -303,7 +303,7 @@ export default {
 
     updateLightboxQueryParam() {
       if (this.isShowLightbox && !this.$route.query.showLightbox) {
-        this.$router.push({ path: this.$route.path, query: { showLightbox: true } });
+        this.$router.push({ path: this.$route.path, query: { ...this.$route.query, showLightbox: true } });
       } else if (!this.isShowLightbox) {
         this.removeLightboxParam();
       }
