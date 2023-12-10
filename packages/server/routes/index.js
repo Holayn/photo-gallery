@@ -8,7 +8,6 @@ const AlbumService = require("../services/album");
 const ApiService = require("../services/api");
 const AuthService = require("../services/auth");
 const SourceService = require("../services/source");
-const UserService = require("../services/user");
 
 const AuthController = require("../controllers/auth");
 
@@ -88,27 +87,8 @@ router.post(
 
 router.post(
   "/auth",
-  requiredBody(["password"]),
-  asyncHandler(async (req, res, next) => {
-    if (UserService.isValidUser("admin", req.body.password)) {
-      req.session.regenerate((regenErr) => {
-        if (regenErr) next(regenErr);
-        req.session.user = {
-          name: "admin",
-          userAgent: req.headers["user-agent"],
-        };
-        req.session.save((saveErr) => {
-          if (saveErr) next(saveErr);
-          res.sendStatus(200);
-        });
-      });
-    } else {
-      // A failed auth shouldn't result in a 401, because the user wasn't denied access to this route.
-      res.send({
-        success: false,
-      });
-    }
-  })
+  requiredBody(["username", "password"]),
+  AuthController.auth,
 );
 router.get(
   "/auth/verify",

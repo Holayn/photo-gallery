@@ -9,7 +9,7 @@
 
 ### Server Setup
 - Define `SESSION_SECRET` in `.env`
-- Start the server, then add an `admin` user with a SHA256-hashed password to the `photo-gallery.db`
+- Start the server, then add a user with a SHA256-hashed password to the `photo-gallery.db`
 
 ### Startup
 
