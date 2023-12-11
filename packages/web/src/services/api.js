@@ -60,13 +60,14 @@ export function error(error) {
   });
 }
 
-export function auth(password) {
+export function auth(username, password) {
   return fetcher.fetch(`${BASE}/auth`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      username,
       password,
     }),
   });
