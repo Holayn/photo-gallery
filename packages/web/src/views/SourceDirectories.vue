@@ -11,6 +11,7 @@
       <div class="mt-4 pb-4">
         <Loading v-if="loadingDirectories" class="w-16 h-16"></Loading>
         <div v-else class="grid gap-2">
+          <div v-if="loadingDirectoriesFailed">Failed to load directories.</div>
           <button v-for="directory in directories" :key="directory.id" class="flex items-center py-2 px-4 bg-slate-50 w-full text-left" @click="openSourceDirectory(directory)">
             <div class="flex-auto">{{ directory }}</div>
             <div>
@@ -40,6 +41,7 @@ export default {
     return {
       loadingSourceInfo: false,
       loadingDirectories: false,
+      loadingDirectoriesFailed: false,
 
       directories: [],
       source: null,
@@ -49,37 +51,35 @@ export default {
     this.loadingSourceInfo = true;
     this.loadingDirectories = true;
     
+    getSource(this.sourceId).then(source => {
+      this.source = source;
+      this.loadingSourceInfo = false;
+      document.title = this.source.alias;
+    });
+
     try {
-      getSource(this.sourceId).then(source => {
-        this.source = source;
-        this.loadingSourceInfo = false;
-        document.title = this.source.alias;
-      });
-
-      getSourceDirectories(this.sourceId).then(directories => {
-        this.directories = directories;
-        this.directories.sort((a, b) => {
-          const splitA = a.split('/');
-          const splitB = b.split('/');
-
-          if (splitA.length > splitB.length) {
-            return 1;
-          } else if (splitA.length < splitB.length) {
-            return -1;
-          } else {
-            for (const i in splitA) {
-              if (splitA[i] !== splitB[i]) {
-                return splitA[i].localeCompare(splitB[i]);
-              }
-            }
-          }
-        });
-        this.loadingDirectories = false;
-      });
-    } catch(e) {
-      alert('An error occurred.');
-      throw e;
+      this.directories = await getSourceDirectories(this.sourceId);
+    } catch (e) {
+      this.loadingDirectoriesFailed = true;
     }
+    
+    this.directories.sort((a, b) => {
+      const splitA = a.split('/');
+      const splitB = b.split('/');
+
+      if (splitA.length > splitB.length) {
+        return 1;
+      } else if (splitA.length < splitB.length) {
+        return -1;
+      } else {
+        for (const i in splitA) {
+          if (splitA[i] !== splitB[i]) {
+            return splitA[i].localeCompare(splitB[i]);
+          }
+        }
+      }
+    });
+    this.loadingDirectories = false;
   },
   methods: {
     openSourceDirectory(directory) {
