@@ -11,6 +11,8 @@ const SourceService = require("../services/source");
 
 const AuthController = require("../controllers/auth");
 
+const logger = require('../logger');
+
 require("dotenv").config();
 
 const asyncHandler = (fn) => (req, res, next) =>
@@ -72,6 +74,7 @@ router.use(
 router.post(
   "/client-error",
   asyncHandler(async (req, res) => {
+    logger.webError(req.body.error);
     await axios(process.env.EMAIL_SERVICE_URL, {
       method: "post",
       data: {

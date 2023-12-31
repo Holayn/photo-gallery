@@ -9,6 +9,7 @@ const infoAndWarnFilter = format((info) =>
 
 class Logger {
   logger;
+  webErrorLogger;
 
   info(message, data) {
     if (!this.logger) {
@@ -36,6 +37,10 @@ class Logger {
     if (email) {
       this.emailError(message);
     }
+  }
+  
+  webError(error) {
+    this.webErrorLogger.error(error);
   }
 
   init(isServerLogger) {
@@ -72,6 +77,25 @@ class Logger {
             }),
           ]
         : [new transports.Console()],
+    });
+
+    this.webErrorLogger = createLogger({
+      format: format.combine(
+        format.timestamp(),
+        format.align(),
+        format.printf(
+          ({ message, timestamp }) => `${timestamp}: ${message}`,
+        )
+      ),
+      transports: [
+        new transports.Console(),
+        new transports.DailyRotateFile({
+          filename: `./log/%DATE%-web-error.log`,
+          level: "error",
+          maxSize: "20m",
+          maxFiles: "14d",
+        }),
+      ]
     });
   }
 
