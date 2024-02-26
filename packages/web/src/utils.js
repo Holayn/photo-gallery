@@ -1,16 +1,11 @@
 import { PHOTO_SIZES } from './services/api';
 import fetcher from './services/fetcher';
 
-const IMAGE_HEIGHT = 200;
-const IMAGE_HEIGHT_MOBILE = 80;
-const AVERAGE_IMAGE_WIDTH = 300;
-const IMAGE_WIDTH_MOBILE = 80;
-
-export const DIMENSIONS = {
-  IMAGE_HEIGHT,
-  IMAGE_HEIGHT_MOBILE,
-  AVERAGE_IMAGE_WIDTH,
-  IMAGE_WIDTH_MOBILE,
+export const getImageHeight = () => {
+  return isMobileScreen() ? window.innerWidth / 5 - 5 : Math.min(200, window.innerWidth / 5);
+}
+export const getImageWidth = () => {
+  return isMobileScreen() ? getImageHeight() : getImageHeight() * (3 / 2);
 }
 
 const BASE_TITLE = 'Photos';
@@ -19,7 +14,7 @@ export function setDocumentTitle(title) {
 }
 
 export function isMobileScreen() {
-  return window.innerHeight < 800 && window.innerWidth < 500;
+  return window.innerWidth < 500;
 }
 
 export function getGalleryPhotoSize() {
@@ -27,8 +22,8 @@ export function getGalleryPhotoSize() {
 }
 
 export function estimateNumImagesFitOnPage() {
-  const width = isMobileScreen() ? IMAGE_WIDTH_MOBILE : AVERAGE_IMAGE_WIDTH;
-  const height = isMobileScreen() ? IMAGE_HEIGHT_MOBILE : IMAGE_HEIGHT;
+  const width = getImageWidth();
+  const height = getImageHeight();
   const { innerWidth, innerHeight } = window;
   const rows = Math.ceil((innerHeight) / height);
   const imagesPerRow = Math.ceil(innerWidth / width);

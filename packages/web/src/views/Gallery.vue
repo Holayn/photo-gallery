@@ -32,7 +32,7 @@
       </Teleport>
     </div>
 
-    <div id="media" class="justified-gallery mt-4">  
+    <div id="media" class="mt-4">  
       <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" @click.prevent>
         <img :src="photo.data?.preview" @click="isSelectionMode ? select(photo) : openLightbox(i)">
         <div v-if="photo.metadata.video" class="overlay">
@@ -81,7 +81,7 @@ import { computed } from 'vue';
 import { useStore } from 'vuex';
 
 import { getAlbums, createAlbum, addToAlbum } from '../services/api';
-import { DIMENSIONS, getGalleryPhotoSize, isMobileScreen, loadPhotoToBase64 } from '../utils';
+import { getImageHeight, getGalleryPhotoSize, loadPhotoToBase64 } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
@@ -197,8 +197,8 @@ export default {
   mounted() {
     // Need to initialize this plugin.
     window.$('#media').justifiedGallery({
-      rowHeight: isMobileScreen() ? DIMENSIONS.IMAGE_HEIGHT_MOBILE : DIMENSIONS.IMAGE_HEIGHT,
-      maxRowHeight: isMobileScreen() ? DIMENSIONS.IMAGE_HEIGHT_MOBILE : DIMENSIONS.IMAGE_HEIGHT,
+      rowHeight: getImageHeight(),
+      maxRowHeight: getImageHeight(),
     });
 
     this.scroll();
@@ -238,8 +238,8 @@ export default {
       } else {
         setTimeout(() => {
           window.$('#media').justifiedGallery({
-            rowHeight: isMobileScreen() ? DIMENSIONS.IMAGE_HEIGHT_MOBILE : DIMENSIONS.IMAGE_HEIGHT,
-            maxRowHeight: isMobileScreen() ? DIMENSIONS.IMAGE_HEIGHT_MOBILE : DIMENSIONS.IMAGE_HEIGHT,
+            rowHeight: getImageHeight(),
+            maxRowHeight: getImageHeight(),
           }).on('jg.complete', () => {
             this.loadingPhotos = false;
             this.infiniteScrollEnable();
