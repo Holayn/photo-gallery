@@ -36,7 +36,8 @@
       <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" @click.prevent>
         <img :src="photo.data?.preview" @click="isSelectionMode ? select(photo) : openLightbox(i)">
         <div v-if="photo.metadata.video" class="overlay">
-          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <div class="text-white text-xs md:text-base md:mb-1 mr-1 md:mr-2">{{ convertDurationToReadable(photo.metadata.duration) }}</div>
+          <svg class="w-4 h-4 md:w-6 md:h-6 md:mb-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </div>
         <div v-if="isSelectionMode" class="overlay p-2 justify-end items-start" :class="{ 'bg-white/25': !selected[photo.id], 'bg-white/75': selected[photo.id] }">
           <div v-if="selected[photo.id]" class="text-orange-400">
@@ -382,6 +383,23 @@ export default {
       this.$store.dispatch('clearPhotos');
       this.infiniteScrollReset();
     },
+
+    convertDurationToReadable(duration) {
+      try {
+        if (duration) {
+          const numericPart = duration.replace(/\s+/g, '');
+          const seconds = parseFloat(numericPart);
+          const minutes = Math.floor(seconds / 60);
+          const remainingSeconds = seconds % 60;
+          return `${minutes}:${remainingSeconds.toFixed(0).padStart(2, '0')}`;
+        }
+      } catch (e) {
+        console.error(e);
+        setTimeout(() => { throw e; })
+      }
+
+      return '';
+    },
   },
 }
 </script>
@@ -392,8 +410,8 @@ export default {
     height: 100%;
     width: 100%;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: end;
+    justify-content: end;
     pointer-events: none;
   }
 </style>

@@ -70,10 +70,7 @@ export default {
       this.loading = false;
 
       this.player = new Plyr(this.$refs.video, {
-        controls: [
-          'play-large', 'play', 'progress', 'current-time', 'mute', 'volume',
-          'captions', 'settings', 'fullscreen'
-        ],
+        controls: ['play-large', 'play', 'progress', 'current-time', 'settings', 'fullscreen'],
       });
 
       setTimeout(() => {

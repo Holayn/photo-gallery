@@ -44,6 +44,7 @@ function apiFilesResponseToPhotos(files) {
         altitude: metadata.location.altitude,
       },
       device: metadata.device,
+      duration: metadata.duration,
     },
   }))
 }

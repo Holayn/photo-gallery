@@ -10,6 +10,7 @@ class FileMetadata {
     fileName,
     location,
     device,
+    duration,
   }) {
     this.date = date;
     this.video = video;
@@ -21,6 +22,7 @@ class FileMetadata {
     this.fileName = fileName;
     this.location = location;
     this.device = device;
+    this.duration = duration;
 
     if (orientation === "Rotate 90 CW" && this.width > this.height) {
       this.width = height;

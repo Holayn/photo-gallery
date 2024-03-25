@@ -17,6 +17,7 @@ class DbSourceMetadata {
     this.fileName = exif.File?.FileName;
     this.location = getLocation(exif);
     this.device = getDevice(exif);
+    this.duration = exif.QuickTime?.Duration;
   }
 }
 
