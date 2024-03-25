@@ -14,7 +14,7 @@
     </div>
   </div>
   <div v-else-if="photo.metadata.video" class="flex items-center justify-center h-full">
-    <video ref="video" class="w-screen h-screen" autoplay playsinline controls :data-poster="preview">
+    <video ref="video" autoplay playsinline controls :data-poster="preview">
       <source :src="photo.urls[PHOTO_SIZES.LARGE]" type="video/mp4"/>
     </video>
   </div>
