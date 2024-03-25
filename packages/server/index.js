@@ -72,14 +72,20 @@ const morganMiddleware = morgan(
 );
 app.use(morganMiddleware);
 
-app.use("/", express.static(path.join(__dirname, "../web/dist")));
-app.use("/api", routes);
+// Certain browsers require this header to be set for video files in order to support seeking.
+app.use((req, res, next) => {
+  res.setHeader('Accept-Ranges', 'bytes');
+  next();
+});
 
 app.use((err, req, res, next) => {
   logger.error(err);
   res.sendStatus(500);
   next();
 });
+
+app.use("/", express.static(path.join(__dirname, "../web/dist")));
+app.use("/api", routes);
 
 const port = process.env.PORT || 8000;
 app.listen(process.env.PORT || 8000, () => {

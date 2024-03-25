@@ -24,7 +24,7 @@
         v-for="(photo, index) in $store.state.photos"
         :key="index"
         :virtualIndex="index"
-        :zoom="true"
+        :zoom="!photo.metadata.video"
       >
         <lightbox-slide
           :active="index === $store.state.lightbox.photoIndex"

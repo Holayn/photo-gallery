@@ -14,13 +14,15 @@
     </div>
   </div>
   <div v-else-if="photo.metadata.video" class="flex items-center justify-center h-full">
-    <video ref="video" class="w-screen h-screen" controls preload="auto" :poster="preview">
+    <video ref="video" class="w-screen h-screen" autoplay playsinline controls :data-poster="preview">
       <source :src="photo.urls[PHOTO_SIZES.LARGE]" type="video/mp4"/>
     </video>
   </div>
 </template>
 
 <script>
+import Plyr from 'plyr';
+
 import { PHOTO_SIZES } from '../services/api';
 import { getGalleryPhotoSize, loadPhotoToBase64 } from '../utils';
 
@@ -45,6 +47,7 @@ export default {
       PHOTO_SIZES,
       large: null,
       preview: null,
+      player: null,
     }
   },
   watch: {
@@ -64,26 +67,43 @@ export default {
       }
 
     if (this.photo.metadata.video) {
-      // Defer to natively loading the video.
       this.loading = false;
+
+      this.player = new Plyr(this.$refs.video, {
+        controls: [
+          'play-large', 'play', 'progress', 'current-time', 'mute', 'volume',
+          'captions', 'settings', 'fullscreen'
+        ],
+      });
+
+      setTimeout(() => {
+        document.querySelector('.plyr__progress').classList.add('swiper-no-swiping');
+      });
     } else {
       loadPhotoToBase64(this.photo.urls[PHOTO_SIZES.LARGE]).then(data => {
         this.large = data;
-        this.loaded();
+        this.loading = false;
       });
     }
   },
   beforeUnmount() {
     this.stopVideo();
+
+    if (this.player) {
+      this.player.destroy();
+    }
   },
   methods: {
     getGalleryPhotoSize,
-    loaded() {
-      this.loading = false;
-    },
     stopVideo() {
-      this.$refs.video?.pause();
+      console.log(this.player);
+      if (this.player) {
+        this.player.pause()
+      }
     },
+    onVideoOverlayClick() {
+      this.player.togglePlay();
+    }
   },
 }
 </script>
