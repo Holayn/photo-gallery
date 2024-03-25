@@ -14,7 +14,7 @@
     </div>
   </div>
   <div v-else-if="photo.metadata.video" class="flex items-center justify-center h-full">
-    <video ref="video" autoplay playsinline controls :data-poster="preview">
+    <video ref="video" playsinline controls :data-poster="preview">
       <source :src="photo.urls[PHOTO_SIZES.LARGE]" type="video/mp4"/>
     </video>
   </div>
@@ -52,8 +52,12 @@ export default {
   },
   watch: {
     active() {
-      if (!this.active) {
-        this.stopVideo();
+      if (this.player) {
+        if (!this.active) {
+          this.player.pause();
+        } else {
+          this.player.play();
+        }
       }
     }
   },
@@ -73,6 +77,10 @@ export default {
         controls: ['play-large', 'play', 'progress', 'current-time', 'settings', 'fullscreen'],
       });
 
+      if (this.active) {
+        this.player.play();
+      }
+
       setTimeout(() => {
         document.querySelector('.plyr__progress').classList.add('swiper-no-swiping');
       });
@@ -84,20 +92,13 @@ export default {
     }
   },
   beforeUnmount() {
-    this.stopVideo();
-
     if (this.player) {
+      this.player.pause();
       this.player.destroy();
     }
   },
   methods: {
     getGalleryPhotoSize,
-    stopVideo() {
-      console.log(this.player);
-      if (this.player) {
-        this.player.pause()
-      }
-    },
     onVideoOverlayClick() {
       this.player.togglePlay();
     }
