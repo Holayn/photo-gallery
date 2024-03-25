@@ -50,6 +50,7 @@ export function useInfiniteScroll({ photos, canLoadMore, loadMore }) {
       await loadMore();
     }
 
+    // TODO: actually calculate numImagesToScroll using photos.metadata.width/height
     for (let i = scrollIndex.value, j = 0; i < photos.value.length && j < numImagesToScroll; i++, j++) {
       scrollIndex.value += 1;
 
