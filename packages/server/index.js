@@ -24,7 +24,7 @@ app.use(
   helmet.contentSecurityPolicy({
     useDefaults: true,
     directives: {
-      defaultSrc: ["'self'", "'unsafe-inline'"],
+      defaultSrc: ["'self'", "'unsafe-inline'", "https://cdn.plyr.io/3.7.8/plyr.svg"],
       fontSrc: [
         "'self'",
         "data:",
@@ -47,6 +47,7 @@ app.use(
         "https://cdnjs.cloudflare.com",
         "https://fonts.googleapis.com",
         "https://cdn.jsdelivr.net",
+        "https://cdn.plyr.io/3.7.8/plyr.css"
       ],
       scriptSrc: [
         "'self'",
