@@ -1,7 +1,7 @@
 <template>
   <div class="lightbox" @click="toggleMenu">
     <div class="lightbox_menu" :style="{ opacity: showMenu ? 1 : 0 }">
-      <div class="m-4 cursor-pointer" @click="showMetadata = true">
+      <div class="m-4 cursor-pointer" @click.stop="showMetadata = true">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
       </div>
       <div class="flex-auto flex items-center justify-center mx-2 mt-2 h-full">
