@@ -1,16 +1,55 @@
 const AlbumService = require("./album");
 const SourceService = require("./source");
 
-function getAlbumFiles(albumId, start, num) {
-  const files = AlbumService.getAlbumFiles(albumId, start, num);
+const RANGE_QUERY_SIZE = 50;
+
+function getAlbumFiles(albumId, start, imagePreviewHeight, imagePreviewArea) {
+  if (!imagePreviewArea || !imagePreviewHeight) {
+    return null;
+  }
+
+  let usedArea = 0;
+  let retFiles = [];
+  let rangeStart = start;
+  let hasMorePhotos = false;
+
+  while (usedArea < imagePreviewArea) {
+    const files = AlbumService.getAlbumFiles(albumId, rangeStart, RANGE_QUERY_SIZE)
+      .map((f) => ({ ...SourceService.getSourceFile(f.sourceId, f.sourceFileId), sourceId: f.sourceId }))
+      .filter((f) => !!f.sourceFileId);
+
+    for (const file of files) {
+      retFiles.push(file);
+
+      const { width: fileWidth, height: fileHeight } = file.metadata;
+
+      if (!fileWidth || !fileHeight) {
+        throw new Error('File is missing width/height metadata.');
+      }
+
+      const ratioFactor = fileHeight / imagePreviewHeight;
+      const adjustedWidth = fileWidth / ratioFactor;
+      usedArea += adjustedWidth * imagePreviewHeight;
+
+      if (usedArea >= imagePreviewArea) {
+        break;
+      }
+    }
+
+    rangeStart += RANGE_QUERY_SIZE;
+
+    hasMorePhotos = files.length >= RANGE_QUERY_SIZE;
+
+    if (!hasMorePhotos) {
+      break;
+    }
+  }
 
   return {
     info: {
-      hasMorePhotos: files.length >= num,
+      hasMorePhotos,
     },
-    files: files
-      .map((f) => ({ ...SourceService.getSourceFile(f.sourceId, f.sourceFileId), sourceId: f.sourceId }))
-      .filter((f) => !!f.sourceFileId)
+    files: retFiles
       .map(({ date, sourceId, sourceFileId = null, metadata }) => {
         return {
           date,
@@ -22,20 +61,57 @@ function getAlbumFiles(albumId, start, num) {
   }
 }
 
-function getSourceFiles(sourceId, start, num, startDateRange, directory) {
-  const files = SourceService.findFilesFrom(
-    sourceId,
-    start,
-    num,
-    startDateRange,
-    directory
-  );
+function getSourceFiles(sourceId, start, imagePreviewHeight, imagePreviewArea, startDateRange, directory) {
+  if (!imagePreviewArea || !imagePreviewHeight) {
+    return null;
+  }
+
+  let usedArea = 0;
+  let retFiles = [];
+  let rangeStart = start;
+  let hasMorePhotos = false;
+
+  while (usedArea < imagePreviewArea) {
+    const files = SourceService.findFilesFrom(
+      sourceId,
+      rangeStart,
+      RANGE_QUERY_SIZE,
+      startDateRange,
+      directory
+    );
+
+    for (const file of files) {
+      retFiles.push(file);
+
+      const { width: fileWidth, height: fileHeight } = file.metadata;
+
+      if (!fileWidth || !fileHeight) {
+        throw new Error('File is missing width/height metadata.');
+      }
+
+      const ratioFactor = fileHeight / imagePreviewHeight;
+      const adjustedWidth = fileWidth / ratioFactor;
+      usedArea += adjustedWidth * imagePreviewHeight;
+
+      if (usedArea >= imagePreviewArea) {
+        break;
+      }
+    }
+
+    rangeStart += RANGE_QUERY_SIZE;
+
+    hasMorePhotos = files.length >= RANGE_QUERY_SIZE;
+
+    if (!hasMorePhotos) {
+      break;
+    }
+  }
 
   return {
     info: {
-      hasMorePhotos: files.length >= num,
+      hasMorePhotos,
     },
-    files: files.map(
+    files: retFiles.map(
       ({ date, sourceFileId = null, metadata }) => ({
         date,
         sourceFileId,

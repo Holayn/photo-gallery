@@ -53,7 +53,7 @@
     <div class="h-48">
       <div v-if="loadingPhotos" class="flex flex-col items-center justify-center mt-4">
         <Loading class="w-16 h-16"></Loading>
-        <p>Loading photos, {{ numPhotosToLoad }} remaining</p>
+        <p class="mt-4">Loading photos, {{ numPhotosToLoad }} remaining</p>
       </div>
     </div>
 

@@ -47,8 +47,6 @@ const requiredBody = (properties) => (req, res, next) => {
   next();
 };
 
-const DEFAULT_NUM_TO_LOAD = 50;
-
 const router = express.Router();
 router.use(
   session({
@@ -117,19 +115,6 @@ router.get(
     res.send(SourceService.getSource(id));
   })
 );
-/**
- * Returns:
- * {
- *  info: {
- *    hasMorePhotos: boolean;
- *  },
- *  photos: {
- *    date: number;
- *    metadata: object;
- *    sourceFileId: string;
- *  }[]
- * }
- */
 router.get(
   "/source/photos",
   requiredParams(["id"]),
@@ -137,13 +122,19 @@ router.get(
   asyncHandler(async (req, res) => {
     const sourceId = parseInt(req.query.id, 10);
     const start = parseInt(req.query.start, 10) || 0;
-    const num = parseInt(req.query.num, 10) || DEFAULT_NUM_TO_LOAD;
+    const imagePreviewHeight = parseInt(req.query.imagePreviewHeight, 10);
+    const imagePreviewArea = parseInt(req.query.imagePreviewArea, 10);
     const directory = req.query.directory || null;
     const date = req.query.date
       ? dayjs(req.query.date, "YYYY-MM-DD").valueOf()
       : null;
 
-    res.send(ApiService.getSourceFiles(sourceId, start, num, date, directory));
+    const data = ApiService.getSourceFiles(sourceId, start, imagePreviewHeight, imagePreviewArea, date, directory);
+    if (data == null) {
+      res.sendStatus(400);
+    } else {
+      res.send(data);
+    }
   })
 );
 router.get(
@@ -202,20 +193,6 @@ router.get(
     }
   })
 );
-/**
- * Returns:
- * {
- *  info: {
- *    hasMorePhotos: boolean;
- *  },
- *  photos: {
- *    date: number;
- *    metadata: object;
- *    sourceId: string;
- *    sourceFileId: string;
- *  }[]
- * }
- */
 router.get(
   "/album/photos",
   requiredParams(["id"]),
@@ -223,23 +200,18 @@ router.get(
   asyncHandler(async (req, res) => {
     const albumId = req.query.id;
     const start = parseInt(req.query.start, 10) || 0;
-    const num = parseInt(req.query.num, 10) || DEFAULT_NUM_TO_LOAD;
+    const imagePreviewHeight = parseInt(req.query.imagePreviewHeight, 10);
+    const imagePreviewArea = parseInt(req.query.imagePreviewArea, 10);
 
-    res.send(ApiService.getAlbumFiles(albumId, start, start + num));
+    const data = ApiService.getAlbumFiles(albumId, start, imagePreviewHeight, imagePreviewArea);
+    if (data == null) {
+      res.sendStatus(400);
+    } else {
+      res.send(data);
+    }
   })
 );
 
-/**
- * Accepts:
- * {
- *  name: string;
- *  albumId: number;
- *  files: {
- *    sourceId: number;
- *    sourceFileId: string;
- *  }[]
- * }
- */
 router.post(
   "/album",
   requiredBody(["files"]),

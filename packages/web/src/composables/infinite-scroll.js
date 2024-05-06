@@ -1,13 +1,10 @@
 import { ref } from 'vue';
-import { estimateNumImagesFitOnPage } from '../utils'
 
 export function useInfiniteScroll({ photos, canLoadMore, loadMore }) {
   let onScrollBinding = null;
   let infiniteScrollEnabled = false;
   const scrolling = ref(false);
   const scrollIndex = ref(0);
-
-  const numImagesToScroll = estimateNumImagesFitOnPage();
 
   async function onScroll() {
     if (infiniteScrollEnabled) {
@@ -46,19 +43,11 @@ export function useInfiniteScroll({ photos, canLoadMore, loadMore }) {
 
     const origScrollIndex = scrollIndex.value;
 
-    if (scrollIndex.value === photos.value.length && canLoadMore) {
+    if (scrollIndex.value === photos.value.length) {
       await loadMore();
     }
 
-    // TODO: actually calculate numImagesToScroll using photos.metadata.width/height
-    for (let i = scrollIndex.value, j = 0; i < photos.value.length && j < numImagesToScroll; i++, j++) {
-      scrollIndex.value += 1;
-
-      // If we haven't reached numImagesToScroll but there are no more photos, we need to load the next page from the server.
-      if (scrollIndex.value === photos.value.length && j < numImagesToScroll - 1) {
-        await loadMore();
-      }
-    }
+    scrollIndex.value = photos.value.length;
 
     console.debug(`scrolled ${scrollIndex.value - origScrollIndex} more images.`);
 

@@ -42,7 +42,7 @@ import Modal from '../components/Modal.vue';
 import Gallery from './Gallery.vue';
 
 import { getPhotosFromAlbum, getAlbum } from '../services/api';
-import { estimateNumImagesFitOnPage, setDocumentTitle } from '../utils';
+import { getImageHeight, setDocumentTitle } from '../utils';
 
 export default {
   name: 'Album',
@@ -116,22 +116,24 @@ export default {
   },
   methods: {
     async loadMoreFromServer() {
-      console.debug('loading more photo info from server...');
+      if (this.hasMorePhotos) {
+        console.debug('loading more photo info from server...');
 
-      try {
-        this.loadingPhotoInfo = true;
-        const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, estimateNumImagesFitOnPage() * 2, this.albumToken);
-        this.loadingPhotoInfo = false;
+        try {
+          this.loadingPhotoInfo = true;
+          const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, getImageHeight(), this.albumToken);
+          this.loadingPhotoInfo = false;
 
-        this.hasMorePhotos = info.hasMorePhotos;
-        this.$store.dispatch('addPhotos', { photos });
+          this.hasMorePhotos = info.hasMorePhotos;
+          this.$store.dispatch('addPhotos', { photos });
 
-        console.debug(`fetched photo info of ${photos.length} more photos from server.`);
-      } catch(e) {
-        alert('An error occurred.');
-        throw e;
-      } finally {
-        this.loadingPhotoInfo = false;
+          console.debug(`fetched photo info of ${photos.length} more photos from server.`);
+        } catch(e) {
+          alert('An error occurred.');
+          throw e;
+        } finally {
+          this.loadingPhotoInfo = false;
+        }
       }
     },
     showModalAlbumLink() {

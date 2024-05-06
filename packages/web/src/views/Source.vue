@@ -27,7 +27,7 @@ import Loading from '../components/Loading.vue';
 import Gallery from './Gallery.vue';
 
 import { getPhotosFromSource, getSource } from '../services/api';
-import { estimateNumImagesFitOnPage, setDocumentTitle } from '../utils';
+import { getImageHeight, setDocumentTitle } from '../utils';
 
 export default {
   name: 'Source',
@@ -81,28 +81,30 @@ export default {
   },
   methods: {
     async loadMoreFromServer() {
-      console.debug('loading more photo info from server...');
+      if (this.hasMorePhotos) {
+        console.debug('loading more photo info from server...');
 
-      try {
-        this.loadingPhotoInfo = true;
-        const { info, photos } = await getPhotosFromSource(
-          this.sourceId, 
-          this.$store.state.photos.length, 
-          estimateNumImagesFitOnPage() * 2, 
-          this.date,
-          this.directory
-        );
-        this.loadingPhotoInfo = false;
+        try {
+          this.loadingPhotoInfo = true;
+          const { info, photos } = await getPhotosFromSource(
+            this.sourceId, 
+            this.$store.state.photos.length,
+            getImageHeight(),
+            this.date,
+            this.directory
+          );
+          this.loadingPhotoInfo = false;
 
-        this.hasMorePhotos = info.hasMorePhotos;
-        this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
+          this.hasMorePhotos = info.hasMorePhotos;
+          this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
 
-        console.debug(`fetched photo info of ${photos.length} more photos from server.`);
-      } catch(e) {
-        alert('An error occurred.');
-        throw e;
-      } finally {
-        this.loadingPhotoInfo = false;
+          console.debug(`fetched photo info of ${photos.length} more photos from server.`);
+        } catch(e) {
+          alert('An error occurred.');
+          throw e;
+        } finally {
+          this.loadingPhotoInfo = false;
+        }
       }
     },
     onDateUpdate(date) {
