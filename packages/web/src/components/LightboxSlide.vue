@@ -14,7 +14,8 @@
     </div>
   </div>
   <div v-else-if="photo.metadata.video" class="flex items-center justify-center h-full">
-    <div class="z-50" @click.stop="">
+    <!-- h-full flex is needed to size and position the video responsively. -->
+    <div class="z-50 h-full flex" @click.stop="">
       <video ref="video" playsinline controls :data-poster="preview">
         <source :src="photo.urls[PHOTO_SIZES.LARGE]" type="video/mp4"/>
       </video>
