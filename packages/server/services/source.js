@@ -1,22 +1,16 @@
-const DbSource = require("./db-source");
-const logger = require("../logger");
+const ProcessorSource = require('./processor-source/processor-source');
+const logger = require('./logger');
 
-const Source = require("../model/source");
-const File = require("../model/file");
-const FileMetadata = require("../metadata/file-metadata");
+const { SourceDAO, GalleryFileDAO } = require('./db');
+const Source = require('../model/source');
+const FileMetadata = require('../util/file-metadata');
 
 module.exports = {
-  /**
-   *
-   * @param {String} source
-   * @param {String} alias
-   * @returns {String} message
-   */
   addSource(sourcePath, alias) {
-    const existingSource = Source.getSourceByPathOrAlias(sourcePath, alias);
+    const existingSource = SourceDAO.getSourceByPathOrAlias(sourcePath, alias);
 
     if (!existingSource) {
-      Source.insert(sourcePath, alias);
+      SourceDAO.insert(new Source({ alias, path: sourcePath }));
       logger.info(`${alias} added with source path: ${sourcePath}.`);
     } else {
       logger.error(`Path (${sourcePath}) or alias (${alias}) already exists.`);
@@ -25,31 +19,31 @@ module.exports = {
 
   async syncSource(alias) {
     logger.info(`Syncing ${alias}...`);
-    const source = Source.getSourceByAlias(alias);
+    const source = SourceDAO.getSourceByAlias(alias);
     if (source) {
       const stats = {
         updated: 0,
       };
 
       // Get all files from this source.
-      const files = File.findBySourceId(source.id);
+      const files = GalleryFileDAO.findBySourceId(source.id);
 
-      // Then update its info using info from the DbSource.
-      const dbSource = new DbSource(source);
+      // Then update its info using info from the ProcessorSource.
+      const processorSource = new ProcessorSource(source);
 
       files.forEach((f) => {
-        const dbSourceFile = dbSource.getFile(f.sourceFileId);
-        if (dbSourceFile) {
+        const sourceFile = processorSource.getFile(f.sourceFileId);
+        if (sourceFile) {
           let diff = false;
 
-          if (f.date !== dbSourceFile.date) {
+          if (f.date !== sourceFile.date) {
             diff = true;
           }
 
           if (diff) {
-            File.update({
+            GalleryFileDAO.update({
               ...f,
-              date: dbSourceFile.date,
+              date: sourceFile.date,
             });
             stats.updated += 1;
             logger.info(`Updating file #${f.id} (${f.sourceFileId}).`);
@@ -63,74 +57,39 @@ module.exports = {
     }
   },
 
-  deleteSource() {
-    console.log("Not implemented");
+  findFiles(sourceId, start, num, startDateRange, directory) {
+    const source = new ProcessorSource(SourceDAO.getById(sourceId));
+    const sourceFiles = source.findFiles(start, num, startDateRange, directory);
+    return sourceFiles.map(({ id, date, metadata }) => ({
+      date,
+      sourceFileId: id,
+      metadata: new FileMetadata(metadata),
+    }));
   },
 
-  getSource(sourceId) {
-    return Source.get(sourceId);
-  },
+  getFile(sourceId, sourceFileId) {
+    const processorSource = new ProcessorSource(SourceDAO.getById(sourceId));
+    const sourceFile = processorSource.getFile(sourceFileId);
 
-  findAll() {
-    return Source.findAll();
-  },
-
-  findFilesFrom(sourceId, start, num, startDateRange, directory) {
-    const source = Source.get(sourceId);
-    if (source.type === "local") {
-      const dbSource = new DbSource(source);
-      const dbSourceFiles = dbSource.findFilesFrom(
-        start,
-        num,
-        startDateRange,
-        directory
-      );
-      return dbSourceFiles.map(({ id, date, metadata }) => ({
-        date,
-        sourceFileId: id,
-        metadata: new FileMetadata(metadata),
-      }));
+    if (sourceFile) {
+      return {
+        date: sourceFile.date,
+        sourceFileId,
+        metadata: new FileMetadata(sourceFile.metadata),
+      };
     }
 
-    throw new Error("Unexpected source type");
+    return null;
   },
 
-  getSourceFile(sourceId, sourceFileId) {
-    const source = Source.get(sourceId);
-    if (source.type === "local") {
-      const dbSource = new DbSource(source);
-      const dbSourceFile = dbSource.getFile(sourceFileId);
-      if (dbSourceFile) {
-        return {
-          date: dbSourceFile.date,
-          sourceFileId,
-          metadata: new FileMetadata(dbSourceFile.metadata),
-        };
-      } else { 
-        return null;
-      }
-    }
-
-    throw new Error("Unexpected source type");
-  },
-
-  getSourceFileData(sourceId, id, size) {
-    const source = Source.get(sourceId);
-    if (source.type === "local") {
-      const dbSource = new DbSource(source);
-      return dbSource.getFileData(id, size);
-    }
-
-    throw new Error("Unexpected source type");
+  getFileData(sourceId, id, size) {
+    return new ProcessorSource(SourceDAO.getById(sourceId)).getFileData(
+      id,
+      size
+    );
   },
 
   getDirectories(sourceId) {
-    const source = Source.get(sourceId);
-    if (source.type === "local") {
-      const dbSource = new DbSource(source);
-      return dbSource.getDirectories();
-    }
-
-    throw new Error("Unexpected source type");
+    return new ProcessorSource(SourceDAO.getById(sourceId)).getDirectories();
   },
 };

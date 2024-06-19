@@ -1,5 +1,5 @@
-const AlbumService = require("./album");
-const SourceService = require("./source");
+const AlbumService = require('./album');
+const SourceService = require('./source');
 
 const RANGE_QUERY_SIZE = 50;
 
@@ -9,13 +9,20 @@ function getAlbumFiles(albumId, start, imagePreviewHeight, imagePreviewArea) {
   }
 
   let usedArea = 0;
-  let retFiles = [];
+  const retFiles = [];
   let rangeStart = start;
   let hasMorePhotos = false;
 
   while (usedArea < imagePreviewArea) {
-    const files = AlbumService.getAlbumFiles(albumId, rangeStart, RANGE_QUERY_SIZE)
-      .map((f) => ({ ...SourceService.getSourceFile(f.sourceId, f.sourceFileId), sourceId: f.sourceId }))
+    const files = AlbumService.getAlbumFiles(
+      albumId,
+      rangeStart,
+      RANGE_QUERY_SIZE
+    )
+      .map((f) => ({
+        ...SourceService.getFile(f.sourceId, f.sourceFileId),
+        sourceId: f.sourceId,
+      }))
       .filter((f) => !!f.sourceFileId);
 
     for (const file of files) {
@@ -49,30 +56,36 @@ function getAlbumFiles(albumId, start, imagePreviewHeight, imagePreviewArea) {
     info: {
       hasMorePhotos,
     },
-    files: retFiles
-      .map(({ date, sourceId, sourceFileId = null, metadata }) => {
-        return {
-          date,
-          sourceId,
-          sourceFileId,
-          metadata,
-        }
-      }),
-  }
+    files: retFiles.map(
+      ({ date, sourceId, sourceFileId = null, metadata }) => ({
+        date,
+        sourceId,
+        sourceFileId,
+        metadata,
+      })
+    ),
+  };
 }
 
-function getSourceFiles(sourceId, start, imagePreviewHeight, imagePreviewArea, startDateRange, directory) {
+function getSourceFiles(
+  sourceId,
+  start,
+  imagePreviewHeight,
+  imagePreviewArea,
+  startDateRange,
+  directory
+) {
   if (!imagePreviewArea || !imagePreviewHeight) {
     return null;
   }
 
   let usedArea = 0;
-  let retFiles = [];
+  const retFiles = [];
   let rangeStart = start;
   let hasMorePhotos = false;
 
   while (usedArea < imagePreviewArea) {
-    const files = SourceService.findFilesFrom(
+    const files = SourceService.findFiles(
       sourceId,
       rangeStart,
       RANGE_QUERY_SIZE,
@@ -111,13 +124,11 @@ function getSourceFiles(sourceId, start, imagePreviewHeight, imagePreviewArea, s
     info: {
       hasMorePhotos,
     },
-    files: retFiles.map(
-      ({ date, sourceFileId = null, metadata }) => ({
-        date,
-        sourceFileId,
-        metadata,
-      })
-    ),
+    files: retFiles.map(({ date, sourceFileId = null, metadata }) => ({
+      date,
+      sourceFileId,
+      metadata,
+    })),
   };
 }
 

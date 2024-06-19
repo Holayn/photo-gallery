@@ -27,7 +27,7 @@ class FileMetadata {
     // Can come as: 0:01:11 or 1.63 s
     this.duration = normalizeDuration(duration);
 
-    if (orientation === "Rotate 90 CW" && this.width > this.height) {
+    if (orientation === 'Rotate 90 CW' && this.width > this.height) {
       this.width = height;
       this.height = width;
     }
@@ -42,10 +42,13 @@ function normalizeDuration(duration) {
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = seconds % 60;
       return `${minutes}:${remainingSeconds.toFixed(0).padStart(2, '0')}`;
-    } else if (duration.includes(':')) {
+    }
+    if (duration.includes(':')) {
       return duration;
-    } 
+    }
   }
+
+  return null;
 }
 
 module.exports = FileMetadata;

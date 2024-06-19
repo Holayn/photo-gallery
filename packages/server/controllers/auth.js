@@ -1,8 +1,10 @@
-const AlbumService = require("../services/album");
-const Album = require("../model/album");
-const AlbumFile = require("../model/album-file");
-const File = require("../model/file");
-const UserService = require("../services/user");
+const {
+  AlbumDAO,
+  AlbumFileDAO,
+  GalleryFileDAO,
+  UserDAO,
+} = require('../services/db');
+const UserService = require('../services/user');
 
 const MAX_ATTEMPTS = 3;
 const ATTEMPT_TIMEOUT = 3600000;
@@ -13,7 +15,7 @@ async function validateAdmin(req) {
 
 const attempts = {};
 function canAttempt(username) {
-  if (UserService.getUserByUsername(username)) {
+  if (UserDAO.getByUsername(username)) {
     return !attempts[username] || attempts[username] < MAX_ATTEMPTS;
   }
   return false;
@@ -22,11 +24,11 @@ function registerAttempt(username) {
   if (!attempts[username]) {
     attempts[username] = 0;
   }
-  attempts[username] = attempts[username] + 1;
+  attempts[username] += 1;
 
   setTimeout(() => {
     if (attempts[username]) {
-      attempts[username] = attempts[username] - 1;
+      attempts[username] -= 1;
       if (attempts[username] <= 0) {
         clearAttempts(username);
       }
@@ -39,8 +41,8 @@ function clearAttempts(username) {
 
 const AuthController = {
   async auth(req, res, next) {
-    const username = req.body.username;
-    const password = req.body.password;
+    const { username } = req.body;
+    const { password } = req.body;
 
     if (canAttempt(username)) {
       registerAttempt(username);
@@ -52,7 +54,7 @@ const AuthController = {
         return req.session.regenerate((regenErr) => {
           if (regenErr) next(regenErr);
           req.session.user = {
-            name: user,
+            name: username,
           };
           req.session.save((saveErr) => {
             if (saveErr) next(saveErr);
@@ -61,11 +63,13 @@ const AuthController = {
         });
       }
     }
-    
+
     // A failed auth shouldn't result in a 401, because the user wasn't denied access to this route.
     res.send({
       success: false,
     });
+
+    return null;
   },
 
   async authAdmin(req, res, next) {
@@ -82,11 +86,11 @@ const AuthController = {
     const { albumToken } = req.query;
 
     if (albumToken) {
-      const file = File.getBySource(sourceId, sourceFileId);
+      const file = GalleryFileDAO.getBySource(sourceId, sourceFileId);
       if (file) {
-        const album = Album.getByToken(albumToken);
+        const album = AlbumDAO.getByToken(albumToken);
         if (album) {
-          const albumFile = AlbumFile.getByAlbumIdFileId(album.id, file.id);
+          const albumFile = AlbumFileDAO.getByAlbumIdFileId(album.id, file.id);
           if (albumFile) {
             next();
           } else {
@@ -110,7 +114,7 @@ const AuthController = {
 
     if (albumToken) {
       const albumId = req.query.id;
-      const album = AlbumService.getAlbum(albumId);
+      const album = AlbumDAO.getById(albumId);
       if (album.token === req.query.albumToken) {
         next();
       } else {

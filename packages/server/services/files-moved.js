@@ -1,34 +1,35 @@
-const File = require('../model/file');
-const Source = require('../model/source');
-const DbSource = require('./db-source');
+const { SourceDAO, GalleryFileDAO } = require('./db');
+const ProcessorSource = require('./processor-source/processor-source');
 
 /**
  * Look up fromSource file to see if there's a matching file in the toSource.
  * Match on file_name and file_date.
  * If match, update source and id.
- * @param {*} fromSourceId 
- * @param {*} toSourceId 
- * @param {*} sourceFileIdConverter 
+ * @param {*} fromSourceId
+ * @param {*} toSourceId
+ * @param {*} sourceFileIdConverter
  */
 function filesMoved(fromSourceAlias, toSourceAlias) {
-  const fromSource = Source.getSourceByAlias(fromSourceAlias);
-  const toSource = Source.getSourceByAlias(toSourceAlias);
+  const fromSource = SourceDAO.getSourceByAlias(fromSourceAlias);
+  const toSource = SourceDAO.getSourceByAlias(toSourceAlias);
   if (fromSource && toSource) {
-    const fromDbSource = new DbSource(fromSource);
-    const toDbSource = new DbSource(toSource);
+    const fromProcessorSource = new ProcessorSource(fromSource);
+    const toProcessorSource = new ProcessorSource(toSource);
 
-    const filesFromSource = File.findBySourceId(fromSource.id);
+    const filesFromSource = GalleryFileDAO.findBySourceId(fromSource.id);
 
     filesFromSource.forEach((f) => {
-      const fromDbSourceFile = fromDbSource.getFile(f.sourceFileId);
-      if (fromDbSourceFile) {
-        const matchingToDbSourceFile = toDbSource.findFilesMatching(fromDbSourceFile)[0];
-        if (matchingToDbSourceFile) {
-          console.log(`Updating - from: ${f.sourceFileId} in ${fromSource.alias} - to: ${matchingToDbSourceFile.path} in ${toSource.alias}`);
-          File.update({
+      const fromFile = fromProcessorSource.getFile(f.sourceFileId);
+      if (fromFile) {
+        const matchingToFile = toProcessorSource.findFilesMatching(fromFile)[0];
+        if (matchingToFile) {
+          console.log(
+            `Updating - from: ${f.sourceFileId} in ${fromSource.alias} - to: ${matchingToFile.path} in ${toSource.alias}`
+          );
+          GalleryFileDAO.update({
             ...f,
             sourceId: toSource.id,
-            sourceFileId: matchingToDbSourceFile.id,
+            sourceFileId: matchingToFile.id,
           });
         }
       }
@@ -38,4 +39,4 @@ function filesMoved(fromSourceAlias, toSourceAlias) {
 
 module.exports = {
   filesMoved,
-}
+};
