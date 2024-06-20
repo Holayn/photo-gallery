@@ -3,7 +3,8 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const logger = require('../logger');
-const DbSourceMetadata = require('../model/db-source-metadata');
+const ProcessorSourceFile = require('./processor-source-file');
+const { toModelFactory } = require('../../util/db-utils');
 
 const SOURCE_INDEX_DB_FILENAME = 'index.db';
 const FILES_TABLE_NAME = 'files';
@@ -17,16 +18,18 @@ const SIZE_COLUMNS = {
 
 const connections = {};
 
+const toModel = toModelFactory(ProcessorSourceFile);
+
 /**
  * photo-web-processor DB schema
  */
-class DbSource {
+class ProcessorSource {
   constructor({ path: sourcePath }) {
     this.path = sourcePath;
 
     if (sourcePath) {
       if (!connections[sourcePath]) {
-        logger.info(`Opening DB source: ${sourcePath}`);
+        logger.info(`Opening photo-web-processor source: ${sourcePath}`);
         const sourceIndexDb = new Database(
           path.resolve(sourcePath, SOURCE_INDEX_DB_FILENAME)
         );
@@ -42,9 +45,9 @@ class DbSource {
     const records = this.db
       .prepare(
         `
-      SELECT path FROM ${FILES_TABLE_NAME} 
-      WHERE processed != 0
-    `
+        SELECT path FROM ${FILES_TABLE_NAME} 
+        WHERE processed != 0
+      `
       )
       .all();
     const paths = new Set();
@@ -56,45 +59,38 @@ class DbSource {
     return [...paths];
   }
 
-  findFilesFrom(start, num, date, directory) {
+  findFiles(start, num, date, directory) {
     return this.db
       .prepare(
         `
         SELECT * FROM ${FILES_TABLE_NAME} 
-        WHERE 
-        processed != 0 
+        WHERE processed != 0 
         ${directory ? `AND path LIKE '${directory}%'` : ''} 
         ${date ? `AND date < ${date}` : ''} 
         ORDER BY date DESC LIMIT ?, ?
       `
       )
       .all(start, num)
-      .map((f) => new DbSourceFile(f));
+      .map((f) => toModel(f));
   }
 
-  /**
-   *
-   * @returns { Array } { path: string; timestamp: number; metadata: string; date: number; processed: number; }
-   */
   getAllFiles() {
     return this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME}`).all();
   }
 
   getFile(id) {
-    const fileRecord = this.db
-      .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE id = ?`)
-      .get(id);
-    if (fileRecord) {
-      return new DbSourceFile(fileRecord);
-    }
-    return null;
+    return toModel(
+      this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE id = ?`).get(id)
+    );
   }
 
   findFilesMatching(file) {
     return this.db
-      .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE file_name = ${file.fileName} AND file_date = ${file.fileDate}`)
+      .prepare(
+        `SELECT * FROM ${FILES_TABLE_NAME} WHERE file_name = ${file.fileName} AND file_date = ${file.fileDate}`
+      )
       .all()
-      .map((f) => new DbSourceFile(f));
+      .map((f) => toModel(f));
   }
 
   async getFileData(id, size) {
@@ -103,7 +99,7 @@ class DbSource {
       .get(id);
 
     if (!fileRecord) {
-      throw new Error(`${id} does not exist in DB source ${this.path}.`);
+      throw new Error(`ID:${id} does not exist in processor ${this.path}.`);
     }
 
     const pathColumn = SIZE_COLUMNS[size.toUpperCase()];
@@ -122,7 +118,10 @@ class DbSource {
       if (!largePath) {
         throw new Error('Failed to derive path for converted file.');
       }
-      const convertedPath = fileRecord[SIZE_COLUMNS.LARGE].replace('large', 'converted');
+      const convertedPath = fileRecord[SIZE_COLUMNS.LARGE].replace(
+        'large',
+        'converted'
+      );
       const photoPath = path.resolve(this.path, convertedPath);
       const exists = await fs.pathExists(photoPath);
       if (exists) {
@@ -133,7 +132,7 @@ class DbSource {
         };
       }
     }
-    
+
     const photoPath = path.resolve(this.path, sourcePath);
     const exists = await fs.pathExists(photoPath);
 
@@ -149,16 +148,4 @@ class DbSource {
   }
 }
 
-class DbSourceFile {
-  constructor({ id, path, file_name, file_date, date, metadata, sourceId }) {
-    this.id = id;
-    this.path = path;
-    this.date = date;
-    this.fileName = file_name;
-    this.fileDate = file_date;
-    this.metadata = new DbSourceMetadata(JSON.parse(metadata));
-    this.sourceId = sourceId;
-  }
-}
-
-module.exports = DbSource;
+module.exports = ProcessorSource;

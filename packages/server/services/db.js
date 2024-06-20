@@ -1,15 +1,175 @@
-const Database = require("better-sqlite3");
-const fs = require("fs-extra");
-const path = require("path");
+const Database = require('better-sqlite3');
+const fs = require('fs-extra');
+const path = require('path');
 
-const DB_FILENAME = "photo-gallery.db";
+const { toModelFactory } = require('../util/db-utils');
+const Album = require('../model/album');
+const AlbumFile = require('../model/album-file');
+const GalleryFile = require('../model/gallery-file');
+const Source = require('../model/source');
+const User = require('../model/user');
+
+const DB_FILENAME = 'photo-gallery.db';
 const DB_PATH = path.resolve(__dirname, `../${DB_FILENAME}`);
 
-class DB {
-  constructor() {
-    fs.mkdirpSync(path.dirname(DB_PATH));
-    this.db = new Database(DB_PATH);
-  }
-}
+fs.mkdirpSync(path.dirname(DB_PATH));
 
-module.exports = new DB().db;
+const DB = new Database(DB_PATH);
+
+DB.exec(
+  'CREATE TABLE IF NOT EXISTS album_file (id INTEGER PRIMARY KEY, album_id INTEGER, file_id INTEGER, FOREIGN KEY(album_id) REFERENCES album(id), FOREIGN KEY(file_id) REFERENCES file(id))'
+);
+const toAlbumFileModel = toModelFactory(AlbumFile);
+const AlbumFileDAO = {
+  insert({ albumId, fileId }) {
+    return DB.prepare(
+      'INSERT INTO album_file (album_id, file_id) VALUES (@albumId, @fileId)'
+    ).run({ albumId, fileId }).lastInsertRowid;
+  },
+  getByAlbumIdFileId(albumId, fileId) {
+    return toAlbumFileModel(
+      DB.prepare(
+        'SELECT * FROM album_file WHERE album_id = ? AND file_id = ?'
+      ).get(albumId, fileId)
+    );
+  },
+  findByAlbumId(albumId) {
+    return DB.prepare('SELECT file_id FROM album_file WHERE album_id = ?')
+      .all(albumId)
+      .map((af) => toAlbumFileModel(af));
+  },
+  deleteByFileId(fileId) {
+    DB.prepare('DELETE FROM album_file WHERE file_id = ?').run(fileId);
+  },
+};
+
+DB.exec(
+  'CREATE TABLE IF NOT EXISTS album (id INTEGER PRIMARY KEY, name TEXT, token TEXT)'
+);
+const toAlbumModel = toModelFactory(Album);
+const AlbumDAO = {
+  insert({ name, token }) {
+    return DB.prepare(
+      'INSERT INTO album (name, token) VALUES (@name, @token)'
+    ).run({ name, token }).lastInsertRowid;
+  },
+  findAll() {
+    return DB.prepare('SELECT * FROM album')
+      .all()
+      .map((a) => toAlbumModel(a));
+  },
+  getById(id) {
+    return toAlbumModel(DB.prepare('SELECT * FROM album WHERE id = ?').get(id));
+  },
+  getByToken(token) {
+    return toAlbumModel(
+      DB.prepare('SELECT * FROM album WHERE token = ?').get(token)
+    );
+  },
+};
+
+DB.exec(
+  'CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, timestamp_added INTEGER, date INTEGER, source_id INTEGER, source_file_id INTEGER, FOREIGN KEY(source_id) REFERENCES source(id))'
+);
+const toGalleryFileModel = toModelFactory(GalleryFile);
+const GalleryFileDAO = {
+  insert({ date, sourceId, sourceFileId }) {
+    return DB.prepare(
+      'INSERT INTO file (timestamp_added, date, source_id, source_file_id) VALUES (@timestampAdded, @date, @sourceId, @sourceFileId)'
+    ).run({
+      date,
+      sourceId,
+      sourceFileId,
+      timestampAdded: new Date().getTime(),
+    }).lastInsertRowid;
+  },
+  update(file) {
+    DB.prepare(
+      'UPDATE file SET date = @date, source_id = @sourceId, source_file_id = @sourceFileId WHERE id = @id'
+    ).run(file);
+  },
+  findBySourceId(sourceId) {
+    return DB.prepare('SELECT * FROM file WHERE source_id = ?')
+      .all(sourceId)
+      .map((f) => toGalleryFileModel(f));
+  },
+  getBySource(sourceId, sourceFileId) {
+    return toGalleryFileModel(
+      DB.prepare(
+        'SELECT * FROM file WHERE source_id = ? AND source_file_id = ?'
+      ).get(sourceId, sourceFileId)
+    );
+  },
+  findByIds(fileIds, start, num) {
+    return DB.prepare(
+      `SELECT * FROM file WHERE id IN (${fileIds.join(
+        ', '
+      )}) ORDER BY date LIMIT ?, ?`
+    )
+      .all(start, num)
+      .map((f) => toGalleryFileModel(f));
+  },
+};
+
+DB.exec(
+  'CREATE TABLE IF NOT EXISTS source (id INTEGER PRIMARY KEY, path STRING, alias STRING)'
+);
+const toSourceModel = toModelFactory(Source);
+const SourceDAO = {
+  insert({ path: sourcePath, alias }) {
+    return DB.prepare(
+      'INSERT INTO source (path, alias) VALUES (@path, @alias)'
+    ).run({ path: sourcePath, alias }).lastInsertRowid;
+  },
+  getById(id) {
+    return toSourceModel(
+      DB.prepare('SELECT * FROM source WHERE id = ?').get(id)
+    );
+  },
+  getSourceByPathOrAlias(sourcePath, alias) {
+    return toSourceModel(
+      DB.prepare('SELECT * FROM source WHERE path = ? OR alias = ?').get(
+        sourcePath,
+        alias
+      )
+    );
+  },
+  getSourceByAlias(alias) {
+    return toSourceModel(
+      DB.prepare('SELECT * FROM source WHERE alias = ?').get(alias)
+    );
+  },
+  findAll() {
+    return DB.prepare('SELECT * FROM source')
+      .all()
+      .map((s) => toSourceModel(s));
+  },
+};
+
+DB.exec(
+  'CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, name TEXT, password TEXT)'
+);
+const toUserModel = toModelFactory(User);
+const UserDAO = {
+  getByUsernamePassword(name, password) {
+    return toUserModel(
+      DB.prepare('SELECT * FROM user WHERE name = ? AND password = ?').get(
+        name,
+        password
+      )
+    );
+  },
+  getByUsername(username) {
+    return toUserModel(
+      DB.prepare('SELECT * FROM user WHERE name = ?').get(username)
+    );
+  },
+};
+
+module.exports = {
+  AlbumFileDAO,
+  AlbumDAO,
+  GalleryFileDAO,
+  SourceDAO,
+  UserDAO,
+};

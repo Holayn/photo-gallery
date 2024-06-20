@@ -1,58 +1,57 @@
-const crypto = require("crypto");
+const crypto = require('crypto');
 
-const SourceService = require("./source");
+const SourceService = require('./source');
 
-const Album = require("../model/album");
-const AlbumFile = require("../model/album-file");
-const File = require("../model/file");
+const { AlbumDAO, AlbumFileDAO, GalleryFileDAO } = require('./db');
+const Album = require('../model/album');
+const AlbumFile = require('../model/album-file');
+const GalleryFile = require('../model/gallery-file');
 
 module.exports = {
   createAlbum(name, files = {}) {
-    const albumId = Album.insert(name, generateAlbumToken());
+    const albumId = AlbumDAO.insert(
+      new Album({ name, token: generateAlbumToken() })
+    );
     this.addToAlbum(albumId, files);
   },
 
   addToAlbum(albumId, files = {}) {
     Object.keys(files).forEach((file) => {
       const f = files[file];
-      const existingFile = File.getBySource(f.sourceId, f.sourceFileId);
+      const existingFile = GalleryFileDAO.getBySource(
+        f.sourceId,
+        f.sourceFileId
+      );
       if (existingFile) {
-        const existsInAlbum = AlbumFile.getByAlbumIdFileId(
+        const existsInAlbum = AlbumFileDAO.getByAlbumIdFileId(
           albumId,
           existingFile.id
         );
         if (!existsInAlbum) {
-          AlbumFile.insert(albumId, existingFile.id);
+          AlbumFileDAO.insert(
+            new AlbumFile({ albumId, fileId: existingFile.id })
+          );
         }
       } else {
-        const sourceFile = SourceService.getSourceFile(
-          f.sourceId,
-          f.sourceFileId
+        const sourceFile = SourceService.getFile(f.sourceId, f.sourceFileId);
+        const newFileId = GalleryFileDAO.insert(
+          new GalleryFile({
+            ...sourceFile,
+            sourceId: f.sourceId,
+          })
         );
-        const newFileId = File.insert({
-          ...sourceFile,
-          sourceId: f.sourceId,
-        });
-        AlbumFile.insert(albumId, newFileId);
+        AlbumFileDAO.insert(new AlbumFile({ albumId, fileId: newFileId }));
       }
     });
   },
 
-  findAllAlbums() {
-    return Album.findAll();
-  },
-
-  getAlbum(id) {
-    return Album.get(id);
-  },
-
   getAlbumFiles(id, start, num) {
-    const albumFiles = AlbumFile.findByAlbumId(id);
-    const fileIds = albumFiles.map((f) => f.file_id);
-    return File.findByIds(fileIds, start, num);
+    const albumFiles = AlbumFileDAO.findByAlbumId(id);
+    const fileIds = albumFiles.map((f) => f.fileId);
+    return GalleryFileDAO.findByIds(fileIds, start, num);
   },
 };
 
 function generateAlbumToken() {
-  return crypto.randomBytes(16).toString("hex");
+  return crypto.randomBytes(16).toString('hex');
 }
