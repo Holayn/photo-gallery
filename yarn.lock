@@ -5971,6 +5971,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"justified-layout@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "justified-layout@npm:4.1.0"
+  checksum: 36d84877fb078d643ca245126990b7c55dbf95b6d6ac59e65843790ce252dab180f32aa5c9a18a3dba4e1723facadf827e234be1b5c82be794ecbdf1825a2894
+  languageName: node
+  linkType: hard
+
 "keyv@npm:^4.5.3":
   version: 4.5.3
   resolution: "keyv@npm:4.5.3"
@@ -7346,6 +7353,7 @@ __metadata:
     eslint: ^8.31.0
     eslint-plugin-vue: ^9.9.0
     js-cookie: ^3.0.1
+    justified-layout: ^4.1.0
     plyr: ^3.7.8
     postcss: ^8.4.23
     swiper: ^10.0.0

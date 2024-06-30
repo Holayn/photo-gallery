@@ -15,11 +15,13 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
           </button>
         </template>
+        <template v-if="loadingPhotoInfo" #loading>
+          <div class="flex flex-col items-center justify-center pb-4">
+            <Loading class="w-16 h-16"></Loading>
+            <p>Retrieving photo info</p>
+          </div>
+        </template>
       </Gallery>
-      <div v-if="loadingPhotoInfo" class="flex flex-col items-center justify-center pb-4">
-        <Loading class="w-16 h-16"></Loading>
-        <p>Retrieving photo info</p>
-      </div>
     </div>
 
     <Modal v-if="isModalAlbumLinkShowing" full="true" @close="(isModalAlbumLinkShowing = false)">
@@ -42,7 +44,7 @@ import Modal from '../components/Modal.vue';
 import Gallery from './Gallery.vue';
 
 import { getPhotosFromAlbum, getAlbum } from '../services/api';
-import { getImageHeight, setDocumentTitle } from '../utils';
+import { getGalleryImageHeight, setDocumentTitle } from '../utils';
 
 export default {
   name: 'Album',
@@ -121,7 +123,7 @@ export default {
 
         try {
           this.loadingPhotoInfo = true;
-          const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, getImageHeight(), this.albumToken);
+          const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, getGalleryImageHeight(), this.albumToken);
           this.loadingPhotoInfo = false;
 
           this.hasMorePhotos = info.hasMorePhotos;

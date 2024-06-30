@@ -2,7 +2,7 @@
   <div v-if="photo && !photo.metadata.video">
     <div v-if="loading" class="relative flex items-center justify-center h-full">
       <img class="w-full h-full object-contain blur-sm" :src="preview">
-      <div class="absolute flex items-center justify-center top-0 left-0 w-full h-full">
+      <div class="absolute flex items-center justify-center">
         <Loading class="w-16 h-16"></Loading>
       </div>
     </div>

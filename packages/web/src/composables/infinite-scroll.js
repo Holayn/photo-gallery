@@ -1,43 +1,53 @@
 import { ref } from 'vue';
 
-export function useInfiniteScroll({ photos, canLoadMore, loadMore }) {
+export function useInfiniteScroll({ photos, loadMore }) {
   let onScrollBinding = null;
-  let infiniteScrollEnabled = false;
+  let enabled = false;
+  let container = null;
+
   const scrolling = ref(false);
   const scrollIndex = ref(0);
 
   async function onScroll() {
-    if (infiniteScrollEnabled) {
-      const boundaryOffset = window.innerHeight / 3;
-      const boundary = window.document.documentElement.scrollHeight - boundaryOffset;
-      const viewingWindowBottom = window.scrollY + window.innerHeight;
-      const isPastBoundary = viewingWindowBottom > boundary;
-      if (isPastBoundary) {
-        infiniteScrollEnabled = false;
-        await scroll();
-      }
+    if (enabled) {
+      await scrollTry();
     }
   }
 
-  function enableInfiniteScroll() {
-    if (!infiniteScrollEnabled) {
+  async function scrollTry() {
+    if (isPastBoundary()) {
+      await scroll();
+    }
+  }
+
+  function registerContainer(c) {
+    container = c;
+  }
+
+  function isPastBoundary() {
+    const boundaryOffset = container.getBoundingClientRect().height / 3;
+    return container.scrollTop + container.getBoundingClientRect().height > container.scrollHeight - boundaryOffset;
+  }
+
+  function enable() {
+    if (!enabled) {
       console.debug('infinite-scroll:: enabled.');
       if (!onScrollBinding) {
         onScrollBinding = onScroll.bind(this);
       }
-      window.addEventListener('scroll', onScrollBinding);
-      infiniteScrollEnabled = true;
+      container.addEventListener('scroll', onScrollBinding);
+      enabled = true;
     }
   }
-  function disableInfiniteScroll() {
+  function disable() {
     console.debug('infinite-scroll:: disabled.');
-    window.removeEventListener('scroll', onScrollBinding);
-    infiniteScrollEnabled = false;
+    container.removeEventListener('scroll', onScrollBinding);
+    enabled = false;
   }
 
   async function scroll() {
     console.debug('infinite-scroll:: scrolling...');
-    disableInfiniteScroll();
+    disable();
 
     scrolling.value = true;
 
@@ -52,6 +62,8 @@ export function useInfiniteScroll({ photos, canLoadMore, loadMore }) {
     console.debug(`scrolled ${scrollIndex.value - origScrollIndex} more images.`);
 
     scrolling.value = false;
+
+    enable();
   }
 
   function reset() {
@@ -60,11 +72,13 @@ export function useInfiniteScroll({ photos, canLoadMore, loadMore }) {
   }
 
   return {
-    enable: enableInfiniteScroll,
-    disable: disableInfiniteScroll,
+    enable,
+    disable,
     reset,
     scroll,
+    scrollTry,
     scrolling,
     scrollIndex,
+    registerContainer,
   }
 }

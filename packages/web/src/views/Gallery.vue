@@ -1,5 +1,5 @@
 <template>
-  <div ref="gallery">
+  <div ref="gallery" class="absolute inset-0 overflow-auto py-12" style="top: var(--header-height);">
     <div class="px-4 md:px-8 md:flex md:gap-8 items-center">
       <div class="flex-auto break-all">
         <slot name="heading"></slot>
@@ -32,9 +32,36 @@
       </Teleport>
     </div>
 
-    <div id="media" class="mt-4">  
-      <a v-for="(photo, i) in loadedPhotos" :ref="setGalleryImageRef" :key="i" @click.prevent>
-        <img :src="photo.data?.preview" @click="isSelectionMode ? select(photo) : openLightbox(i)">
+    <div ref="photos" class="mt-4 relative" :style="{ height: `${layout?.containerHeight}px` }">
+      <div 
+        v-if="layout" 
+        v-for="(photo, i) in renderPhotos" 
+        :ref="setGalleryImageRef"
+        :key="photo.id" 
+        :data-photo-id="photo.id"
+        style="position: absolute;" 
+        :style="{ 
+          top: layout.boxes[i + renderPhotosStart].top + 'px', 
+          left: layout.boxes[i + renderPhotosStart].left + 'px', 
+          width: layout.boxes[i + renderPhotosStart].width + 'px', 
+          height: layout.boxes[i + renderPhotosStart].height + 'px',
+        }"
+      >
+        <div v-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full">
+          <Loading class="w-8 h-8"></Loading>
+        </div>
+        <button @click="isSelectionMode ? select(photo) : openLightbox(photo)">
+          <img 
+            :src="getPhotoUrl(photo)"
+            :style="{
+              width: layout.boxes[i + renderPhotosStart].width + 'px', 
+              height: layout.boxes[i + renderPhotosStart].height + 'px',
+              opacity: loadedImages[photo.id] ? 1 : 0,
+            }"
+            style="transition: opacity 500ms linear;"
+            @load="imgLoad(photo)"
+          >
+        </button>
         <div v-if="photo.metadata.video" class="overlay">
           <div class="text-white text-xs md:text-base md:mb-1 mr-1 md:mr-2">{{ photo.metadata.duration }}</div>
           <svg class="w-4 h-4 md:w-6 md:h-6 md:mb-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -47,16 +74,11 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
           </div>
         </div>
-      </a>
-    </div>
-
-    <div class="h-48">
-      <div v-if="loadingPhotos" class="flex flex-col items-center justify-center mt-4">
-        <Loading class="w-16 h-16"></Loading>
-        <p class="mt-4">Loading photos, {{ numPhotosToLoad }} remaining</p>
       </div>
     </div>
 
+    <div v-if="$slots.loading" class="mt-8"></div>
+    <slot name="loading"></slot>
     <div v-if="isNoPhotos" class="text-center">No photos found.</div>
     
     <Lightbox v-if="isShowLightbox" @close="closeLightbox()"></Lightbox>
@@ -80,9 +102,10 @@
 <script>
 import { computed } from 'vue';
 import { useStore } from 'vuex';
+import justifiedLayout from 'justified-layout';
 
 import { getAlbums, createAlbum, addToAlbum } from '../services/api';
-import { getImageHeight, getGalleryPhotoSize, loadPhotoToBase64 } from '../utils';
+import { debounce, getMobileGalleryImageHeight, isMobileScreen, getGalleryPhotoSize, isElementFullyInView } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
@@ -112,7 +135,9 @@ export default {
       enable,
       disable,
       reset,
+      registerContainer,
       scroll,
+      scrollTry,
       scrolling,
       scrollIndex,
     } = useInfiniteScroll({
@@ -126,8 +151,10 @@ export default {
       infiniteScrollDisable: disable,
       infiniteScrollReset: reset,
       scroll,
+      scrollTry,
       scrolling,
       scrollIndex,
+      registerScrollContainer: registerContainer,
     };
   },
   data() {
@@ -141,11 +168,10 @@ export default {
       loadingAlbums: false,
       showAddToExistingAlbum: false,
 
-      loadedPhotoIndex: 0,
-      loadingPhotos: false,
-      numPhotosToLoad: 0,
-
-      scrollPosition: 0,
+      renderPhotosStart: 0,
+      renderPhotosEnd: 0,
+      loadedImages: {},
+      layout: null,
 
       isSelectionMode: false,
       selected: {},
@@ -154,28 +180,37 @@ export default {
     };
   },
   computed: {
-    loadedPhotos() {
-      return this.$store.state.photos?.slice(0, this.loadedPhotoIndex);
-    },
     lightboxIndex() {
       return this.$store.state.lightbox.photoIndex;
     },
     isNoPhotos() {
-      return !this.scrolling && this.numPhotos === 0;
-    },
-    numPhotos() {
-      return this.$store.state.photos.length;
+      return !this.scrolling && this.$store.state.photos.length === 0;
     },
     token() {
       return this.$store.state.token;
     },
+    photos() {
+      return this.$store.state.photos;
+    },
+    renderPhotos() {
+      return this.photos.slice(this.renderPhotosStart, this.renderPhotosEnd);
+    },
+    container() {
+      return this.$refs.gallery;
+    }
   },
   watch: {
-    lightboxIndex() {
+    async lightboxIndex() {
+      await this.scrollLightboxImageIntoView();
+
       // Handling for navigating the lightbox past loaded gallery thumbnails.
       if (this.lightboxIndex + 1 >= this.scrollIndex) {
-        this.scroll();
+        await this.scroll();
+      } else {
+        await this.scrollTry();
       }
+
+      this.updateRenderPhotos();
     },
     showLightbox() {
       if (this.showLightbox) {
@@ -187,22 +222,30 @@ export default {
     isShowLightbox() {
       this.updateLightboxQueryParam();
     },
-    scrollIndex() {
-      this.loadPhotos();
+    scrolling() {
+      if (!this.scrolling) {
+        this.updateRenderPhotos();
+      }
     },
   },
   created() {
     // Ensure the page isn't loaded with this query parameter set.
     this.removeLightboxParam(true);
   },
-  mounted() {
-    // Need to initialize this plugin.
-    window.$('#media').justifiedGallery({
-      rowHeight: getImageHeight(),
-      maxRowHeight: getImageHeight(),
-    });
+  async mounted() {
+    this.registerScrollContainer(this.$refs.gallery);
+    await this.scroll();
+    
+    const onScroll = debounce(() => this.updateRenderPhotos());
+    this.$refs.gallery.addEventListener('scroll', onScroll);
 
-    this.scroll();
+    this.updateRenderPhotos();
+
+    // Scrollbar may show now, so re-update layout to accommodate for that.
+    await this.$nextTick();
+    this.updateLayout();
+
+    this.infiniteScrollEnable();
   },
   beforeUpdate() {
     this.galleryImageRefs = [];
@@ -211,97 +254,84 @@ export default {
     this.infiniteScrollDisable();
   },
   methods: {
-    async loadPhotos() {
-      console.debug('loadPhotos(): loading photos...');
-      this.loadingPhotos = true;
-      const photosToLoad = this.$store.state.photos.slice(this.loadedPhotoIndex, this.scrollIndex);
-      this.numPhotosToLoad = photosToLoad.length;
-      this.loadedPhotoIndex = this.scrollIndex;
-      const loadPromises = photosToLoad.map(photo => {
-        return new Promise((resolve) => {
-          const url = photo.urls[getGalleryPhotoSize()];
-
-          loadPhotoToBase64(url).then(data => {
-            if (!photo.data) photo.data = {};
-            photo.data.preview = data;
-            this.numPhotosToLoad--;
-            resolve();
-          })
-        });
+    updateLayout() {
+      this.layout = justifiedLayout([...this.photos.map(p => ({
+        width: isMobileScreen() ? getMobileGalleryImageHeight() : p.metadata.width,
+        height: isMobileScreen() ? getMobileGalleryImageHeight() : p.metadata.height,
+      }))], {
+        containerPadding: 0,
+        containerWidth: this.$refs.photos?.getBoundingClientRect().width,
+        targetRowHeight: getMobileGalleryImageHeight(),
+        boxSpacing: 2,
       });
-
-      await Promise.all(loadPromises);
-
-      console.debug('loadPhotos(): photos loaded.');
-
-      if (!this.loadedPhotos.length) {
-        this.loadingPhotos = false;
-      } else {
-        setTimeout(() => {
-          window.$('#media').justifiedGallery({
-            rowHeight: getImageHeight(),
-            maxRowHeight: getImageHeight(),
-          }).on('jg.complete', () => {
-            this.loadingPhotos = false;
-            this.infiniteScrollEnable();
-          });
-        });
+    },
+    async imgLoad(photo) {
+      this.loadedImages[photo.id] = true;
+    },
+    updateRenderPhotos() {
+      this.updateLayout();
+      let start = null;
+      let end = null;
+      for (let i = 0; i < this.layout.boxes.length; i++) {
+        const box = this.layout.boxes[i];
+        if ((box.top + box.height + 128 > this.$refs.gallery.scrollTop) && (box.top < this.$refs.gallery.scrollTop + this.$refs.gallery.getBoundingClientRect().height)) {
+          if (start === null) {
+            start = i;
+          }
+        } else {
+          if (start !== null) {
+            end = i;
+            break;
+          }
+        }
       }
+      if (end === null) {
+        end = this.layout.boxes.length;
+      }
+      this.renderPhotosStart = start;
+      this.renderPhotosEnd = end;
     },
-
-    isScrolledIntoView(el) {
-      const rect = el.getBoundingClientRect();
-      const elemTop = rect.top;
-      const elemBottom = rect.bottom;
-
-      const isVisible = (elemTop >= 0) && (elemBottom <= window.innerHeight);
-      return isVisible;
+    
+    getPhotoUrl(photo) {
+      return photo.urls[getGalleryPhotoSize()];
     },
-    scrollCurrentImageIntoView() {
-      const galleryPhoto = this.galleryImageRefs[this.lightboxIndex];
-      if (galleryPhoto && !this.isScrolledIntoView(galleryPhoto)) {
-        galleryPhoto.scrollIntoView();
-        window.scrollBy(0, -1 * window.innerHeight / 2);
+    
+    async scrollLightboxImageIntoView() {
+      const lightboxPhoto = this.photos[this.lightboxIndex];
+      const galleryPhotoRef = this.galleryImageRefs.find(ref => ref.photo === lightboxPhoto);
+      if (!galleryPhotoRef) {
+        throw new Error('Could not find gallery photo to scroll to.');
+      }
+      const fullyInView = await isElementFullyInView(galleryPhotoRef.el);
+      if (galleryPhotoRef && !fullyInView) {
+        galleryPhotoRef.el.scrollIntoView();
       }
     },
     setGalleryImageRef(el) {
       if (el) {
-        this.galleryImageRefs.push(el);
+        this.galleryImageRefs.push({
+          el,
+          photo: this.photos.find(photo => photo.id === el.dataset.photoId),
+        });
       }
     },
 
-    openLightbox(index) {
+    openLightbox(photo) {
       if (!this.isShowLightbox) {
         this.isShowLightbox = true;
-
-        document.body.style.position = 'fixed';
-        document.body.style.overflow = 'hidden';
-
-        if (index !== null && index !== undefined) {
-          this.$store.state.lightbox.photoIndex = index;
-        }
-
-        this.scrollPosition = window.scrollY;
         this.infiniteScrollDisable();
+
+        if (photo) {
+          this.$store.state.lightbox.photoIndex = this.photos.findIndex(p => p === photo);
+        }
       }
     },
     closeLightbox() {
       if (this.isShowLightbox) {
         this.isShowLightbox = false;
-
-        document.body.style.position = '';
-        document.body.style.overflow = '';
-
-        this.$nextTick(() => {
-          window.scrollTo(0, this.scrollPosition);
-          setTimeout(() => {
-            this.scrollCurrentImageIntoView();
-            this.infiniteScrollEnable();
-          });
-        });
+        this.infiniteScrollEnable();
       }
     },
-
     updateLightboxQueryParam() {
       if (this.isShowLightbox && !this.$route.query.showLightbox) {
         this.$router.push({ path: this.$route.path, query: { ...this.$route.query, showLightbox: true } });
@@ -379,7 +409,6 @@ export default {
     },
 
     reset() {
-      this.loadedPhotoIndex = 0;
       this.$store.dispatch('clearPhotos');
       this.infiniteScrollReset();
     },
@@ -390,6 +419,8 @@ export default {
 <style scoped>
   .overlay {
     position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
     width: 100%;
     display: flex;

@@ -13,11 +13,13 @@
             </template>
           </h1>
         </template>
+        <template v-if="loadingPhotoInfo" #loading>
+          <div class="flex flex-col items-center justify-center pb-4">
+            <Loading class="w-16 h-16"></Loading>
+            <div>Retrieving photo info</div>
+          </div>
+        </template>
       </Gallery>
-      <div v-if="loadingPhotoInfo" class="flex flex-col items-center justify-center pb-4">
-        <Loading class="w-16 h-16"></Loading>
-        <div>Retrieving photo info</div>
-      </div>
     </div>
   </div>
 </template>
@@ -27,7 +29,7 @@ import Loading from '../components/Loading.vue';
 import Gallery from './Gallery.vue';
 
 import { getPhotosFromSource, getSource } from '../services/api';
-import { getImageHeight, setDocumentTitle } from '../utils';
+import { getGalleryImageHeight, setDocumentTitle } from '../utils';
 
 export default {
   name: 'Source',
@@ -89,7 +91,7 @@ export default {
           const { info, photos } = await getPhotosFromSource(
             this.sourceId, 
             this.$store.state.photos.length,
-            getImageHeight(),
+            getGalleryImageHeight(),
             this.date,
             this.directory
           );

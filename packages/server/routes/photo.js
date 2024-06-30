@@ -25,6 +25,7 @@ router.get(
     if (fileData) {
       const { data, fileType } = fileData;
       res.contentType(fileType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
       res.send(data);
     } else {
       res.status(404).send('Photo not found.');
