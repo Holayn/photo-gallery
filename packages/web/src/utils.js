@@ -18,7 +18,7 @@ export function isMobileScreen() {
   return window.innerWidth < 500;
 }
 
-export function getGalleryPhotoSize() {
+export function getFetchedGalleryPhotoSize() {
   return isMobileScreen() ? PHOTO_SIZES.THUMB : PHOTO_SIZES.SMALL;
 }
 

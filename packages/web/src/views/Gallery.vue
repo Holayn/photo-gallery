@@ -105,7 +105,7 @@ import { useStore } from 'vuex';
 import justifiedLayout from 'justified-layout';
 
 import { getAlbums, createAlbum, addToAlbum } from '../services/api';
-import { debounce, getMobileGalleryImageHeight, isMobileScreen, getGalleryPhotoSize, isElementFullyInView } from '../utils';
+import { debounce, getGalleryImageHeight, getMobileGalleryImageHeight, isMobileScreen, getFetchedGalleryPhotoSize, isElementFullyInView } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
@@ -231,19 +231,22 @@ export default {
   created() {
     // Ensure the page isn't loaded with this query parameter set.
     this.removeLightboxParam(true);
+
+    this._updateRenderPhotosDebounce = debounce(() => this.updateRenderPhotos(), 50);
   },
   async mounted() {
     this.registerScrollContainer(this.$refs.gallery);
     await this.scroll();
     
-    const onScroll = debounce(() => this.updateRenderPhotos());
-    this.$refs.gallery.addEventListener('scroll', onScroll);
+    this.$refs.gallery.addEventListener('scroll', this._updateRenderPhotosDebounce);
+    window.addEventListener('resize', this._updateRenderPhotosDebounce);
+
+    const resize = debounce(() => {
+      this.scrollTry();
+    }, 500);
+    window.addEventListener('resize', resize);
 
     this.updateRenderPhotos();
-
-    // Scrollbar may show now, so re-update layout to accommodate for that.
-    await this.$nextTick();
-    this.updateLayout();
 
     this.infiniteScrollEnable();
   },
@@ -261,14 +264,11 @@ export default {
       }))], {
         containerPadding: 0,
         containerWidth: this.$refs.photos?.getBoundingClientRect().width,
-        targetRowHeight: getMobileGalleryImageHeight(),
+        targetRowHeight: getGalleryImageHeight(),
         boxSpacing: 2,
       });
     },
-    async imgLoad(photo) {
-      this.loadedImages[photo.id] = true;
-    },
-    updateRenderPhotos() {
+    async updateRenderPhotos() {
       this.updateLayout();
       let start = null;
       let end = null;
@@ -290,10 +290,18 @@ export default {
       }
       this.renderPhotosStart = start;
       this.renderPhotosEnd = end;
+
+      // Scrollbar may show now, so re-update layout to accommodate for that.
+      await this.$nextTick();
+      this.updateLayout();
     },
     
     getPhotoUrl(photo) {
-      return photo.urls[getGalleryPhotoSize()];
+      return photo.urls[getFetchedGalleryPhotoSize()];
+    },
+
+    async imgLoad(photo) {
+      this.loadedImages[photo.id] = true;
     },
     
     async scrollLightboxImageIntoView() {

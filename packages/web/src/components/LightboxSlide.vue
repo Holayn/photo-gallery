@@ -27,7 +27,7 @@
 import Plyr from 'plyr';
 
 import { PHOTO_SIZES } from '../services/api';
-import { getGalleryPhotoSize, loadPhotoToBase64 } from '../utils';
+import { getFetchedGalleryPhotoSize, loadPhotoToBase64 } from '../utils';
 
 import Loading from './Loading.vue';
 
@@ -68,7 +68,7 @@ export default {
     if (this.photo.data?.preview) {
         this.preview = this.photo.data.preview;
       } else {
-        loadPhotoToBase64(this.photo.urls[getGalleryPhotoSize()]).then(data => {
+        loadPhotoToBase64(this.photo.urls[getFetchedGalleryPhotoSize()]).then(data => {
           this.preview = data;
         });
       }
@@ -101,7 +101,6 @@ export default {
     }
   },
   methods: {
-    getGalleryPhotoSize,
     onVideoOverlayClick() {
       this.player.togglePlay();
     }
