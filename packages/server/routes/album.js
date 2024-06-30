@@ -2,7 +2,6 @@ const express = require('express');
 
 const AlbumService = require('../services/album');
 const { AlbumDAO } = require('../services/db');
-const ApiService = require('../services/api');
 const AuthController = require('../controllers/auth');
 const {
   asyncHandler,
@@ -43,7 +42,7 @@ router.get(
     const imagePreviewHeight = parseInt(req.query.imagePreviewHeight, 10);
     const imagePreviewArea = parseInt(req.query.imagePreviewArea, 10);
 
-    const data = ApiService.getAlbumFiles(
+    const data = AlbumService.getAlbumFilesCoveringArea(
       albumId,
       start,
       imagePreviewHeight,

@@ -2,7 +2,7 @@ const dayjs = require('dayjs');
 const express = require('express');
 
 const AuthController = require('../controllers/auth');
-const ApiService = require('../services/api');
+const SourceService = require('../services/source');
 const { SourceDAO } = require('../services/db');
 const { asyncHandler, requiredParams } = require('../util/route-utils');
 
@@ -38,7 +38,7 @@ router.get(
       ? dayjs(req.query.date, 'YYYY-MM-DD').valueOf()
       : null;
 
-    const data = ApiService.getSourceFiles(
+    const data = SourceService.getSourceFilesCoveringArea(
       sourceId,
       start,
       imagePreviewHeight,
@@ -59,7 +59,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const sourceId = parseInt(req.query.id, 10);
 
-    res.send(ApiService.getDirectories(sourceId));
+    res.send(SourceService.getDirectories(sourceId));
   })
 );
 

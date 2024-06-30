@@ -5,6 +5,8 @@ const { SourceDAO, GalleryFileDAO } = require('./db');
 const Source = require('../model/source');
 const FileMetadata = require('../util/file-metadata');
 
+const RANGE_QUERY_SIZE = 50;
+
 module.exports = {
   addSource(sourcePath, alias) {
     const existingSource = SourceDAO.getSourceByPathOrAlias(sourcePath, alias);
@@ -92,4 +94,69 @@ module.exports = {
   getDirectories(sourceId) {
     return new ProcessorSource(SourceDAO.getById(sourceId)).getDirectories();
   },
+
+  getSourceFilesCoveringArea(
+    sourceId,
+    start,
+    imagePreviewHeight,
+    imagePreviewArea,
+    startDateRange,
+    directory
+  ) {
+    if (!imagePreviewArea || !imagePreviewHeight) {
+      return null;
+    }
+  
+    let usedArea = 0;
+    const retFiles = [];
+    let rangeStart = start;
+    let hasMorePhotos = false;
+  
+    while (usedArea < imagePreviewArea) {
+      const files = this.findFiles(
+        sourceId,
+        rangeStart,
+        RANGE_QUERY_SIZE,
+        startDateRange,
+        directory
+      );
+  
+      for (const file of files) {
+        retFiles.push(file);
+  
+        const { width: fileWidth, height: fileHeight } = file.metadata;
+  
+        if (!fileWidth || !fileHeight) {
+          throw new Error('File is missing width/height metadata.');
+        }
+  
+        const ratioFactor = fileHeight / imagePreviewHeight;
+        const adjustedWidth = fileWidth / ratioFactor;
+        usedArea += adjustedWidth * imagePreviewHeight;
+  
+        if (usedArea >= imagePreviewArea) {
+          break;
+        }
+      }
+  
+      rangeStart += RANGE_QUERY_SIZE;
+  
+      hasMorePhotos = files.length >= RANGE_QUERY_SIZE;
+  
+      if (!hasMorePhotos) {
+        break;
+      }
+    }
+  
+    return {
+      info: {
+        hasMorePhotos,
+      },
+      files: retFiles.map(({ date, sourceFileId = null, metadata }) => ({
+        date,
+        sourceFileId,
+        metadata,
+      })),
+    };
+  }
 };
