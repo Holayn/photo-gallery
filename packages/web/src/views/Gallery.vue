@@ -216,7 +216,7 @@ export default {
       if (this.showLightbox) {
         this.openLightbox();
       } else {
-        this.closeLightbox();
+        this.closeLightbox(false);
       }
     },
     isShowLightbox() {
@@ -297,14 +297,10 @@ export default {
     },
     
     async scrollLightboxImageIntoView() {
-      const lightboxPhoto = this.photos[this.lightboxIndex];
-      const galleryPhotoRef = this.galleryImageRefs.find(ref => ref.photo === lightboxPhoto);
-      if (!galleryPhotoRef) {
-        throw new Error('Could not find gallery photo to scroll to.');
-      }
-      const fullyInView = await isElementFullyInView(galleryPhotoRef.el);
-      if (galleryPhotoRef && !fullyInView) {
-        galleryPhotoRef.el.scrollIntoView();
+      const ref = this.getGalleryImageRefForLightboxPhoto();
+      const fullyInView = await isElementFullyInView(ref.el);
+      if (ref && !fullyInView) {
+        ref.el.scrollIntoView();
       }
     },
     setGalleryImageRef(el) {
@@ -314,6 +310,14 @@ export default {
           photo: this.photos.find(photo => photo.id === el.dataset.photoId),
         });
       }
+    },
+    getGalleryImageRefForLightboxPhoto() {
+      const lightboxPhoto = this.photos[this.lightboxIndex];
+      const galleryPhotoRef = this.galleryImageRefs.find(ref => ref.photo === lightboxPhoto);
+      if (!galleryPhotoRef) {
+        throw new Error('Could not find gallery photo to scroll to.');
+      }
+      return galleryPhotoRef;
     },
 
     openLightbox(photo) {
@@ -326,9 +330,25 @@ export default {
         }
       }
     },
-    closeLightbox() {
+    closeLightbox(showTransition = true) {
       if (this.isShowLightbox) {
         this.isShowLightbox = false;
+
+        // Helps to show which photo was just being viewed in the lightbox.
+        if (showTransition) {
+          const ref = this.getGalleryImageRefForLightboxPhoto();
+          ref.el.style.transform = 'scale(3)';
+          ref.el.style.zIndex = '1';
+          setTimeout(() => {
+            ref.el.style.transition = 'transform 0.1s linear';
+            ref.el.style.transform = 'scale(1)';
+            setTimeout(() => {
+              ref.el.style.transition = '';
+              ref.el.style.zIndex = '';
+            }, 100);
+          });
+        }
+        
         this.infiniteScrollEnable();
       }
     },
