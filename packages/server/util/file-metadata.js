@@ -11,6 +11,7 @@ class FileMetadata {
     location,
     device,
     duration,
+    rotation,
   }) {
     this.date = date;
     this.video = video;
@@ -22,12 +23,16 @@ class FileMetadata {
     this.fileName = fileName;
     this.location = location;
     this.device = device;
+    this.rotation = rotation;
 
     // Normalize this.
     // Can come as: 0:01:11 or 1.63 s
     this.duration = normalizeDuration(duration);
 
-    if (orientation === 'Rotate 90 CW' && this.width > this.height) {
+    if (orientation === 'Rotate 90 CW') {
+      this.width = height;
+      this.height = width;
+    } else if (rotation === 90) {
       this.width = height;
       this.height = width;
     }

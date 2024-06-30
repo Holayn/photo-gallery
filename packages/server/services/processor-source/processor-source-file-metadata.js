@@ -18,6 +18,7 @@ class ProcessorSourceFileMetadata {
     this.location = getLocation(exif);
     this.device = getDevice(exif);
     this.duration = exif.QuickTime?.Duration;
+    this.rotation = exif.Composite?.Rotation;
   }
 }
 
