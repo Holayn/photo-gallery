@@ -206,6 +206,17 @@ export async function getLocationInfo(lat, long) {
   }
 }
 
+export async function pingPhoto(photoUrl) {
+  const split = photoUrl.split('?');
+  const url = `${split[0]}/ping?${split[1]}`;
+  const res = await fetcher.fetch(url);
+  if (res.data) {
+    return {
+      ready: res.data.ready,
+    }
+  }
+}
+
 export function toPhotoUrl(photo, size, albumToken) {
   return `${BASE}/photo?sourceFileId=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}${attachAlbumToken(albumToken)}`;
 }
