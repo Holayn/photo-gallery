@@ -11,14 +11,12 @@ class ProcessorSourceFileMetadata {
     const size = getDimensions(exif);
     this.width = size.width;
     this.height = size.height;
-    this.orientation = exif.EXIF?.Orientation;
     this.appleLivePhoto = !!exif.QuickTime?.LivePhotoAuto;
     this.fileSize = exif.File?.FileSize;
     this.fileName = exif.File?.FileName;
     this.location = getLocation(exif);
     this.device = getDevice(exif);
-    this.duration = exif.QuickTime?.Duration;
-    this.rotation = exif.Composite?.Rotation;
+    this.duration = normalizeDuration(exif.QuickTime?.Duration);
   }
 }
 
@@ -79,10 +77,37 @@ function getDimensions(exif) {
   }
   const size = exif.Composite.ImageSize;
   const x = size.indexOf('x');
-  return {
+  const dimensions = {
     width: parseInt(size.substr(0, x), 10),
     height: parseInt(size.substr(x + 1), 10),
   };
+
+  if (exif.EXIF?.Orientation === 'Rotate 90 CW' || exif.Composite?.Rotation === 90) {
+    return {
+      width: dimensions.height,
+      height: dimensions.width,
+    };
+  }
+
+  return dimensions;
+}
+
+// Can come as: 0:01:11 or 1.63 s
+function normalizeDuration(duration) {
+  if (duration) {
+    if (duration.includes('s')) {
+      const numericPart = duration.replace(/\s+/g, '');
+      const seconds = parseFloat(numericPart);
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes}:${remainingSeconds.toFixed(0).padStart(2, '0')}`;
+    }
+    if (duration.includes(':')) {
+      return duration;
+    }
+  }
+
+  return null;
 }
 
 module.exports = ProcessorSourceFileMetadata;

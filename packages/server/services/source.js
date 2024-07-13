@@ -3,7 +3,6 @@ const logger = require('./logger');
 
 const { SourceDAO, GalleryFileDAO } = require('./db');
 const Source = require('../model/source');
-const FileMetadata = require('../util/file-metadata');
 
 const RANGE_QUERY_SIZE = 50;
 
@@ -64,20 +63,20 @@ module.exports = {
     const sourceFiles = source.findFiles(start, num, startDateRange, directory);
     return sourceFiles.map(({ id, date, metadata }) => ({
       date,
+      metadata,
       sourceFileId: id,
-      metadata: new FileMetadata(metadata),
     }));
   },
 
   getFile(sourceId, sourceFileId) {
     const processorSource = new ProcessorSource(SourceDAO.getById(sourceId));
-    const sourceFile = processorSource.getFile(sourceFileId);
+    const { date, metadata } = processorSource.getFile(sourceFileId);
 
     if (sourceFile) {
       return {
-        date: sourceFile.date,
+        date,
+        metadata,
         sourceFileId,
-        metadata: new FileMetadata(sourceFile.metadata),
       };
     }
 

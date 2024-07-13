@@ -62,7 +62,7 @@
             <div>{{ currentPhotoMetadata.fileName }}</div>
             <div class="text-sm text-slate-600">
               <div class="grid md:grid-cols-2 gap-x-2">
-                <p>{{ currentPhotoMetadata.width }} x {{ currentPhotoMetadata.height }}, {{ currentPhotoMetadata.orientation }}</p>
+                <p>{{ currentPhotoMetadata.width }} x {{ currentPhotoMetadata.height }}</p>
                 <p>{{ currentPhotoMetadata.fileSize }}</p>
               </div>
               <p>
@@ -131,7 +131,7 @@ export default {
       return this.$store.state.photos[this.$store.state.lightbox.photoIndex];
     },
     currentPhotoMetadata() {
-      const { date, fileName, fileSize, width, height, orientation, location, device } = this.currentPhoto.metadata;
+      const { date, fileName, fileSize, width, height, location, device } = this.currentPhoto.metadata;
       const parsedDate = dayjs(date, DATE_FORMAT);
       return {
         date: {
@@ -143,7 +143,6 @@ export default {
         fileSize,
         width,
         height,
-        orientation,
         location,
         device,
       };

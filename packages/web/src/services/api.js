@@ -33,7 +33,6 @@ function apiFilesResponseToPhotos(files) {
     metadata: {
       date: metadata.date,
       video: metadata.video || false,
-      orientation: metadata.orientation,
       width: metadata.width,
       height: metadata.height,
       fileSize: metadata.fileSize,
