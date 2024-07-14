@@ -7,18 +7,19 @@ const {
 const UserService = require('../services/user');
 
 const MAX_ATTEMPTS = 3;
-const ATTEMPT_TIMEOUT = 3600000;
+const ATTEMPTS_CLEAR_TIMEOUT = 3600000;
 
-async function validateAdmin(req) {
+function validateAdmin(req) {
   return req.session.user;
 }
 
 const attempts = {};
 function canAttempt(username) {
-  if (UserDAO.getByUsername(username)) {
-    return !attempts[username] || attempts[username] < MAX_ATTEMPTS;
+  if (attempts[username] >= MAX_ATTEMPTS) {
+    return false;
   }
-  return false;
+
+  return !!UserDAO.getByUsername(username);
 }
 function registerAttempt(username) {
   if (!attempts[username]) {
@@ -28,21 +29,17 @@ function registerAttempt(username) {
 
   setTimeout(() => {
     if (attempts[username]) {
-      attempts[username] -= 1;
-      if (attempts[username] <= 0) {
-        clearAttempts(username);
-      }
+      clearAttempts(username);
     }
-  }, ATTEMPT_TIMEOUT);
+  }, ATTEMPTS_CLEAR_TIMEOUT);
 }
 function clearAttempts(username) {
   delete attempts[username];
 }
 
 const AuthController = {
-  async auth(req, res, next) {
-    const { username } = req.body;
-    const { password } = req.body;
+  auth(req, res, next) {
+    const { username, password } = req.body;
 
     if (canAttempt(username)) {
       registerAttempt(username);
@@ -51,16 +48,25 @@ const AuthController = {
       if (user) {
         clearAttempts(username);
 
-        return req.session.regenerate((regenErr) => {
-          if (regenErr) next(regenErr);
+        req.session.regenerate((regenErr) => {
+          if (regenErr) {
+            next(regenErr);
+          }
+
           req.session.user = {
             name: username,
           };
           req.session.save((saveErr) => {
-            if (saveErr) next(saveErr);
+            if (saveErr) {
+              next(saveErr);
+              return;
+            }
+
             res.sendStatus(200);
           });
         });
+
+        return;
       }
     }
 
@@ -68,23 +74,24 @@ const AuthController = {
     res.send({
       success: false,
     });
-
-    return null;
   },
 
-  async authAdmin(req, res, next) {
-    if (await validateAdmin(req)) {
+  authAdmin(req, res, next) {
+    if (validateAdmin(req)) {
       next();
-    } else {
-      res.sendStatus(401);
+      return;
     }
+
+    res.sendStatus(401);
   },
 
-  async authPhoto(req, res, next) {
-    const { sourceFileId } = req.query;
-    const { sourceId } = req.query;
-    const { albumToken } = req.query;
+  authPhoto(req, res, next) {
+    const { sourceFileId, sourceId, albumToken } = req.query;
 
+    if (validateAdmin(req)) {
+      next();
+      return;
+    }
     if (albumToken) {
       const file = GalleryFileDAO.getBySource(sourceId, sourceFileId);
       if (file) {
@@ -93,38 +100,31 @@ const AuthController = {
           const albumFile = AlbumFileDAO.getByAlbumIdFileId(album.id, file.id);
           if (albumFile) {
             next();
-          } else {
-            res.sendStatus(401);
+            return;
           }
-        } else {
-          res.sendStatus(401);
         }
-      } else {
-        res.sendStatus(401);
       }
-    } else if (await validateAdmin(req)) {
-      next();
-    } else {
-      res.sendStatus(401);
     }
+
+    res.sendStatus(401);
   },
 
-  async authAlbum(req, res, next) {
-    const { albumToken } = req.query;
+  authAlbum(req, res, next) {
+    const { albumToken, id: albumId } = req.query;
 
-    if (albumToken) {
-      const albumId = req.query.id;
-      const album = AlbumDAO.getById(albumId);
-      if (album.token === req.query.albumToken) {
-        next();
-      } else {
-        res.sendStatus(401);
-      }
-    } else if (await validateAdmin(req)) {
+    if (validateAdmin(req)) {
       next();
-    } else {
-      res.sendStatus(401);
+      return;
     }
+    if (albumToken) {
+      const album = AlbumDAO.getById(albumId);
+      if (album.token === albumToken) {
+        next();
+        return;
+      }
+    }
+
+    res.sendStatus(401);
   },
 };
 

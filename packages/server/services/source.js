@@ -1,61 +1,70 @@
 const ProcessorSource = require('./processor-source/processor-source');
 const logger = require('./logger');
 
-const { SourceDAO, GalleryFileDAO } = require('./db');
+const { SourceDAO, GalleryFileDAO, transaction } = require('./db');
 const Source = require('../model/source');
 
 const RANGE_QUERY_SIZE = 50;
 
 module.exports = {
   addSource(sourcePath, alias) {
-    const existingSource = SourceDAO.getSourceByPathOrAlias(sourcePath, alias);
+    transaction(() => {
+      const existingSource = SourceDAO.getSourceByPathOrAlias(
+        sourcePath,
+        alias
+      );
 
-    if (!existingSource) {
-      SourceDAO.insert(new Source({ alias, path: sourcePath }));
-      logger.info(`${alias} added with source path: ${sourcePath}.`);
-    } else {
-      logger.error(`Path (${sourcePath}) or alias (${alias}) already exists.`);
-    }
+      if (!existingSource) {
+        SourceDAO.insert(new Source({ alias, path: sourcePath }));
+        logger.info(`${alias} added with source path: ${sourcePath}.`);
+      } else {
+        logger.error(
+          `Path (${sourcePath}) or alias (${alias}) already exists.`
+        );
+      }
+    })();
   },
 
   async syncSource(alias) {
-    logger.info(`Syncing ${alias}...`);
-    const source = SourceDAO.getSourceByAlias(alias);
-    if (source) {
-      const stats = {
-        updated: 0,
-      };
+    transaction(() => {
+      logger.info(`Syncing ${alias}...`);
+      const source = SourceDAO.getSourceByAlias(alias);
+      if (source) {
+        const stats = {
+          updated: 0,
+        };
 
-      // Get all files from this source.
-      const files = GalleryFileDAO.findBySourceId(source.id);
+        // Get all files from this source.
+        const files = GalleryFileDAO.findBySourceId(source.id);
 
-      // Then update its info using info from the ProcessorSource.
-      const processorSource = new ProcessorSource(source);
+        // Then update its info using info from the ProcessorSource.
+        const processorSource = new ProcessorSource(source);
 
-      files.forEach((f) => {
-        const sourceFile = processorSource.getFile(f.sourceFileId);
-        if (sourceFile) {
-          let diff = false;
+        files.forEach((f) => {
+          const sourceFile = processorSource.getFile(f.sourceFileId);
+          if (sourceFile) {
+            let diff = false;
 
-          if (f.date !== sourceFile.date) {
-            diff = true;
+            if (f.date !== sourceFile.date) {
+              diff = true;
+            }
+
+            if (diff) {
+              GalleryFileDAO.update({
+                ...f,
+                date: sourceFile.date,
+              });
+              stats.updated += 1;
+              logger.info(`Updating file #${f.id} (${f.sourceFileId}).`);
+            }
           }
+        });
 
-          if (diff) {
-            GalleryFileDAO.update({
-              ...f,
-              date: sourceFile.date,
-            });
-            stats.updated += 1;
-            logger.info(`Updating file #${f.id} (${f.sourceFileId}).`);
-          }
-        }
-      });
-
-      logger.info(`${alias} synced - ${stats.updated} files updated.`);
-    } else {
-      logger.error(`Source with alias ${alias} does not exist.`);
-    }
+        logger.info(`${alias} synced - ${stats.updated} files updated.`);
+      } else {
+        logger.error(`Source with alias ${alias} does not exist.`);
+      }
+    })();
   },
 
   findFiles(sourceId, start, num, startDateRange, directory) {

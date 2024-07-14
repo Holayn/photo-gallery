@@ -4,46 +4,44 @@ const express = require('express');
 const AuthController = require('../controllers/auth');
 const SourceService = require('../services/source');
 const { SourceDAO } = require('../services/db');
-const { asyncHandler, requiredParams } = require('../util/route-utils');
+const { requiredParams } = require('../util/route-utils');
 
 const router = express.Router();
 
-router.get(
-  '/sources',
-  AuthController.authAdmin,
-  asyncHandler(async (req, res) => {
-    res.send(SourceDAO.findAll());
-  })
-);
+router.get('/sources', AuthController.authAdmin, (req, res) => {
+  res.send(SourceDAO.findAll());
+});
+
 router.get(
   '/source/info',
   requiredParams(['id']),
   AuthController.authAdmin,
-  asyncHandler(async (req, res) => {
-    const { id } = req.query;
-    res.send(SourceDAO.getById(id));
-  })
+  (req, res) => {
+    const { id: sourceId } = req.query;
+    res.send(SourceDAO.getById(sourceId));
+  }
 );
+
 router.get(
   '/source/photos',
-  requiredParams(['id']),
+  requiredParams(['id', 'start', 'imagePreviewHeight', 'imagePreviewArea']),
   AuthController.authAdmin,
-  asyncHandler(async (req, res) => {
-    const sourceId = parseInt(req.query.id, 10);
-    const start = parseInt(req.query.start, 10) || 0;
-    const imagePreviewHeight = parseInt(req.query.imagePreviewHeight, 10);
-    const imagePreviewArea = parseInt(req.query.imagePreviewArea, 10);
-    const directory = req.query.directory || null;
-    const date = req.query.date
-      ? dayjs(req.query.date, 'YYYY-MM-DD').valueOf()
-      : null;
+  (req, res) => {
+    const {
+      id: sourceId,
+      start = 0,
+      imagePreviewHeight,
+      imagePreviewArea,
+      date = null,
+      directory = null,
+    } = req.query;
 
     const data = SourceService.getSourceFilesCoveringArea(
       sourceId,
-      start,
-      imagePreviewHeight,
-      imagePreviewArea,
-      date,
+      parseInt(start, 10),
+      parseInt(imagePreviewHeight, 10),
+      parseInt(imagePreviewArea, 10),
+      date ? dayjs(date, 'YYYY-MM-DD').valueOf() : null,
       directory
     );
     if (data == null) {
@@ -51,16 +49,12 @@ router.get(
     } else {
       res.send(data);
     }
-  })
+  }
 );
-router.get(
-  '/source/directories',
-  requiredParams(['id']),
-  asyncHandler(async (req, res) => {
-    const sourceId = parseInt(req.query.id, 10);
 
-    res.send(SourceService.getDirectories(sourceId));
-  })
-);
+router.get('/source/directories', requiredParams(['id']), (req, res) => {
+  const { id: sourceId } = req.query;
+  res.send(SourceService.getDirectories(sourceId));
+});
 
 module.exports = router;

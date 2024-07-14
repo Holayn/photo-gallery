@@ -4,7 +4,7 @@ const SQLiteStore = require('connect-sqlite3')(session);
 
 const AuthController = require('../controllers/auth');
 const AuthService = require('../services/auth');
-const { asyncHandler, requiredBody } = require('../util/route-utils');
+const { requiredBody } = require('../util/route-utils');
 
 const router = express.Router();
 
@@ -34,12 +34,9 @@ router.post(
   requiredBody(['username', 'password']),
   AuthController.auth
 );
-router.get(
-  '/auth/verify',
-  AuthController.authAdmin,
-  asyncHandler(async (req, res) => {
-    res.sendStatus(200);
-  })
-);
+
+router.get('/auth/verify', AuthController.authAdmin, (req, res) => {
+  res.sendStatus(200);
+});
 
 module.exports = router;

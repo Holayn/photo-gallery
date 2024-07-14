@@ -12,9 +12,7 @@ router.get(
   requiredParams(['sourceFileId', 'sourceId', 'size']),
   AuthController.authPhoto,
   asyncHandler(async (req, res) => {
-    const { sourceFileId } = req.query;
-    const { sourceId } = req.query;
-    const { size } = req.query;
+    const { sourceFileId, sourceId, size } = req.query;
 
     let responseSent = false;
 
@@ -54,9 +52,7 @@ router.get(
   requiredParams(['sourceFileId', 'sourceId', 'size']),
   AuthController.authPhoto,
   asyncHandler(async (req, res) => {
-    const { sourceFileId } = req.query;
-    const { sourceId } = req.query;
-    const { size } = req.query;
+    const { sourceFileId, sourceId, size } = req.query;
 
     const fileData = await SourceService.getFileData(
       sourceId,
@@ -87,6 +83,8 @@ router.get(
       if (data) {
         const [result] = data.data;
         res.send(result);
+      } else {
+        res.sendStatus(503);
       }
     } catch (e) {
       res.sendStatus(400);
