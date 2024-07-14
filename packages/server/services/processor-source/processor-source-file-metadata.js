@@ -82,7 +82,10 @@ function getDimensions(exif) {
     height: parseInt(size.substr(x + 1), 10),
   };
 
-  if (exif.EXIF?.Orientation === 'Rotate 90 CW' || exif.Composite?.Rotation === 90) {
+  if (
+    exif.EXIF?.Orientation === 'Rotate 90 CW' ||
+    exif.Composite?.Rotation === 90
+  ) {
     return {
       width: dimensions.height,
       height: dimensions.width,

@@ -34,7 +34,7 @@ router.get(
       }
     }, 1000);
 
-    fileDataPromise.then(fileData => {
+    fileDataPromise.then((fileData) => {
       if (!responseSent) {
         responseSent = true;
         if (fileData) {

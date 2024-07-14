@@ -70,9 +70,10 @@ module.exports = {
 
   getFile(sourceId, sourceFileId) {
     const processorSource = new ProcessorSource(SourceDAO.getById(sourceId));
-    const { date, metadata } = processorSource.getFile(sourceFileId);
+    const sourceFile = processorSource.getFile(sourceFileId);
 
     if (sourceFile) {
+      const { date, metadata } = sourceFile;
       return {
         date,
         metadata,
@@ -105,12 +106,12 @@ module.exports = {
     if (!imagePreviewArea || !imagePreviewHeight) {
       return null;
     }
-  
+
     let usedArea = 0;
     const retFiles = [];
     let rangeStart = start;
     let hasMorePhotos = false;
-  
+
     while (usedArea < imagePreviewArea) {
       const files = this.findFiles(
         sourceId,
@@ -119,34 +120,34 @@ module.exports = {
         startDateRange,
         directory
       );
-  
+
       for (const file of files) {
         retFiles.push(file);
-  
+
         const { width: fileWidth, height: fileHeight } = file.metadata;
-  
+
         if (!fileWidth || !fileHeight) {
           throw new Error('File is missing width/height metadata.');
         }
-  
+
         const ratioFactor = fileHeight / imagePreviewHeight;
         const adjustedWidth = fileWidth / ratioFactor;
         usedArea += adjustedWidth * imagePreviewHeight;
-  
+
         if (usedArea >= imagePreviewArea) {
           break;
         }
       }
-  
+
       rangeStart += RANGE_QUERY_SIZE;
-  
+
       hasMorePhotos = files.length >= RANGE_QUERY_SIZE;
-  
+
       if (!hasMorePhotos) {
         break;
       }
     }
-  
+
     return {
       info: {
         hasMorePhotos,
@@ -157,5 +158,5 @@ module.exports = {
         metadata,
       })),
     };
-  }
+  },
 };

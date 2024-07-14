@@ -53,7 +53,12 @@ module.exports = {
     return GalleryFileDAO.findByIds(fileIds, start, num);
   },
 
-  getAlbumFilesCoveringArea(albumId, start, imagePreviewHeight, imagePreviewArea) {
+  getAlbumFilesCoveringArea(
+    albumId,
+    start,
+    imagePreviewHeight,
+    imagePreviewArea
+  ) {
     if (!imagePreviewArea || !imagePreviewHeight) {
       return null;
     }
@@ -64,11 +69,7 @@ module.exports = {
     let hasMorePhotos = false;
 
     while (usedArea < imagePreviewArea) {
-      const files = this.getAlbumFiles(
-        albumId,
-        rangeStart,
-        RANGE_QUERY_SIZE
-      )
+      const files = this.getAlbumFiles(albumId, rangeStart, RANGE_QUERY_SIZE)
         .map((f) => ({
           ...SourceService.getFile(f.sourceId, f.sourceFileId),
           sourceId: f.sourceId,
@@ -115,7 +116,7 @@ module.exports = {
         })
       ),
     };
-  }
+  },
 };
 
 function generateAlbumToken() {
