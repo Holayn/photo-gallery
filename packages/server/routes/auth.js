@@ -6,6 +6,8 @@ const AuthController = require('../controllers/auth');
 const AuthService = require('../services/auth');
 const { requiredBody } = require('../util/route-utils');
 
+require('dotenv').config();
+
 const router = express.Router();
 
 router.use(

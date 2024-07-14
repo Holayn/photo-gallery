@@ -3,6 +3,10 @@ const { createLogger, format, transports } = require('winston');
 require('winston-daily-rotate-file');
 require('dotenv').config();
 
+if (!process.env.EMAIL_SERVICE_URL || !process.env.ERROR_EMAIL) {
+  console.warn('Warning: email service not configured.');
+}
+
 const infoAndWarnFilter = format((info) =>
   info.level === 'info' || info.level === 'warn' ? info : false
 );

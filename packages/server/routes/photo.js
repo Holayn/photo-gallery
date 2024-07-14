@@ -7,6 +7,12 @@ const { asyncHandler, requiredParams } = require('../util/route-utils');
 
 const router = express.Router();
 
+require('dotenv').config();
+
+if (!process.env.POSITIONSTACK_APIKEY) {
+  console.warn('Warning: no PositionStack API key set.');
+}
+
 router.get(
   '/photo/ping',
   requiredParams(['sourceFileId', 'sourceId', 'size']),
@@ -75,6 +81,11 @@ router.get(
   '/location',
   requiredParams(['lat', 'long']),
   asyncHandler(async (req, res) => {
+    if (!process.env.POSITIONSTACK_APIKEY) {
+      res.sendStatus(503);
+      return;
+    }
+
     const { lat, long } = req.query;
     try {
       const { data } = await axios(
