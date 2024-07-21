@@ -24,7 +24,7 @@
       </Gallery>
     </div>
 
-    <Modal v-if="isModalAlbumLinkShowing" full="true" @close="(isModalAlbumLinkShowing = false)">
+    <Modal v-if="isModalAlbumLinkShowing" size="full" @close="(isModalAlbumLinkShowing = false)">
       <div class="flex items-center gap-2">
         <input class="flex-auto" :value="albumLink">
         <div class="flex gap-1 items-center">

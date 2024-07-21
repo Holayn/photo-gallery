@@ -1,82 +1,80 @@
 <template>
-  <div class="lightbox" @click="toggleMenu">
-    <div class="lightbox_menu" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
-      <div class="m-4 cursor-pointer" @click.stop="showMetadata = true">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-      </div>
-      <div class="flex-auto flex items-center justify-center mx-2 mt-2 h-full">
-        <div class="text-white text-center">
-          <div class="text-sm">{{ currentPhotoMetadata.date?.day }} {{ currentPhotoMetadata.date?.date }}</div>
-          <div class="text-xs">{{ currentPhotoMetadata.date?.time }}</div>
+  <dialog ref="dialog">
+    <div class="lightbox" @click="toggleMenu">
+      <div class="lightbox_menu" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
+        <div class="m-4 cursor-pointer" @click.stop="showMetadata = true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
         </div>
-      </div>
-      <div class="m-4 cursor-pointer" @click="close()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </div>
-    </div>
-    <swiper
-      :keyboard="{enabled: true, onlyInViewport: false}"
-      :modules="modules"
-      :space-between="50"
-      :threshold="10"
-      :initial-slide="$store.state.lightbox.photoIndex"
-      centered-slides
-      virtual
-      zoom
-      @activeIndexChange="_swiperOnActiveIndexChange"
-      @afterInit="_swiperOnAfterInit"
-    >
-      <swiper-slide
-        v-for="(photo, index) in $store.state.photos"
-        :key="index"
-        :virtualIndex="index"
-        :zoom="!photo.metadata.video"
-      >
-        <lightbox-slide
-          :active="index === $store.state.lightbox.photoIndex"
-          :index="index"
-          :photo="photo"
-        ></lightbox-slide>
-      </swiper-slide>
-    </swiper>
-
-    <Modal v-if="showMetadata" @close="(showMetadata = false)">
-      <div class="grid gap-4">
-        <div>{{ currentPhotoMetadata.date?.date }} - {{ currentPhotoMetadata.date?.time }}</div>
-        <div>
-          <h2 class="text-sm text-slate-600">Location</h2>
-          <div v-if="location">
-            <div>
-              <a class="text-black underline" :href="location.link" target="_blank">{{ loadingLocationInfo ? 'loading...' : currentPhotoLocationInfo ?? 'Unknown' }}</a>
-            </div>
-            <div class="text-sm text-slate-600">
-              <div>lat:{{ location.lat ?? '--' }}, long:{{ location.long ?? '--' }},</div>
-              <div>alt:{{ location.altitude ?? '--' }}</div>
-            </div>
+        <div class="flex-auto flex items-center justify-center mx-2 mt-2 h-full">
+          <div class="text-white text-center">
+            <div class="text-sm">{{ currentPhotoMetadata.date?.day }} {{ currentPhotoMetadata.date?.date }}</div>
+            <div class="text-xs">{{ currentPhotoMetadata.date?.time }}</div>
           </div>
-          <div v-else>Unknown</div>
         </div>
-        <div>
-          <h2 class="text-sm text-slate-600">Details</h2>
+        <div class="m-4 cursor-pointer" @click="close()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+      </div>
+      <swiper
+        :keyboard="{enabled: true, onlyInViewport: false}"
+        :modules="modules"
+        :space-between="50"
+        :threshold="10"
+        :initial-slide="$store.state.lightbox.photoIndex"
+        centered-slides
+        virtual
+        zoom
+        @activeIndexChange="_swiperOnActiveIndexChange"
+        @afterInit="_swiperOnAfterInit"
+      >
+        <swiper-slide
+          v-for="(photo, index) in $store.state.photos"
+          :key="index"
+          :virtualIndex="index"
+          :zoom="!photo.metadata.video"
+        >
+          <lightbox-slide
+            :active="index === $store.state.lightbox.photoIndex"
+            :index="index"
+            :photo="photo"
+          ></lightbox-slide>
+        </swiper-slide>
+      </swiper>
+
+      <Modal v-if="showMetadata" size="md" @close="(showMetadata = false)">
+        <div class="grid gap-4">
+          <div>{{ currentPhotoMetadata.date?.date }} - {{ currentPhotoMetadata.date?.time }}</div>
           <div>
-            <div>{{ currentPhotoMetadata.fileName }}</div>
-            <div class="text-sm text-slate-600">
-              <div class="grid md:grid-cols-2 gap-x-2">
+            <h2 class="text-sm text-slate-600">Location</h2>
+            <div v-if="location">
+              <div>
+                <a class="text-black underline" :href="location.link" target="_blank">{{ loadingLocationInfo ? 'loading...' : currentPhotoLocationInfo ?? 'Unknown' }}</a>
+              </div>
+              <div class="text-sm text-slate-600">
+                <div>lat:{{ location.lat ?? '--' }}, long:{{ location.long ?? '--' }},</div>
+                <div>alt:{{ location.altitude ?? '--' }}</div>
+              </div>
+            </div>
+            <div v-else>Unknown</div>
+          </div>
+          <div>
+            <h2 class="text-sm text-slate-600">Details</h2>
+            <div>
+              <div>{{ currentPhotoMetadata.fileName }}</div>
+              <div class="text-sm text-slate-600">
                 <p>{{ currentPhotoMetadata.width }} x {{ currentPhotoMetadata.height }}</p>
                 <p>{{ currentPhotoMetadata.fileSize }}</p>
+                <p>{{ currentPhotoMetadata.device }}</p>
               </div>
-              <p>
-                {{ currentPhotoMetadata.device }}
-              </p>
-            </div>
-            <div>
-              <a class="text-sm underline" :href="currentPhotoOriginalUrl" target="_blank">View Original</a>
+              <div>
+                <a class="text-sm underline" :href="currentPhotoOriginalUrl" target="_blank">View Original</a>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </Modal>
-  </div>
+      </Modal>
+    </div>
+  </dialog>
 </template>
 
 <script>
@@ -182,22 +180,15 @@ export default {
     },
   },
   mounted() {
-    this.handleEscapeKey();
+    this.$refs.dialog.showModal();
   },
   beforeUnmount() {
     this.close();
   },
   methods: {
     close() {
+      this.$refs.dialog.close();
       this.$emit('close');
-    },
-
-    handleEscapeKey() {
-      window.addEventListener('keyup', (e) => {
-        if (e.key === 'Escape') {
-          this.close();
-        }
-      });
     },
 
     toggleMenu() {
