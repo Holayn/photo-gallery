@@ -84,6 +84,7 @@ function getDimensions(exif) {
 
   if (
     exif.EXIF?.Orientation === 'Rotate 90 CW' ||
+    exif.EXIF?.Orientation === 'Rotate 270 CW' ||
     exif.Composite?.Rotation === 90
   ) {
     return {
