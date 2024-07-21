@@ -69,13 +69,13 @@ export default {
     }
   },
   async mounted() {
-    if (this.photo.data?.preview) {
-        this.preview = this.photo.data.preview;
-      } else {
-        loadPhotoToBase64(this.photo.urls[getFetchedGalleryPhotoSize()]).then(data => {
-          this.preview = data;
-        });
-      }
+    if (!this.active) {
+      await this.$nextTick();
+    }
+
+    loadPhotoToBase64(this.photo.urls[getFetchedGalleryPhotoSize()]).then(data => {
+      this.preview = data;
+    });
 
     if (this.photo.metadata.video) {
       this.loading = false;
@@ -92,15 +92,15 @@ export default {
         document.querySelector('.plyr__progress').classList.add('swiper-no-swiping');
       });
     } else {
-      loadPhotoToBase64(this.photo.urls[PHOTO_SIZES.LARGE]).then(data => {
-        this.large = data;
-        this.loading = false;
-        this.serverLoading = false;
-      });
       pingPhoto(this.photo.urls[PHOTO_SIZES.LARGE]).then(({ ready }) => {
         if (this.loading && !ready) {
           this.serverLoading = true;
         }
+      });
+      loadPhotoToBase64(this.photo.urls[PHOTO_SIZES.LARGE]).then(data => {
+        this.large = data;
+        this.loading = false;
+        this.serverLoading = false;
       });
     }
   },
