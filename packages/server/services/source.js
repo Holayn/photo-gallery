@@ -22,7 +22,7 @@ module.exports = {
           `Path (${sourcePath}) or alias (${alias}) already exists.`
         );
       }
-    })();
+    });
   },
 
   async syncSource(alias) {
@@ -64,7 +64,7 @@ module.exports = {
       } else {
         logger.error(`Source with alias ${alias} does not exist.`);
       }
-    })();
+    });
   },
 
   findFiles(sourceId, start, num, startDateRange, directory) {

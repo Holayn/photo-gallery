@@ -16,7 +16,7 @@ module.exports = {
         new Album({ name, token: generateAlbumToken() })
       );
       this.addToAlbum(albumId, files);
-    })();
+    });
   },
 
   addToAlbum(albumId, files = {}) {
@@ -48,7 +48,7 @@ module.exports = {
           AlbumFileDAO.insert(new AlbumFile({ albumId, fileId: newFileId }));
         }
       });
-    })();
+    });
   },
 
   getAlbumFiles(id, start, num) {
