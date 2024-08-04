@@ -17,19 +17,14 @@ router.use(source);
 router.use(album);
 router.use(photo);
 
+router.get('/test', (req, res) => {
+  res.sendStatus(200);
+});
+
 router.post(
   '/client-error',
   asyncHandler(async (req, res) => {
     logger.webError(req.body.error);
-    await axios(process.env.EMAIL_SERVICE_URL, {
-      method: 'post',
-      data: {
-        emailFrom: 'kai452589@gmail.com',
-        emailTo: 'kai452589@gmail.com',
-        subject: 'photo-gallery web error',
-        text: req.body.error,
-      },
-    });
     res.sendStatus(200);
   })
 );

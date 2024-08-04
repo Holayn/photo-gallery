@@ -3,9 +3,7 @@ const { createLogger, format, transports } = require('winston');
 require('winston-daily-rotate-file');
 require('dotenv').config();
 
-if (!process.env.EMAIL_SERVICE_URL || !process.env.ERROR_EMAIL) {
-  console.warn('Warning: email service not configured.');
-}
+const ERROR_NOTIFICATION_DELAY_MS = 60 * 1000 * 5;
 
 const infoAndWarnFilter = format((info) =>
   info.level === 'info' || info.level === 'warn' ? info : false
@@ -13,8 +11,10 @@ const infoAndWarnFilter = format((info) =>
 
 class Logger {
   logger;
-
   webErrorLogger;
+
+  sendServerErrorNotification = true;
+  sendWebErrorNotification = true;
 
   info(message, data) {
     if (!this.logger) {
@@ -32,20 +32,21 @@ class Logger {
     this.logger.http(message, data);
   }
 
-  error(message, data, email = true) {
+  error(message, data, notify = false) {
     if (!this.logger) {
       throw new Error('Logger not initialized!');
     }
 
     this.logger.error(message, data);
 
-    if (email) {
-      this.emailError(message);
+    if (notify) {
+      this._sendServerErrorNotification();
     }
   }
 
-  webError(error) {
+  async webError(error) {
     this.webErrorLogger.error(error);
+    this._sendWebErrorNotification();
   }
 
   init(logToFile) {
@@ -106,19 +107,57 @@ class Logger {
     });
   }
 
-  async emailError(error) {
+  async _sendServerErrorNotification() {
+    if (!process.env.NOTIFY_URL) {
+      this.logger.error('Notification service not configured.', null, false);
+    }
+
+    if (!this.sendServerErrorNotification) {
+      return;
+    }
+
     try {
-      await axios(process.env.EMAIL_SERVICE_URL, {
+      await axios(process.env.NOTIFY_URL, {
         method: 'post',
         data: {
-          emailFrom: process.env.ERROR_EMAIL,
-          emailTo: process.env.ERROR_EMAIL,
-          subject: 'photo-gallery server error',
-          text: error,
+          message: 'photo-gallery server error',
         },
       });
+
+      this.sendServerErrorNotification = false;
+
+      setTimeout(() => {
+        this.sendServerErrorNotification = true;
+      }, ERROR_NOTIFICATION_DELAY_MS);
     } catch (e) {
-      this.logger.error('Failed to send email', e);
+      this.logger.error('Failed to send server error notification', e);
+    }
+  }
+
+  async _sendWebErrorNotification() {
+    if (!process.env.NOTIFY_URL) {
+      this.logger.error('Notification service not configured.', null, false);
+    }
+
+    if (!this.sendWebErrorNotification) {
+      return;
+    }
+
+    try {
+      await axios(process.env.NOTIFY_URL, {
+        method: 'post',
+        data: {
+          message: 'photo-gallery web error',
+        },
+      });
+
+      this.sendWebErrorNotification = false;
+
+      setTimeout(() => {
+        this.sendWebErrorNotification = true;
+      }, ERROR_NOTIFICATION_DELAY_MS);
+    } catch (e) {
+      this.logger.error('Failed to send web error notification', e);
     }
   }
 }

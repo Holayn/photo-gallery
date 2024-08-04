@@ -85,7 +85,7 @@ app.use('/api', routes);
 
 // Should be placed at the end of middleware stack to ensure they catch any errors that weren't handled by earlier middleware.
 app.use((err, req, res, next) => {
-  logger.error(err);
+  logger.error(err, null, true);
   res.sendStatus(500);
   next();
 });
