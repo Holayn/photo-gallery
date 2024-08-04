@@ -13,8 +13,8 @@ class Logger {
   logger;
   webErrorLogger;
 
-  sendServerErrorNotification = true;
-  sendWebErrorNotification = true;
+  canSendServerErrorNotification = true;
+  canSendWebErrorNotification = true;
 
   info(message, data) {
     if (!this.logger) {
@@ -40,13 +40,13 @@ class Logger {
     this.logger.error(message, data);
 
     if (notify) {
-      this._sendServerErrorNotification();
+      this.#sendServerErrorNotification();
     }
   }
 
   async webError(error) {
     this.webErrorLogger.error(error);
-    this._sendWebErrorNotification();
+    this.#sendWebErrorNotification();
   }
 
   init(logToFile) {
@@ -107,12 +107,12 @@ class Logger {
     });
   }
 
-  async _sendServerErrorNotification() {
+  async #sendServerErrorNotification() {
     if (!process.env.NOTIFY_URL) {
       this.logger.error('Notification service not configured.', null, false);
     }
 
-    if (!this.sendServerErrorNotification) {
+    if (!this.canSendServerErrorNotification) {
       return;
     }
 
@@ -124,22 +124,22 @@ class Logger {
         },
       });
 
-      this.sendServerErrorNotification = false;
+      this.canSendServerErrorNotification = false;
 
       setTimeout(() => {
-        this.sendServerErrorNotification = true;
+        this.canSendServerErrorNotification = true;
       }, ERROR_NOTIFICATION_DELAY_MS);
     } catch (e) {
       this.logger.error('Failed to send server error notification', e);
     }
   }
 
-  async _sendWebErrorNotification() {
+  async #sendWebErrorNotification() {
     if (!process.env.NOTIFY_URL) {
       this.logger.error('Notification service not configured.', null, false);
     }
 
-    if (!this.sendWebErrorNotification) {
+    if (!this.canSendWebErrorNotification) {
       return;
     }
 
@@ -151,10 +151,10 @@ class Logger {
         },
       });
 
-      this.sendWebErrorNotification = false;
+      this.canSendWebErrorNotification = false;
 
       setTimeout(() => {
-        this.sendWebErrorNotification = true;
+        this.canSendWebErrorNotification = true;
       }, ERROR_NOTIFICATION_DELAY_MS);
     } catch (e) {
       this.logger.error('Failed to send web error notification', e);

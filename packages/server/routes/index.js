@@ -1,5 +1,4 @@
 const express = require('express');
-const axios = require('axios');
 
 const auth = require('./auth');
 const source = require('./source');

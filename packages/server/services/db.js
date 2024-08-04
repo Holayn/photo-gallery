@@ -172,7 +172,9 @@ module.exports = {
   GalleryFileDAO,
   SourceDAO,
   UserDAO,
-  transaction: fn => {
-    DB.transaction(() => { fn(); })();
+  transaction: (fn) => {
+    DB.transaction(() => {
+      fn();
+    })();
   },
 };
