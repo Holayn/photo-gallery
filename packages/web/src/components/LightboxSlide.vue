@@ -1,6 +1,6 @@
 <template>
-  <div v-if="photo && !photo.metadata.video">
-    <div v-if="loading" class="relative flex items-center justify-center h-full">
+  <div v-if="photo && !photo.metadata.video" class="h-full w-full">
+    <div v-if="loading" class="relative flex items-center justify-center h-full w-full">
       <img class="w-full h-full object-contain blur-sm" :src="preview">
       <div class="absolute flex flex-col items-center justify-center">
         <Loading class="w-16 h-16"></Loading>
@@ -9,7 +9,7 @@
         </div>
       </div>
     </div>
-    <div v-else="!loading" class="flex justify-center w-screen h-screen">
+    <div v-else="!loading" class="flex justify-center w-full h-full">
       <img :src="large" class="max-w-full max-h-full object-contain">
       <!-- HACK: Force browser to render base64 image. -->
       <!-- Intermittent issue of where the browser just refuses to render the image. -->
