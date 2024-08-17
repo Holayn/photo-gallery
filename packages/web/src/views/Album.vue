@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="mt-4">
-      <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer" :show-lightbox="showLightbox">
+      <Gallery ref="gallery" :show-lightbox="showLightbox">
         <template #heading>
           <h1 class="flex-auto text-3xl md:text-5xl">
             <div v-if="showLoadingAlbumInfo" class="flex justify-center">
@@ -44,7 +44,7 @@ import Modal from '../components/Modal.vue';
 import Gallery from './Gallery.vue';
 
 import { getPhotosFromAlbum, getAlbum } from '../services/api';
-import { getGalleryImageHeight, setDocumentTitle } from '../utils';
+import { setDocumentTitle } from '../utils';
 
 export default {
   name: 'Album',
@@ -62,8 +62,6 @@ export default {
   },
   data() {
     return {
-      hasMorePhotos: true,
-      
       isModalAlbumLinkShowing: false,
       isModalAlbumLinkCopied: false,
 
@@ -102,6 +100,7 @@ export default {
 
     try {
       this.loadingAlbumInfo = true;
+      this.loadPhotoInfo();
       this.album = await getAlbum(this.albumId, this.albumToken);
       this.loadingAlbumInfo = false;
 
@@ -117,27 +116,22 @@ export default {
     this.$store.dispatch('clearPhotos');
   },
   methods: {
-    async loadMoreFromServer() {
-      if (this.hasMorePhotos) {
-        console.debug('loading more photo info from server...');
+    async loadPhotoInfo() {
+      try {
+        this.loadingPhotoInfo = true;
+        const { photos } = await getPhotosFromAlbum(this.albumId, this.albumToken);
+        this.loadingPhotoInfo = false;
 
-        try {
-          this.loadingPhotoInfo = true;
-          const { info, photos } = await getPhotosFromAlbum(this.albumId, this.$store.state.photos.length, getGalleryImageHeight(), this.albumToken);
-          this.loadingPhotoInfo = false;
-
-          this.hasMorePhotos = info.hasMorePhotos;
-          this.$store.dispatch('addPhotos', { photos });
-
-          console.debug(`fetched photo info of ${photos.length} more photos from server.`);
-        } catch(e) {
-          alert('An error occurred.');
-          throw e;
-        } finally {
-          this.loadingPhotoInfo = false;
-        }
+        this.$store.dispatch('setPhotos', { photos });
+        this.$refs.gallery.updateRenderPhotos();
+      } catch(e) {
+        alert('An error occurred.');
+        throw e;
+      } finally {
+        this.loadingPhotoInfo = false;
       }
     },
+
     showModalAlbumLink() {
       this.isModalAlbumLinkShowing = true;
     },

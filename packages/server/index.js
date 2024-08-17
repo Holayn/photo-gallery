@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const path = require('path');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 
 const logger = require('./services/logger');
 
@@ -20,6 +21,7 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(compression());
 app.use(
   helmet.contentSecurityPolicy({
     useDefaults: true,

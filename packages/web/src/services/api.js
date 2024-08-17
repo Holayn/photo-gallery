@@ -104,12 +104,9 @@ export async function getSourceDirectories(sourceId) {
     throw new ApiError(res.error.status);
   }
 }
-export async function getPhotosFromSource(sourceId, start, imageHeight, date, directory) {
+export async function getPhotosFromSource(sourceId, date, directory) {
   const url = new URL(`${BASE}/source/photos`, window.location.origin);
   url.searchParams.append('id', sourceId);
-  url.searchParams.append('start', start);
-  url.searchParams.append('imagePreviewHeight', imageHeight);
-  url.searchParams.append('imagePreviewArea', window.innerHeight * window.innerWidth);
   if (date) {
     url.searchParams.append('date', date);
   }
@@ -119,9 +116,8 @@ export async function getPhotosFromSource(sourceId, start, imageHeight, date, di
   
   const res = await fetcher.fetch(url.toString());
   if (res.data) {
-    const { info, files } = res.data;
+    const { files } = res.data;
     return {
-      info,
       photos: apiFilesResponseToPhotos(files),
     }
   } else if (res.error) {
@@ -132,21 +128,17 @@ export async function getPhotosFromSource(sourceId, start, imageHeight, date, di
 function attachAlbumToken(albumToken) {
   return albumToken ? `&albumToken=${albumToken}` : '';
 }
-export async function getPhotosFromAlbum(albumId, start, imageHeight, albumToken) {
+export async function getPhotosFromAlbum(albumId, albumToken) {
   const url = new URL(`${BASE}/album/photos`, window.location.origin);
   url.searchParams.append('id', albumId);
-  url.searchParams.append('start', start);
-  url.searchParams.append('imagePreviewHeight', imageHeight);
-  url.searchParams.append('imagePreviewArea', window.innerHeight * window.innerWidth);
   if (albumToken) {
     url.searchParams.append('albumToken', albumToken);
   }
 
   const res = await fetcher.fetch(url.toString());
   if (res.data) {
-    const { info, files } = res.data;
+    const { files } = res.data;
     return {
-      info,
       photos: apiFilesResponseToPhotos(files),
     }
   } else if (res.error) {

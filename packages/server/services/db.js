@@ -100,13 +100,11 @@ const GalleryFileDAO = {
       ).get(sourceId, sourceFileId)
     );
   },
-  findByIds(fileIds, start, num) {
+  findByIds(fileIds) {
     return DB.prepare(
-      `SELECT * FROM file WHERE id IN (${fileIds.join(
-        ', '
-      )}) ORDER BY date LIMIT ?, ?`
+      `SELECT * FROM file WHERE id IN (${fileIds.join(', ')}) ORDER BY date`
     )
-      .all(start, num)
+      .all()
       .map((f) => toGalleryFileModel(f));
   },
 };

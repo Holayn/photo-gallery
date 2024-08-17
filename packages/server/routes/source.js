@@ -24,30 +24,22 @@ router.get(
 
 router.get(
   '/source/photos',
-  requiredParams(['id', 'start', 'imagePreviewHeight', 'imagePreviewArea']),
+  requiredParams(['id']),
   AuthController.authAdmin,
   (req, res) => {
-    const {
-      id: sourceId,
-      start = 0,
-      imagePreviewHeight,
-      imagePreviewArea,
-      date = null,
-      directory = null,
-    } = req.query;
+    const { id: sourceId, date = null, directory = null } = req.query;
 
-    const data = SourceService.getSourceFilesCoveringArea(
+    const files = SourceService.findFiles(
       sourceId,
-      parseInt(start, 10),
-      parseInt(imagePreviewHeight, 10),
-      parseInt(imagePreviewArea, 10),
       date ? dayjs(date, 'YYYY-MM-DD').valueOf() : null,
       directory
     );
-    if (data == null) {
+    if (!files) {
       res.sendStatus(400);
     } else {
-      res.send(data);
+      res.send({
+        files,
+      });
     }
   }
 );

@@ -4,8 +4,6 @@ const logger = require('./logger');
 const { SourceDAO, GalleryFileDAO, transaction } = require('./db');
 const Source = require('../model/source');
 
-const RANGE_QUERY_SIZE = 50;
-
 module.exports = {
   addSource(sourcePath, alias) {
     transaction(() => {
@@ -67,9 +65,9 @@ module.exports = {
     });
   },
 
-  findFiles(sourceId, start, num, startDateRange, directory) {
+  findFiles(sourceId, startDateRange, directory) {
     const source = new ProcessorSource(SourceDAO.getById(sourceId));
-    const sourceFiles = source.findFiles(start, num, startDateRange, directory);
+    const sourceFiles = source.findFiles(startDateRange, directory);
     return sourceFiles.map(({ id, date, metadata }) => ({
       date,
       metadata,
@@ -102,70 +100,5 @@ module.exports = {
 
   getDirectories(sourceId) {
     return new ProcessorSource(SourceDAO.getById(sourceId)).getDirectories();
-  },
-
-  getSourceFilesCoveringArea(
-    sourceId,
-    start,
-    imagePreviewHeight,
-    imagePreviewArea,
-    startDateRange,
-    directory
-  ) {
-    if (!imagePreviewArea || !imagePreviewHeight) {
-      return null;
-    }
-
-    let usedArea = 0;
-    const retFiles = [];
-    let rangeStart = start;
-    let hasMorePhotos = false;
-
-    while (usedArea < imagePreviewArea) {
-      const files = this.findFiles(
-        sourceId,
-        rangeStart,
-        RANGE_QUERY_SIZE,
-        startDateRange,
-        directory
-      );
-
-      for (const file of files) {
-        retFiles.push(file);
-
-        const { width: fileWidth, height: fileHeight } = file.metadata;
-
-        if (!fileWidth || !fileHeight) {
-          throw new Error('File is missing width/height metadata.');
-        }
-
-        const ratioFactor = fileHeight / imagePreviewHeight;
-        const adjustedWidth = fileWidth / ratioFactor;
-        usedArea += adjustedWidth * imagePreviewHeight;
-
-        if (usedArea >= imagePreviewArea) {
-          break;
-        }
-      }
-
-      rangeStart += RANGE_QUERY_SIZE;
-
-      hasMorePhotos = files.length >= RANGE_QUERY_SIZE;
-
-      if (!hasMorePhotos) {
-        break;
-      }
-    }
-
-    return {
-      info: {
-        hasMorePhotos,
-      },
-      files: retFiles.map(({ date, sourceFileId = null, metadata }) => ({
-        date,
-        sourceFileId,
-        metadata,
-      })),
-    };
   },
 };

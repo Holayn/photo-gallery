@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="mt-4">
-      <Gallery ref="gallery" :has-more-photos="hasMorePhotos" :load-more="loadMoreFromServer" :show-date-selection="true" :show-lightbox="showLightbox" @date="onDateUpdate($event)">
+      <Gallery ref="gallery" :show-date-selection="true" :show-lightbox="showLightbox" @date="onDateUpdate($event)">
         <template #heading>
           <h1 class="flex-auto text-3xl md:text-5xl">
             <div v-if="showLoadingSourceInfo" class="flex justify-center">
@@ -29,7 +29,7 @@ import Loading from '../components/Loading.vue';
 import Gallery from './Gallery.vue';
 
 import { getPhotosFromSource, getSource } from '../services/api';
-import { getGalleryImageHeight, setDocumentTitle } from '../utils';
+import {  setDocumentTitle } from '../utils';
 
 export default {
   name: 'Source',
@@ -47,8 +47,6 @@ export default {
   },
   data() {
     return {
-      hasMorePhotos: true,
-
       loadingPhotoInfo: false,
       loadingSourceInfo: false,
 
@@ -67,6 +65,7 @@ export default {
   async mounted() {
     try {
       this.loadingSourceInfo = true;
+      this.loadPhotoInfo();
       this.source = await getSource(this.sourceId);
       this.loadingSourceInfo = false;
       
@@ -82,39 +81,28 @@ export default {
     this.$store.dispatch('clearPhotos');
   },
   methods: {
-    async loadMoreFromServer() {
-      if (this.hasMorePhotos) {
-        console.debug('loading more photo info from server...');
+    async loadPhotoInfo() {
+      try {
+        this.loadingPhotoInfo = true;
+        const { photos } = await getPhotosFromSource(
+          this.sourceId, 
+          this.date,
+          this.directory
+        );
+        this.loadingPhotoInfo = false;
 
-        try {
-          this.loadingPhotoInfo = true;
-          const { info, photos } = await getPhotosFromSource(
-            this.sourceId, 
-            this.$store.state.photos.length,
-            getGalleryImageHeight(),
-            this.date,
-            this.directory
-          );
-          this.loadingPhotoInfo = false;
-
-          this.hasMorePhotos = info.hasMorePhotos;
-          this.$store.dispatch('addPhotos', { photos, sourceId: this.sourceId });
-
-          console.debug(`fetched photo info of ${photos.length} more photos from server.`);
-        } catch(e) {
-          alert('An error occurred.');
-          throw e;
-        } finally {
-          this.loadingPhotoInfo = false;
-        }
+        this.$store.dispatch('setPhotos', { photos, sourceId: this.sourceId });
+        this.$refs.gallery.updateRenderPhotos();
+      } catch(e) {
+        alert('An error occurred.');
+        throw e;
+      } finally {
+        this.loadingPhotoInfo = false;
       }
     },
     onDateUpdate(date) {
-      // Only update the date and call init if the date actually changed.
-      if (date !== this.date) {
-        this.hasMorePhotos = true;
-        this.date = date;
-      }
+      this.date = date;
+      this.loadPhotoInfo();
     },
   }
 }

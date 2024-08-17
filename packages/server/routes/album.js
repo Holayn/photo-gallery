@@ -28,26 +28,18 @@ router.get(
 
 router.get(
   '/album/photos',
-  requiredParams(['id', 'start', 'imagePreviewHeight', 'imagePreviewArea']),
+  requiredParams(['id']),
   AuthController.authAlbum,
   (req, res) => {
-    const {
-      id: albumId,
-      start = 0,
-      imagePreviewHeight,
-      imagePreviewArea,
-    } = req.query;
+    const { id: albumId } = req.query;
 
-    const data = AlbumService.getAlbumFilesCoveringArea(
-      albumId,
-      parseInt(start, 10),
-      parseInt(imagePreviewHeight, 10),
-      parseInt(imagePreviewArea, 10)
-    );
-    if (!data) {
+    const files = AlbumService.getAlbumFiles(albumId);
+    if (!files) {
       res.sendStatus(400);
     } else {
-      res.send(data);
+      res.send({
+        files,
+      });
     }
   }
 );

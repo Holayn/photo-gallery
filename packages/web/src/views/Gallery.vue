@@ -78,8 +78,9 @@
     </div>
 
     <div v-if="$slots.loading" class="mt-8"></div>
-    <slot name="loading"></slot>
-    <div v-if="isNoPhotos" class="text-center">No photos found.</div>
+    <slot name="loading">
+      <div v-if="isNoPhotos" class="text-center">No photos found.</div>
+    </slot>
     
     <Lightbox v-if="isShowLightbox" @close="closeLightbox()"></Lightbox>
 
@@ -100,8 +101,6 @@
 </template>
 
 <script>
-import { computed } from 'vue';
-import { useStore } from 'vuex';
 import justifiedLayout from 'justified-layout';
 
 import { getAlbums, createAlbum, addToAlbum } from '../services/api';
@@ -110,7 +109,6 @@ import { debounce, getGalleryImageHeight, getMobileGalleryImageHeight, isMobileS
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
 import Modal from '../components/Modal.vue';
-import { useInfiniteScroll } from '../composables/infinite-scroll';
 
 export default {
   name: 'Gallery',
@@ -120,42 +118,11 @@ export default {
     Modal,
   },
   props: {
-    hasMorePhotos: Boolean,
-    loadMore: Function,
     showDateSelection: Boolean,
     showLightbox: {
       type: Boolean,
       default: false,
     },
-  },
-  setup(props) {
-    const store = useStore();
-
-    const { 
-      enable,
-      disable,
-      reset,
-      registerContainer,
-      scroll,
-      scrollTry,
-      scrolling,
-      scrollIndex,
-    } = useInfiniteScroll({
-      photos: computed(() => store.state.photos),
-      canLoadMore: props.hasMorePhotos,
-      loadMore: props.loadMore,
-    });
-
-    return { 
-      infiniteScrollEnable: enable,
-      infiniteScrollDisable: disable,
-      infiniteScrollReset: reset,
-      scroll,
-      scrollTry,
-      scrolling,
-      scrollIndex,
-      registerScrollContainer: registerContainer,
-    };
   },
   data() {
     return {
@@ -184,7 +151,7 @@ export default {
       return this.$store.state.lightbox.photoIndex;
     },
     isNoPhotos() {
-      return !this.scrolling && this.$store.state.photos.length === 0;
+      return this.$store.state.photos.length === 0;
     },
     token() {
       return this.$store.state.token;
@@ -195,21 +162,10 @@ export default {
     renderPhotos() {
       return this.photos.slice(this.renderPhotosStart, this.renderPhotosEnd);
     },
-    container() {
-      return this.$refs.gallery;
-    }
   },
   watch: {
     async lightboxIndex() {
       await this.scrollLightboxImageIntoView();
-
-      // Handling for navigating the lightbox past loaded gallery thumbnails.
-      if (this.lightboxIndex + 1 >= this.scrollIndex) {
-        await this.scroll();
-      } else {
-        await this.scrollTry();
-      }
-
       this.updateRenderPhotos();
     },
     showLightbox() {
@@ -222,11 +178,6 @@ export default {
     isShowLightbox() {
       this.updateLightboxQueryParam();
     },
-    scrolling() {
-      if (!this.scrolling) {
-        this.updateRenderPhotos();
-      }
-    },
   },
   created() {
     // Ensure the page isn't loaded with this query parameter set.
@@ -235,26 +186,11 @@ export default {
     this._updateRenderPhotosDebounce = debounce(() => this.updateRenderPhotos(), 50);
   },
   async mounted() {
-    this.registerScrollContainer(this.$refs.gallery);
-    await this.scroll();
-    
     this.$refs.gallery.addEventListener('scroll', this._updateRenderPhotosDebounce);
     window.addEventListener('resize', this._updateRenderPhotosDebounce);
-
-    const resize = debounce(() => {
-      this.scrollTry();
-    }, 500);
-    window.addEventListener('resize', resize);
-
-    this.updateRenderPhotos();
-
-    this.infiniteScrollEnable();
   },
   beforeUpdate() {
     this.galleryImageRefs = [];
-  },
-  beforeUnmount() {
-    this.infiniteScrollDisable();
   },
   methods: {
     updateLayout() {
@@ -331,7 +267,6 @@ export default {
     openLightbox(photo) {
       if (!this.isShowLightbox) {
         this.isShowLightbox = true;
-        this.infiniteScrollDisable();
 
         if (photo) {
           this.$store.state.lightbox.photoIndex = this.photos.findIndex(p => p === photo);
@@ -356,8 +291,6 @@ export default {
             }, 250);
           });
         }
-        
-        this.infiniteScrollEnable();
       }
     },
     updateLightboxQueryParam() {
@@ -438,7 +371,6 @@ export default {
 
     reset() {
       this.$store.dispatch('clearPhotos');
-      this.infiniteScrollReset();
     },
   },
 }

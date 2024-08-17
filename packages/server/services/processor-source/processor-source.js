@@ -59,7 +59,7 @@ class ProcessorSource {
     return [...paths];
   }
 
-  findFiles(start, num, date, directory) {
+  findFiles(date, directory) {
     return this.db
       .prepare(
         `
@@ -67,15 +67,11 @@ class ProcessorSource {
         WHERE processed != 0 
         ${directory ? `AND path LIKE '${directory}%'` : ''} 
         ${date ? `AND date < ${date}` : ''} 
-        ORDER BY date DESC LIMIT ?, ?
+        ORDER BY date DESC
       `
       )
-      .all(start, num)
+      .all()
       .map((f) => toModel(f));
-  }
-
-  getAllFiles() {
-    return this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME}`).all();
   }
 
   getFile(id) {

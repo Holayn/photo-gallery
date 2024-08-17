@@ -15,7 +15,7 @@ export default createStore({
     isAdmin: null,
   },
   actions: {
-    addPhotos(context, { photos, sourceId = null }) {
+    setPhotos(context, { photos, sourceId = null }) {
       const modPhotos = photos.reduce((acc, photo) => {
         const photoSourceId = photo.sourceId || sourceId;
         const modPhoto = { 
@@ -34,7 +34,7 @@ export default createStore({
         return acc;
       }, []);
 
-      context.state.photos.push(...modPhotos);
+      context.state.photos = modPhotos;
     },
     clearPhotos(context) {
       context.state.photos = [];
