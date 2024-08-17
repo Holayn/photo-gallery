@@ -23,6 +23,7 @@ class ProcessorSourceFileMetadata {
 function getDate(exif) {
   const date =
     exif.EXIF?.DateTimeOriginal ||
+    exif.EXIF?.ModifyDate ||
     exif.H264?.DateTimeOriginal ||
     exif.QuickTime?.ContentCreateDate ||
     exif.QuickTime?.CreationDate ||
