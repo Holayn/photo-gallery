@@ -92,6 +92,8 @@
         </div>
       </div>
     </div>
+
+    <Toast></Toast>
   </dialog>
 </template>
 
@@ -107,7 +109,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import LightboxSlide from './LightboxSlide.vue';
-import Modal from './Modal.vue';
+import Toast from './Toast.vue';
 
 import { getLocationInfo, toPhotoDownloadUrl, PHOTO_SIZES } from '../services/api';
 
@@ -119,9 +121,9 @@ export default {
   name: 'Lightbox',
   components: {
     LightboxSlide,
-    Modal,
     Swiper,
     SwiperSlide,
+    Toast,
   },
   setup() {
     return {

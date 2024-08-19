@@ -17,7 +17,7 @@
         </template>
         <template v-if="loadingPhotoInfo" #loading>
           <div class="flex flex-col items-center justify-center pb-4">
-            <Loading class="w-16 h-16"></Loading>
+            <Loading class="w-16 h-16" show-long-wait></Loading>
             <p>Retrieving photo info</p>
           </div>
         </template>

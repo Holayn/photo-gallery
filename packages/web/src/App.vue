@@ -40,12 +40,19 @@
         <router-view></router-view>
       </div>
     </div>
+
+    <Toast></Toast>
   </div>
 </template>
 
 <script>
+import Toast from './components/Toast.vue';
+
 export default {
   name: 'App',
+  components: {
+    Toast,
+  },
   data() {
     return {
       showSidebar: false,
