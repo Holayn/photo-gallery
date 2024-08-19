@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const path = require('path');
 
 const SourceService = require('../services/source');
 const AuthController = require('../controllers/auth');
@@ -72,7 +73,25 @@ router.get(
       res.setHeader('Cache-Control', 'public, max-age=86400');
       res.send(data);
     } else {
-      res.status(404).send('Photo not found.');
+      res.sendStatus(404);
+    }
+  })
+);
+
+router.get(
+  '/photo/download',
+  requiredParams(['sourceFileId', 'sourceId']),
+  AuthController.authPhoto,
+  asyncHandler(async (req, res) => {
+    const { sourceFileId, sourceId } = req.query;
+
+    const p = await SourceService.getFilePath(sourceId, sourceFileId);
+
+    if (p) {
+      res.setHeader('Content-Disposition', `attachment; filename=${path.basename(p)}`);
+      res.sendFile(p);
+    } else {
+      res.sendStatus(404);
     }
   })
 );

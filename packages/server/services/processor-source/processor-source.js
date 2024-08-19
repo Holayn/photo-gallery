@@ -142,6 +142,34 @@ class ProcessorSource {
 
     return null;
   }
+
+  async getFilePath(id) {
+    const fileRecord = this.db
+      .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE id = ?`)
+      .get(id);
+
+    if (!fileRecord) {
+      throw new Error(`ID:${id} does not exist in processor ${this.path}.`);
+    }
+
+    const sourcePath = fileRecord[SIZE_COLUMNS.ORIGINAL];
+    if (!sourcePath) {
+      throw new Error(`${SIZE_COLUMNS.ORIGINAL} does not exist for ${id}`);
+    }
+
+    // Attempt to return the original file's web-converted copy.
+    const convertedPath = fileRecord[SIZE_COLUMNS.ORIGINAL].replace(
+      'original',
+      'converted'
+    );
+    const photoPath = path.resolve(this.path, convertedPath);
+    const exists = await fs.pathExists(photoPath);
+    if (exists) {
+      return photoPath;
+    } else {
+      return path.resolve(this.path, fileRecord[SIZE_COLUMNS.ORIGINAL]);
+    }
+  }
 }
 
 module.exports = ProcessorSource;

@@ -211,3 +211,7 @@ export async function pingPhoto(photoUrl) {
 export function toPhotoUrl(photo, size, albumToken) {
   return `${BASE}/photo?sourceFileId=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}${attachAlbumToken(albumToken)}`;
 }
+
+export function toPhotoDownloadUrl(photo) {
+  return `${BASE}/photo/download?sourceFileId=${photo.sourceFileId}&sourceId=${photo.sourceId}`;
+}

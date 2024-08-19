@@ -98,6 +98,10 @@ module.exports = {
     );
   },
 
+  getFilePath(sourceId, id) {
+    return new ProcessorSource(SourceDAO.getById(sourceId)).getFilePath(id);
+  },
+
   getDirectories(sourceId) {
     return new ProcessorSource(SourceDAO.getById(sourceId)).getDirectories();
   },
