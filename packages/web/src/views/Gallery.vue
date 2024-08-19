@@ -280,15 +280,16 @@ export default {
         // Helps to show which photo was just being viewed in the lightbox.
         if (showTransition) {
           const ref = this.getGalleryImageRefForLightboxPhoto();
-          ref.el.style.transform = 'scale(4)';
           ref.el.style.zIndex = '1';
-          setTimeout(() => {
-            ref.el.style.transition = 'transform 0.25s ease-out';
-            ref.el.style.transform = 'scale(1)';
-            setTimeout(() => {
-              ref.el.style.transition = '';
-              ref.el.style.zIndex = '';
-            }, 250);
+          ref.el.animate([
+            {
+              transform: 'scale(4)',
+            },
+            {
+              transform: 'scale(1)',
+            }
+          ], { duration: 250, easing: 'ease-in' }).finished.then(() => {
+            ref.el.style.zIndex = '';
           });
         }
       }
