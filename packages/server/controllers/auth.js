@@ -1,3 +1,5 @@
+const axios = require('axios');
+const crypto = require('crypto');
 const {
   AlbumDAO,
   AlbumFileDAO,
@@ -5,48 +7,168 @@ const {
   UserDAO,
 } = require('../services/db');
 const UserService = require('../services/user');
+const logger = require('../services/logger');
+
+require('dotenv').config();
 
 const MAX_ATTEMPTS = 3;
-const ATTEMPTS_CLEAR_TIMEOUT = 3600000;
 
 function validateAdmin(req) {
-  return req.session.user;
+  return (
+    req.session.user && req.cookies.PUBLICKEY === req.session.user.publicKey
+  );
 }
 
-const attempts = {};
-function canAttempt(username) {
-  if (attempts[username] >= MAX_ATTEMPTS) {
-    return false;
+class Attemptor {
+  attempts = {};
+
+  constructor(isValidAttemptFn) {
+    this.isValidAttemptFn = isValidAttemptFn;
   }
 
-  return !!UserDAO.getByUsername(username);
-}
-function registerAttempt(username) {
-  if (!attempts[username]) {
-    attempts[username] = 0;
-  }
-  attempts[username] += 1;
-
-  setTimeout(() => {
-    if (attempts[username]) {
-      clearAttempts(username);
+  canAttempt(key) {
+    if (this.attempts[key] >= MAX_ATTEMPTS) {
+      return false;
     }
-  }, ATTEMPTS_CLEAR_TIMEOUT);
+
+    return this.isValidAttemptFn(key);
+  }
+
+  registerAttempt(key) {
+    if (!this.attempts[key]) {
+      this.attempts[key] = 0;
+    }
+    this.attempts[key] += 1;
+  }
+
+  clearAttempts(key) {
+    delete this.attempts[key];
+  }
 }
-function clearAttempts(username) {
-  delete attempts[username];
-}
+
+const loginAttemptor = new Attemptor(
+  (username) => !!UserDAO.getByUsername(username)
+);
+
+const twoFAKeys = {};
+const twoFaAttemptor = new Attemptor((key) => !!twoFAKeys[key]);
 
 const AuthController = {
-  auth(req, res, next) {
+  auth(req, res) {
     const { username, password } = req.body;
 
-    if (canAttempt(username)) {
-      registerAttempt(username);
+    if (loginAttemptor.canAttempt(username)) {
+      loginAttemptor.registerAttempt(username);
 
       const user = UserService.getUser(username, password);
       if (user) {
-        clearAttempts(username);
+        loginAttemptor.clearAttempts(username);
+
+        if (process.env.ENV !== 'development') {
+          (async () => {
+            try {
+              await axios(process.env.NOTIFY_URL, {
+                method: 'post',
+                data: {
+                  message: `${username} logged in from ${req.ip}`,
+                },
+              });
+            } catch (e) {
+              logger.error('Failed to send login notification', e);
+            }
+          })();
+        }
+
+        const publicKey = crypto.randomBytes(32).toString('hex');
+        res.cookie('PUBLICKEY', publicKey, {
+          httpOnly: true,
+          sameSite: 'strict',
+          secure: process.env.ENV !== 'development',
+        });
+
+        const twoFAKey = crypto.randomBytes(32).toString('hex');
+        res.cookie('TWOFAKEY', twoFAKey, {
+          httpOnly: true,
+          sameSite: 'strict',
+          secure: process.env.ENV !== 'development',
+        });
+
+        Object.keys(twoFAKeys).forEach((key) => {
+          if (twoFAKeys[key].username === username) {
+            delete twoFAKeys[key];
+          }
+        });
+
+        twoFAKeys[twoFAKey] = {
+          publicKey,
+          username,
+          code: Array.from({ length: 6 }, () =>
+            Math.random().toString(36).substring(2, 3)
+          )
+            .join('')
+            .toUpperCase(),
+        };
+
+        setTimeout(() => {
+          // Token valid for 1 minute.
+          delete twoFAKeys[twoFAKey];
+        }, 1000 * 60);
+
+        if (process.env.ENV !== 'development') {
+          (async () => {
+            try {
+              await axios(process.env.NOTIFY_URL, {
+                method: 'post',
+                data: {
+                  message: `2FA code: ${twoFAKeys[twoFAKey].code}`,
+                  user: user.notifyUser,
+                },
+              });
+            } catch (e) {
+              logger.error('Failed to send 2FA code', e);
+            }
+          })();
+        } else {
+          console.log(user.notifyUser, twoFAKeys[twoFAKey].code);
+        }
+
+        res.sendStatus(200);
+
+        return;
+      }
+    }
+
+    // A failed auth shouldn't result in a 401, because the user wasn't denied access to this route.
+    res.send({
+      success: false,
+    });
+  },
+  authTwoFa(req, res, next) {
+    const { twoFACode } = req.body;
+    const { PUBLICKEY: publicKey, TWOFAKEY: twoFAKey } = req.cookies;
+    if (twoFaAttemptor.canAttempt(twoFAKey)) {
+      twoFaAttemptor.registerAttempt(twoFAKey);
+
+      if (
+        publicKey === twoFAKeys[twoFAKey].publicKey &&
+        twoFACode === twoFAKeys[twoFAKey].code
+      ) {
+        twoFaAttemptor.clearAttempts(twoFAKey);
+
+        if (process.env.ENV !== 'development') {
+          (async () => {
+            try {
+              await axios(process.env.NOTIFY_URL, {
+                method: 'post',
+                data: {
+                  message: `${twoFAKeys[twoFAKey].username} passed 2FA (${req.ip})`,
+                },
+              });
+            } catch (e) {
+              logger.error('Failed to send 2FA notification', e);
+            }
+          })();
+        }
 
         req.session.regenerate((regenErr) => {
           if (regenErr) {
@@ -54,7 +176,8 @@ const AuthController = {
           }
 
           req.session.user = {
-            name: username,
+            publicKey,
+            username: twoFAKeys[twoFAKey].username,
           };
           req.session.save((saveErr) => {
             if (saveErr) {
@@ -70,12 +193,10 @@ const AuthController = {
       }
     }
 
-    // A failed auth shouldn't result in a 401, because the user wasn't denied access to this route.
     res.send({
       success: false,
     });
   },
-
   authAdmin(req, res, next) {
     if (validateAdmin(req)) {
       next();
@@ -86,7 +207,7 @@ const AuthController = {
   },
 
   authPhoto(req, res, next) {
-    const { sourceFileId, sourceId, albumToken } = req.query;
+    const { sourceFileId, sourceId, token: albumId, albumToken } = req.query;
 
     if (validateAdmin(req)) {
       next();
@@ -95,7 +216,12 @@ const AuthController = {
     if (albumToken) {
       const file = GalleryFileDAO.getBySource(sourceId, sourceFileId);
       if (file) {
-        const album = AlbumDAO.getByToken(albumToken);
+        const album = AlbumDAO.getByIdToken(albumId, albumToken);
+        if (!album) {
+          res.sendStatus(401);
+          return;
+        }
+
         if (album) {
           const albumFile = AlbumFileDAO.getByAlbumIdFileId(album.id, file.id);
           if (albumFile) {
@@ -110,14 +236,19 @@ const AuthController = {
   },
 
   authAlbum(req, res, next) {
-    const { albumToken, id: albumId } = req.query;
+    const { token: albumToken, id: albumId } = req.query;
 
     if (validateAdmin(req)) {
       next();
       return;
     }
     if (albumToken) {
-      const album = AlbumDAO.getById(albumId);
+      const album = AlbumDAO.getByIdAlias(albumId);
+      if (!album) {
+        res.sendStatus(401);
+        return;
+      }
+
       if (album.token === albumToken) {
         next();
         return;

@@ -3,10 +3,11 @@ class User {
   name;
   password;
 
-  constructor({ id, name, password }) {
+  constructor({ id, name, password, notifyUser }) {
     this.id = id;
     this.name = name;
     this.password = password;
+    this.notifyUser = notifyUser;
   }
 }
 

@@ -166,9 +166,8 @@ class ProcessorSource {
     const exists = await fs.pathExists(photoPath);
     if (exists) {
       return photoPath;
-    } else {
-      return path.resolve(this.path, fileRecord[SIZE_COLUMNS.ORIGINAL]);
     }
+    return path.resolve(this.path, fileRecord[SIZE_COLUMNS.ORIGINAL]);
   }
 }
 

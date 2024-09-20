@@ -43,15 +43,44 @@ const AlbumFileDAO = {
   },
 };
 
+const generateIdAlias = () =>
+  Array.from({ length: 6 }, () =>
+    Math.random().toString(36).substring(2, 3)
+  ).join('');
 DB.exec(
   'CREATE TABLE IF NOT EXISTS album (id INTEGER PRIMARY KEY, name TEXT, token TEXT)'
 );
+
+if (
+  !DB.prepare(
+    'SELECT COUNT(*) FROM pragma_table_info(\'album\') WHERE name = \'id_alias\';'
+  ).get()
+) {
+  DB.exec('ALTER TABLE album ADD COLUMN id_alias TEXT');
+
+  // Generate id aliases for existing records that don't have them.
+  DB.prepare('SELECT * FROM album WHERE id_alias IS NULL')
+    .all()
+    .forEach((record) => {
+      DB.prepare('UPDATE album SET id_alias = @idAlias WHERE id = @id').run({
+        id: record.id,
+        idAlias: generateIdAlias(),
+      });
+    });
+}
+
 const toAlbumModel = toModelFactory(Album);
 const AlbumDAO = {
-  insert({ name, token }) {
+  insert({ name }) {
+    let idAlias = generateIdAlias();
+    while (
+      DB.prepare('SELECT * FROM album WHERE id_alias = ?').get(idAlias) != null
+    ) {
+      idAlias = generateIdAlias();
+    }
     return DB.prepare(
-      'INSERT INTO album (name, token) VALUES (@name, @token)'
-    ).run({ name, token }).lastInsertRowid;
+      'INSERT INTO album (id_alias, name) VALUES (@idAlias, @name)'
+    ).run({ idAlias, name }).lastInsertRowid;
   },
   findAll() {
     return DB.prepare('SELECT * FROM album')
@@ -61,10 +90,23 @@ const AlbumDAO = {
   getById(id) {
     return toAlbumModel(DB.prepare('SELECT * FROM album WHERE id = ?').get(id));
   },
-  getByToken(token) {
+  getByIdAlias(idAlias) {
     return toAlbumModel(
-      DB.prepare('SELECT * FROM album WHERE token = ?').get(token)
+      DB.prepare('SELECT * FROM album WHERE id_alias = ?').get(idAlias)
     );
+  },
+  getByIdToken(idAlias, token) {
+    return toAlbumModel(
+      DB.prepare('SELECT * FROM album WHERE id_alias = ? AND token = ?').get(
+        idAlias,
+        token
+      )
+    );
+  },
+  update({ id, name, token }) {
+    DB.prepare(
+      'UPDATE album SET name = @name, token = @token WHERE id = @id'
+    ).run({ id, name, token });
   },
 };
 
@@ -147,6 +189,13 @@ const SourceDAO = {
 DB.exec(
   'CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, name TEXT, password TEXT)'
 );
+if (
+  !DB.prepare(
+    'SELECT COUNT(*) FROM pragma_table_info(\'user\') WHERE name = \'notify_User\';'
+  ).get()
+) {
+  DB.exec('ALTER TABLE user ADD COLUMN notify_user TEXT');
+}
 const toUserModel = toModelFactory(User);
 const UserDAO = {
   getByUsernamePassword(name, password) {

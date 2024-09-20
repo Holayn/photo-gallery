@@ -5,7 +5,7 @@
         <slot name="heading"></slot>
       </div>
       <Teleport to="#headerAdditionalControls">
-        <div v-if="$store.state.isAdmin" class="flex gap-4 justify-end">
+        <div v-if="$store.state.isLoggedIn" class="flex gap-4 justify-end">
           <div v-if="isSelectionMode" class="flex flex-col md:flex-row items-end md:items-center gap-2">
             <div>Selected: {{ Object.keys(selected).length }}</div>
             <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Existing Album</button>

@@ -5,6 +5,7 @@ import Gallery from './views/Gallery.vue';
 import Albums from './views/Albums.vue';
 import Album from './views/Album.vue';
 import Login from './views/Login.vue';
+import TwoFA from './views/TwoFA.vue';
 import Sources from './views/Sources.vue';
 import Source from './views/Source.vue';
 import SourceDirectories from './views/SourceDirectories.vue';
@@ -17,7 +18,7 @@ import './style.css';
 
 const routes = [
   { name: 'home', path: '/', redirect: () => {
-    if (store.state.isAdmin === null) {
+    if (store.state.isLoggedIn === null) {
       return { name: 'login' };
     }
     return { name: 'albums' };
@@ -29,6 +30,7 @@ const routes = [
     showLightbox: route.query.showLightbox === 'true',
   })},
   { name: 'login', path: '/login', component: Login, props: route => route.query },
+  { name: '2fa', path: '/2fa', component: TwoFA, props: route => route.query },
   { name: 'sources', path: '/sources', component: Sources },
   { name: 'source', path: '/source/:sourceId/:directory?', component: Source, props: route => ({
     ...route.params,
@@ -51,14 +53,14 @@ router.beforeEach(async (to) => {
   if (to.name === 'album' && to.query.albumToken) {
     return true;
   }
-  if (to.name === 'login') {
+  if (to.name === 'login' || to.name === '2fa') {
     return true;
   }
 
-  if (store.state.isAdmin === null) {
+  if (!store.state.isLoggedIn) {
       // Verify token
     if (await authVerify()) {
-      store.dispatch('setIsAdmin', true);
+      store.dispatch('setIsLoggedIn', true);
     } else {
       router.push({ 
         name: 'login', 

@@ -1,18 +1,14 @@
 <template>
   <div class="flex flex-col items-center px-4 md:px-8">
-    <form class="mt-8 max-w-lg" @submit.prevent="login">
+    <form class="mt-8 max-w-lg" @submit.prevent="onSubmit">
       <div>
-        <label for="username" class="mb-1">Username</label>
-        <input id="username" class="input w-full" v-model="username">
+        <label for="code" class="mb-1">Code</label>
+        <input id="code" class="input w-full" v-model="code">
+        <div>This code is valid for 1 minute.</div>
       </div>
 
-      <div class="mt-2">
-        <label for="password" class="mb-1">Password</label>
-        <input id="password" class="input w-full" v-model="password" type="password">
-      </div>
-      
       <div class="mt-4">
-        <button class="btn w-full" type="submit">Login</button>
+        <button class="btn w-full" type="submit">Verify</button>
       </div>
     </form>
     <Loading v-if="loading" class="w-16 h-16"></Loading>
@@ -22,10 +18,10 @@
 <script>
 import Loading from '../components/Loading.vue';
 
-import { auth } from '../services/api';
+import { auth2FA } from '../services/api';
 
 export default {
-  name: 'Login',
+  name: '2FA',
   components: {
     Loading,
   },
@@ -38,23 +34,28 @@ export default {
   data() {
     return {
       loading: false,
-      username: null,
-      password: null,
+      code: null,
       error: null,
     };
   },
   methods: {
-    async login() {
-      if (this.username && this.password) {
+    async onSubmit() {
+      if (this.code) {
         this.error = null;
         this.loading = true;
-        const { data, error } = await auth(this.username, this.password);
+        const { data, error } = await auth2FA(this.code);
         if (data && data.success === false) {
-          this.error = 'Bad login';
+          this.error = 'Failed';
         } else if (error) {
           this.error = 'Error';
         } else {
-          this.$router.push({ path: '2fa', query: this.$route.query });
+          this.$store.dispatch('setIsLoggedIn', true);
+
+          if (this.next !== null) {
+            this.$router.push({ path: this.next });
+          } else {
+            this.$router.push({ name: 'home' });
+          }
         }
         this.loading = false;
       }

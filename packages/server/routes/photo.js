@@ -88,7 +88,10 @@ router.get(
     const p = await SourceService.getFilePath(sourceId, sourceFileId);
 
     if (p) {
-      res.setHeader('Content-Disposition', `attachment; filename=${path.basename(p)}`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=${path.basename(p)}`
+      );
       res.sendFile(p);
     } else {
       res.sendStatus(404);

@@ -10,9 +10,7 @@ const GalleryFile = require('../model/gallery-file');
 module.exports = {
   createAlbum(name, files = {}) {
     transaction(() => {
-      const albumId = AlbumDAO.insert(
-        new Album({ name, token: generateAlbumToken() })
-      );
+      const albumId = AlbumDAO.insert(new Album({ name }));
       this.addToAlbum(albumId, files);
     });
   },
@@ -59,8 +57,14 @@ module.exports = {
       }))
       .filter((f) => !!f.sourceFileId);
   },
-};
 
-function generateAlbumToken() {
-  return crypto.randomBytes(16).toString('hex');
-}
+  generateAlbumToken(id) {
+    const album = AlbumDAO.getById(id);
+    if (album.token) {
+      return album.token;
+    }
+    album.token = crypto.randomBytes(32).toString('hex');
+    AlbumDAO.update(album);
+    return album.token;
+  },
+};

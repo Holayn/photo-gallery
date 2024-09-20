@@ -9,7 +9,7 @@ export const getGalleryImageHeight = () => {
   return isMobileScreen() ? getMobileGalleryImageHeight() : Math.min(200, window.innerWidth / 5);
 }
 
-const BASE_TITLE = 'Photos';
+const BASE_TITLE = 'kaifotos';
 export function setDocumentTitle(title) {
   document.title = `${title} - ${BASE_TITLE}`;
 }
@@ -38,7 +38,6 @@ export async function loadPhotoToBase64(url) {
 
   return new Promise((resolve) => {
     imageUrlToBase64(url).then(data => {
-      console.debug(`Loaded ${url}`);
       resolve(data);
     });
   });
@@ -82,8 +81,6 @@ export function isElementFullyInView(element, options = { threshold: 0 }) {
     observer.observe(element);
 
     // Cleanup after the observation is done
-    // observer.unobserve(element);
+    observer.unobserve(element);
   });
 }
-
-window.asdf = isElementFullyInView;

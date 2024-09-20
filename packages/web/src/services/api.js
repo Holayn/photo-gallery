@@ -77,6 +77,20 @@ export async function authVerify() {
 
   return !res.error;
 }
+export async function auth2FA(code) {
+  return fetcher.fetch(`${BASE}/auth/2fa`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      twoFACode: code,
+    }),
+  });
+}
+export function logout() {
+  return fetcher.fetch(`${BASE}/auth/logout`, { method: 'post' });
+}
 
 export async function getSources() {
   const res = await fetcher.fetch(`${BASE}/sources`);
@@ -125,9 +139,6 @@ export async function getPhotosFromSource(sourceId, date, directory) {
   }
 }
 
-function attachAlbumToken(albumToken) {
-  return albumToken ? `&albumToken=${albumToken}` : '';
-}
 export async function getPhotosFromAlbum(albumId, albumToken) {
   const url = new URL(`${BASE}/album/photos`, window.location.origin);
   url.searchParams.append('id', albumId);
@@ -152,7 +163,7 @@ export async function getAlbums() {
   }
 }
 export async function getAlbum(albumId, albumToken) {
-  const res = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${attachAlbumToken(albumToken)}`);
+  const res = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${albumToken ? `&albumToken=${albumToken}` : ''}`);
   if (res.data) {
     return {
       id: res.data.id,
@@ -187,6 +198,19 @@ export function addToAlbum(albumId, files) {
     }),
   });
 }
+export async function shareAlbum(album) {
+  const res = await fetcher.fetch(`${BASE}/album/share`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      id: album.id,
+    }),
+  });
+
+  return res.data.token;
+}
 
 export async function getLocationInfo(lat, long) {
   const res = await fetcher.fetch(`${BASE}/location?lat=${lat}&long=${long}`);
@@ -208,8 +232,8 @@ export async function pingPhoto(photoUrl) {
   }
 }
 
-export function toPhotoUrl(photo, size, albumToken) {
-  return `${BASE}/photo?sourceFileId=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}${attachAlbumToken(albumToken)}`;
+export function toPhotoUrl(photo, size) {
+  return `${BASE}/photo?sourceFileId=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}`;
 }
 
 export function toPhotoDownloadUrl(photo) {

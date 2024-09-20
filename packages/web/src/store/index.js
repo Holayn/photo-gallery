@@ -12,10 +12,10 @@ export default createStore({
     },
 
     authToken: '',
-    isAdmin: null,
+    isLoggedIn: false,
   },
   actions: {
-    setPhotos(context, { photos, sourceId = null }) {
+    setPhotos(context, { photos, sourceId = null, urlParams = '', }) {
       const modPhotos = photos.reduce((acc, photo) => {
         const photoSourceId = photo.sourceId || sourceId;
         const modPhoto = { 
@@ -25,10 +25,10 @@ export default createStore({
           metadata: photo.metadata,
         }
         modPhoto.urls = {
-          [PHOTO_SIZES.LARGE]: toPhotoUrl(modPhoto, PHOTO_SIZES.LARGE, context.state.albumToken),
-          [PHOTO_SIZES.SMALL]: toPhotoUrl(modPhoto, PHOTO_SIZES.SMALL, context.state.albumToken),
-          [PHOTO_SIZES.ORIGINAL]: toPhotoUrl(modPhoto, PHOTO_SIZES.ORIGINAL, context.state.albumToken),
-          [PHOTO_SIZES.THUMB]: toPhotoUrl(modPhoto, PHOTO_SIZES.THUMB, context.state.albumToken),
+          [PHOTO_SIZES.LARGE]: toPhotoUrl(modPhoto, PHOTO_SIZES.LARGE) + `&${urlParams}`,
+          [PHOTO_SIZES.SMALL]: toPhotoUrl(modPhoto, PHOTO_SIZES.SMALL) + `&${urlParams}`,
+          [PHOTO_SIZES.ORIGINAL]: toPhotoUrl(modPhoto, PHOTO_SIZES.ORIGINAL) + `&${urlParams}`,
+          [PHOTO_SIZES.THUMB]: toPhotoUrl(modPhoto, PHOTO_SIZES.THUMB) + `&${urlParams}`,
         }
         acc.push(modPhoto);
         return acc;
@@ -39,15 +39,12 @@ export default createStore({
     clearPhotos(context) {
       context.state.photos = [];
     },
-    setAlbumToken(context, albumToken) {
-      context.state.albumToken = albumToken;
-    },
 
     setAuthToken({ state }, authToken) {
       state.authToken = authToken;
     },
-    setIsAdmin({ state }, isAdmin) {
-      state.isAdmin = isAdmin;
+    setIsLoggedIn({ state }, isLoggedIn) {
+      state.isLoggedIn = isLoggedIn;
     },
   },
 })

@@ -26,13 +26,16 @@
 
     <Modal v-if="isModalAlbumLinkShowing" size="full" @close="(isModalAlbumLinkShowing = false)">
       <div class="flex items-center gap-2">
-        <input class="flex-auto" :value="albumLink">
-        <div class="flex gap-1 items-center">
-          <button @click="copyToClipboard(albumLink)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-          </button>
-          <p v-if="isModalAlbumLinkCopied">copied!</p>
-        </div>
+        <button v-if="!album.token" class="btn" @click="shareAlbum">Share</button>
+        <template v-else>
+          <input class="flex-auto" :value="albumLink">
+          <div class="flex gap-1 items-center">
+            <button @click="copyToClipboard(albumLink)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+            </button>
+            <p v-if="isModalAlbumLinkCopied">copied!</p>
+          </div>
+        </template>
       </div>
     </Modal>
   </div>
@@ -43,7 +46,7 @@ import Loading from '../components/Loading.vue';
 import Modal from '../components/Modal.vue';
 import Gallery from './Gallery.vue';
 
-import { getPhotosFromAlbum, getAlbum } from '../services/api';
+import { getPhotosFromAlbum, getAlbum, shareAlbum } from '../services/api';
 import { setDocumentTitle } from '../utils';
 
 export default {
@@ -73,10 +76,10 @@ export default {
   },
   computed: {
     albumToken() {
-      return this.$route.query.albumToken;
+      return this.$route.query.token;
     },
     albumLink() {
-      return `${window.location.href.split('?')[0]}?albumToken=${this.album.token}`;
+      return `${window.location.href.split('?')[0]}?token=${this.album.token}`;
     },
     showLoadingAlbumInfo() {
       return this.loadingAlbumInfo && !this.loadingPhotoInfo;
@@ -96,44 +99,32 @@ export default {
     }
   },
   async mounted() {
-    this.$store.dispatch('setAlbumToken', this.albumToken);
+    this.loadingAlbumInfo = true;
+    this.loadPhotoInfo();
+    this.album = await getAlbum(this.albumId, this.albumToken);
+    this.loadingAlbumInfo = false;
 
-    try {
-      this.loadingAlbumInfo = true;
-      this.loadPhotoInfo();
-      this.album = await getAlbum(this.albumId, this.albumToken);
-      this.loadingAlbumInfo = false;
-
-      setDocumentTitle(this.album.name);
-    } catch(e) {
-      alert('An error occurred.');
-      throw e;
-    } finally {
-      this.loadingAlbumInfo = false;
-    }
+    setDocumentTitle(this.album.name);
   },
   beforeUnmount() {
     this.$store.dispatch('clearPhotos');
   },
   methods: {
     async loadPhotoInfo() {
-      try {
-        this.loadingPhotoInfo = true;
-        const { photos } = await getPhotosFromAlbum(this.albumId, this.albumToken);
-        this.loadingPhotoInfo = false;
+      this.loadingPhotoInfo = true;
+      const { photos } = await getPhotosFromAlbum(this.albumId, this.albumToken);
+      this.loadingPhotoInfo = false;
 
-        this.$store.dispatch('setPhotos', { photos });
-        this.$refs.gallery.updateRenderPhotos();
-      } catch(e) {
-        alert('An error occurred.');
-        throw e;
-      } finally {
-        this.loadingPhotoInfo = false;
-      }
+      this.$store.dispatch('setPhotos', { photos, urlParams: `id=${this.albumId}&token=${this.albumToken}` });
+      this.$refs.gallery.updateRenderPhotos();
     },
 
     showModalAlbumLink() {
       this.isModalAlbumLinkShowing = true;
+    },
+    async shareAlbum() {
+      const token = await shareAlbum(this.album);
+      this.album.token = token;
     },
     copyToClipboard(link) {
       window.navigator.clipboard.writeText(link);
