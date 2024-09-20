@@ -187,15 +187,8 @@ const SourceDAO = {
 };
 
 DB.exec(
-  'CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, name TEXT, password TEXT)'
+  'CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, name TEXT, password TEXT, notify_user TEXT)'
 );
-if (
-  !DB.prepare(
-    'SELECT COUNT(*) FROM pragma_table_info(\'user\') WHERE name = \'notify_User\';'
-  ).get()
-) {
-  DB.exec('ALTER TABLE user ADD COLUMN notify_user TEXT');
-}
 const toUserModel = toModelFactory(User);
 const UserDAO = {
   getByUsernamePassword(name, password) {
