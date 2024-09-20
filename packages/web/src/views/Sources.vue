@@ -2,7 +2,7 @@
   <div class="px-8">
     <h1 class="text-5xl">Sources</h1>
     <div class="mt-4">
-      <Loading v-if="loading" class="w-16 h-16" show-long-wait></Loading>
+      <Loading v-if="loading" class="w-16 h-16"></Loading>
       <div v-else class="grid gap-4 md:gap-2">
         <div v-for="source in sources" :key="source.id">
           <div class="flex gap-1">

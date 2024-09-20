@@ -3,10 +3,7 @@
     <div v-if="loading" class="relative flex items-center justify-center h-full w-full">
       <img class="w-full h-full object-contain blur-sm" :src="preview">
       <div class="absolute flex flex-col items-center justify-center">
-        <Loading class="w-16 h-16" show-long-wait></Loading>
-        <div v-if="serverLoading" class="bg-gray-800 text-white mt-4 rounded whitespace-nowrap py-2 px-4 mx-4">
-          Server is reading file data, please wait...
-        </div>
+        <Loading class="w-16 h-16"></Loading>
       </div>
     </div>
     <div v-else="!loading" class="flex justify-center w-full h-full">
@@ -29,7 +26,7 @@
 <script>
 import Plyr from 'plyr';
 
-import { PHOTO_SIZES, pingPhoto } from '../services/api';
+import { PHOTO_SIZES } from '../services/api';
 import { getFetchedGalleryPhotoSize, loadPhotoToBase64 } from '../utils';
 
 import Loading from './Loading.vue';
@@ -50,7 +47,6 @@ export default {
   data() {
     return {
       loading: true,
-      serverLoading: false,
       PHOTO_SIZES,
       large: null,
       preview: null,
@@ -92,15 +88,9 @@ export default {
         document.querySelector('.plyr__progress').classList.add('swiper-no-swiping');
       });
     } else {
-      pingPhoto(this.photo.urls[PHOTO_SIZES.LARGE]).then(({ ready }) => {
-        if (this.loading && !ready) {
-          this.serverLoading = true;
-        }
-      });
       loadPhotoToBase64(this.photo.urls[PHOTO_SIZES.LARGE]).then(data => {
         this.large = data;
         this.loading = false;
-        this.serverLoading = false;
       });
     }
   },

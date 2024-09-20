@@ -7,12 +7,6 @@
 <script>
 export default {
   name: 'Loading',
-  props: {
-    showLongWait: {
-      type: Boolean,
-      default: false,
-    },
-  },
   data() {
     return {
       mounted: false,
@@ -20,25 +14,9 @@ export default {
   },
   mounted() {
     this.mounted = true;
-
-    if (this.showLongWait) {
-      setTimeout(() => {
-        if (this.mounted) {
-          window.dispatchEvent(new CustomEvent('show-toast', {
-            detail: {
-              message: 'Still loading, please wait... (another ~5 seconds or so)',
-            }
-          }));
-        }
-      }, 4000);
-    }
   },
   beforeUnmount() {
     this.mounted = false;
-
-    if (this.showLongWait) {
-      window.dispatchEvent(new CustomEvent('hide-toast'));
-    }
   },
 }
 </script>

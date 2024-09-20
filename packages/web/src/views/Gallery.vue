@@ -48,7 +48,7 @@
         }"
       >
         <div v-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full">
-          <Loading class="w-8 h-8" show-long-wait></Loading>
+          <Loading class="w-8 h-8"></Loading>
         </div>
         <button @click="isSelectionMode ? select(photo) : openLightbox(photo)">
           <img 

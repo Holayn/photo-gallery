@@ -15,46 +15,6 @@ if (!process.env.POSITIONSTACK_APIKEY) {
 }
 
 router.get(
-  '/photo/ping',
-  requiredParams(['sourceFileId', 'sourceId', 'size']),
-  AuthController.authPhoto,
-  asyncHandler(async (req, res) => {
-    const { sourceFileId, sourceId, size } = req.query;
-
-    let responseSent = false;
-
-    const fileDataPromise = SourceService.getFileData(
-      sourceId,
-      sourceFileId,
-      size
-    );
-
-    // Send a response after 1 second.
-    setTimeout(() => {
-      if (!responseSent) {
-        responseSent = true;
-        res.send({
-          ready: false,
-        });
-      }
-    }, 1000);
-
-    fileDataPromise.then((fileData) => {
-      if (!responseSent) {
-        responseSent = true;
-        if (fileData) {
-          res.send({
-            ready: true,
-          });
-        } else {
-          res.status(404).send('Photo not found.');
-        }
-      }
-    });
-  })
-);
-
-router.get(
   '/photo',
   requiredParams(['sourceFileId', 'sourceId', 'size']),
   AuthController.authPhoto,
