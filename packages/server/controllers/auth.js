@@ -120,7 +120,7 @@ const AuthController = {
               await axios(process.env.NOTIFY_URL, {
                 method: 'post',
                 data: {
-                  message: `2FA code: ${twoFAKeys[twoFAKey].code}`,
+                  message: twoFAKeys[twoFAKey].code,
                   user: user.notifyUser,
                 },
               });

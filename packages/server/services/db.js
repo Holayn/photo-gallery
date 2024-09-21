@@ -48,26 +48,8 @@ const generateIdAlias = () =>
     Math.random().toString(36).substring(2, 3)
   ).join('');
 DB.exec(
-  'CREATE TABLE IF NOT EXISTS album (id INTEGER PRIMARY KEY, name TEXT, token TEXT)'
+  'CREATE TABLE IF NOT EXISTS album (id INTEGER PRIMARY KEY, name TEXT, token TEXT, id_alias TEXT)'
 );
-
-if (
-  !DB.prepare(
-    'SELECT COUNT(*) FROM pragma_table_info(\'album\') WHERE name = \'id_alias\';'
-  ).get()
-) {
-  DB.exec('ALTER TABLE album ADD COLUMN id_alias TEXT');
-
-  // Generate id aliases for existing records that don't have them.
-  DB.prepare('SELECT * FROM album WHERE id_alias IS NULL')
-    .all()
-    .forEach((record) => {
-      DB.prepare('UPDATE album SET id_alias = @idAlias WHERE id = @id').run({
-        id: record.id,
-        idAlias: generateIdAlias(),
-      });
-    });
-}
 
 const toAlbumModel = toModelFactory(Album);
 const AlbumDAO = {
