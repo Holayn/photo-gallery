@@ -76,9 +76,12 @@ const morganMiddleware = morgan(
 );
 app.use(morganMiddleware);
 
-// Certain browsers require this header to be set for video files in order to support seeking.
+
 app.use((req, res, next) => {
+  // Certain browsers require this header to be set for video files in order to support seeking.
   res.setHeader('Accept-Ranges', 'bytes');
+
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   next();
 });
 
