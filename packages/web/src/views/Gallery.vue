@@ -15,7 +15,7 @@
                 <Loading v-if="loadingCreateAlbum" class="h-8 w-8"></Loading>
               </div>
             </div>
-            <button @click="toggleSelect()">
+            <button @click="toggleSelectionMode(false)">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
@@ -23,7 +23,7 @@
             <div v-if="showDateSelection" class="mr-8"> 
               <input v-model="date" type="date" @blur="onDateBlur">
             </div>
-            <button @click="toggleSelect()">
+            <button @click="toggleSelectionMode(true)">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
             </button>
           </div>
@@ -50,7 +50,7 @@
         <div v-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full">
           <Loading class="w-8 h-8"></Loading>
         </div>
-        <button @click="isSelectionMode ? select(photo) : openLightbox(photo)">
+        <button @click="openLightbox(photo)">
           <img 
             :src="getPhotoUrl(photo)"
             :style="{
@@ -66,14 +66,19 @@
           <div class="text-white text-xs md:text-base md:mb-1 mr-1 md:mr-2">{{ photo.metadata.duration }}</div>
           <svg class="w-4 h-4 md:w-6 md:h-6 md:mb-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </div>
-        <div v-if="isSelectionMode" class="overlay p-2 justify-end items-start" :class="{ 'bg-white/25': !selected[photo.id], 'bg-white/75': selected[photo.id] }">
-          <div v-if="selected[photo.id]" class="text-orange-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <template v-if="isSelectionMode">
+          <div v-if="selected[photo.id]" class="absolute top-0 w-full h-full pointer-events-none bg-white/50"></div>
+          <div class="absolute top-0 right-0">
+            <button class="p-2" @click="select(photo)">
+              <div v-if="selected[photo.id]" class="text-orange-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div v-else class="text-orange-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+              </div>
+            </button>
           </div>
-          <div v-else class="text-orange-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-          </div>
-        </div>
+        </template>
       </div>
     </div>
 
@@ -82,7 +87,7 @@
       <div v-if="isNoPhotos" class="text-center">No photos found.</div>
     </slot>
     
-    <Lightbox v-if="isShowLightbox" @close="closeLightbox()"></Lightbox>
+    <Lightbox v-if="isShowLightbox" :is-selection-mode="isSelectionMode" :selected="selected" @close="closeLightbox()" @enable-selection-mode="toggleSelectionMode(true)" @select="photo => select(photo)"></Lightbox>
 
     <Modal v-if="showAddToExistingAlbum" @close="showAddToExistingAlbum = false">
       <div class="w-[500px] max-w-full">
@@ -311,8 +316,8 @@ export default {
       }
     },
 
-    toggleSelect() {
-      this.isSelectionMode = !this.isSelectionMode;
+    toggleSelectionMode(val) {
+      this.isSelectionMode = val;
     },
     select({ id, sourceId, sourceFileId }) {
       if (this.selected[id]) {
