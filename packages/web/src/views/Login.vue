@@ -53,8 +53,14 @@ export default {
           this.error = 'Bad login';
         } else if (error) {
           this.error = 'Error';
-        } else {
+        } else if (data && data.twoFA) {
           this.$router.push({ path: '2fa', query: this.$route.query });
+        } else {
+          if (this.next !== null) {
+            this.$router.push({ path: this.next });
+          } else {
+            this.$router.push({ name: 'home' });
+          }
         }
         this.loading = false;
       }
