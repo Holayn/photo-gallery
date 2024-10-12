@@ -32,7 +32,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col h-screen">
+      <div class="flex flex-col h-full">
         <swiper
           class="min-h-0 h-full w-full"
           :keyboard="{enabled: true, onlyInViewport: false}"
