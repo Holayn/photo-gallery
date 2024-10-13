@@ -147,6 +147,8 @@ export default {
 
       isSelectionMode: false,
       selected: {},
+      lastSelected: null,
+      isShiftPressed: false,
 
       isShowLightbox: false,
     };
@@ -183,6 +185,9 @@ export default {
     isShowLightbox() {
       this.updateLightboxQueryParam();
     },
+    isSelectionMode() {
+      this.lastSelected = null;
+    },
   },
   created() {
     // Ensure the page isn't loaded with this query parameter set.
@@ -193,6 +198,21 @@ export default {
   async mounted() {
     this.$refs.gallery.addEventListener('scroll', this._updateRenderPhotosDebounce);
     window.addEventListener('resize', this._updateRenderPhotosDebounce);
+    this.keydown = (e => {
+      this.isShiftPressed = e.key === 'Shift';
+    }).bind(this);
+    this.keyup = (e => {
+      if (e.key === 'Shift') {
+        this.isShiftPressed = false;
+      }
+    }).bind(this);
+    window.addEventListener('keydown', this.keydown);
+    window.addEventListener('keyup', this.keyup);
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this._updateRenderPhotosDebounce);
+    window.removeEventListener('keydown', this.keydown);
+    window.removeEventListener('keyup', this.keyup);
   },
   beforeUpdate() {
     this.galleryImageRefs = [];
@@ -321,12 +341,38 @@ export default {
     },
     select({ id, sourceId, sourceFileId }) {
       if (this.selected[id]) {
+        this.lastSelected = null;
         delete this.selected[id];
       } else {
         this.selected[id] = {
           sourceId,
           sourceFileId,
         };
+
+        if (this.isShiftPressed && this.lastSelected !== null) {
+          let start, end;
+
+          const indexOfLastSelected = this.photos.findIndex(photo => photo.id === this.lastSelected);
+          const indexOfSelected = this.photos.findIndex(photo => photo.id === id);
+
+          if (indexOfSelected > indexOfLastSelected) {
+            start = indexOfLastSelected;
+            end = indexOfSelected;
+          } else {
+            start = indexOfSelected;
+            end = indexOfLastSelected;
+          }
+
+          for (let i = start; i <= end; i++) {
+            const { id, sourceId, sourceFileId } = this.photos[i];
+            this.selected[id] = {
+              sourceId,
+              sourceFileId,
+            };
+          }
+        }
+
+        this.lastSelected = id;
       }
     },
 
