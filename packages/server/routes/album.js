@@ -89,6 +89,26 @@ router.post(
 );
 
 router.post(
+  '/album/delete-files',
+  requiredBody(['albumId', 'files']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { files, albumId } = req.body;
+
+    const album = AlbumDAO.getByIdAlias(albumId);
+
+    if (!album) {
+      res.sendStatus(400);
+      return;
+    }
+
+    AlbumService.removeFromAlbum(album.id, files);
+
+    res.sendStatus(200);
+  }
+);
+
+router.post(
   '/album/share',
   requiredBody(['id']),
   AuthController.authAdmin,

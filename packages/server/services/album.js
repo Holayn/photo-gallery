@@ -47,6 +47,27 @@ module.exports = {
     });
   },
 
+  removeFromAlbum(albumId, files = {}) {
+    transaction(() => {
+      Object.keys(files).forEach((file) => {
+        const f = files[file];
+        const existingFile = GalleryFileDAO.getBySource(
+          f.sourceId,
+          f.sourceFileId
+        );
+        if (existingFile) {
+          const existsInAlbum = AlbumFileDAO.getByAlbumIdFileId(
+            albumId,
+            existingFile.id
+          );
+          if (existsInAlbum) {
+            AlbumFileDAO.deleteByFileId(existingFile.id);
+          }
+        }
+      });
+    });
+  },
+
   getAlbumFiles(id) {
     const albumFiles = AlbumFileDAO.findByAlbumId(id);
     const fileIds = albumFiles.map((f) => f.fileId);

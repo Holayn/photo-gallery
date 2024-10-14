@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="mt-4">
-      <Gallery ref="gallery" :show-lightbox="showLightbox">
+      <Gallery ref="gallery" :show-lightbox="showLightbox" :album="true" :album-id="albumId">
         <template #heading>
           <h1 class="flex-auto text-3xl md:text-5xl">
             <div v-if="showLoadingAlbumInfo" class="flex justify-center">
@@ -67,6 +67,7 @@ export default {
     return {
       isModalAlbumLinkShowing: false,
       isModalAlbumLinkCopied: false,
+      showRemoveFromAlbumModal: false,
 
       loadingPhotoInfo: false,
       loadingAlbumInfo: false,

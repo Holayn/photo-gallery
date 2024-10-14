@@ -8,6 +8,12 @@
         <div v-if="$store.state.isLoggedIn" class="flex gap-4 justify-end">
           <div v-if="isSelectionMode" class="flex flex-col md:flex-row items-end md:items-center gap-2">
             <div>Selected: {{ Object.keys(selected).length }}</div>
+            <div class="relative">
+              <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="removeSelectedFromAlbum()">Delete From Album</button>
+              <div class="absolute top-0 left-0 flex justify-center w-full">
+                <Loading v-if="loadingRemoveFromAlbum" class="h-8 w-8"></Loading>
+              </div>
+            </div>
             <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Existing Album</button>
             <div class="relative">
               <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="createAlbumFromSelected()">Create Album</button>
@@ -108,7 +114,7 @@
 <script>
 import justifiedLayout from 'justified-layout';
 
-import { getAlbums, createAlbum, addToAlbum } from '../services/api';
+import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum } from '../services/api';
 import { debounce, getGalleryImageHeight, getMobileGalleryImageHeight, isMobileScreen, getFetchedGalleryPhotoSize, isElementFullyInView } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
@@ -123,11 +129,10 @@ export default {
     Modal,
   },
   props: {
+    album: Boolean,
+    albumId: String,
     showDateSelection: Boolean,
-    showLightbox: {
-      type: Boolean,
-      default: false,
-    },
+    showLightbox: Boolean,
   },
   data() {
     return {
@@ -138,6 +143,7 @@ export default {
       albums: [],
       loadingCreateAlbum: false,
       loadingAlbums: false,
+      loadingRemoveFromAlbum: false,
       showAddToExistingAlbum: false,
 
       renderPhotosStart: 0,
@@ -414,6 +420,20 @@ export default {
       }
 
       this.loadingCreateAlbum = false;
+    },
+    async removeSelectedFromAlbum() {
+      this.loadingRemoveFromAlbum = true;
+      try {
+        await deleteFromAlbum(this.albumId, Object.values(this.selected));
+        alert(`Removed selected from album.`);
+        this.selected = {};
+        this.isSelectionMode = false;
+        window.location.reload();
+      } catch (e) {
+        alert(e);
+      } finally {
+        this.loadingRemoveFromAlbum = false;
+      }
     },
 
     onDateBlur() {

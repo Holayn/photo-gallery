@@ -198,6 +198,18 @@ export function addToAlbum(albumId, files) {
     }),
   });
 }
+export function deleteFromAlbum(albumId, files) {
+  return fetcher.fetch(`${BASE}/album/delete-files`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      albumId,
+      files,
+    }),
+  });
+}
 export async function shareAlbum(album) {
   const res = await fetcher.fetch(`${BASE}/album/share`, {
     method: 'POST',
