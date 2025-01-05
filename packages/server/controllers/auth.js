@@ -46,9 +46,7 @@ class Attemptor {
   }
 }
 
-const loginAttemptor = new Attemptor(
-  (username) => !!UserDAO.getByUsername(username)
-);
+const loginAttemptor = new Attemptor((username) => !!UserDAO.getByUsername(username));
 
 const twoFAKeys = {};
 const twoFaAttemptor = new Attemptor((key) => !!twoFAKeys[key]);
@@ -224,6 +222,7 @@ const AuthController = {
           httpOnly: true,
           sameSite: 'strict',
           secure: process.env.ENV !== 'development',
+          maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
         getTwoFABypassToken
