@@ -33,6 +33,7 @@ export default {
   },
   async mounted() {
     this.albums = await getAlbums();
+    this.albums.sort((a, b) => a.name.localeCompare(b.name));
     this.loading = false;
   },
   methods: {

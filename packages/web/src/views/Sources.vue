@@ -42,6 +42,7 @@ export default {
   },
   async mounted() {
     this.sources = await getSources();
+    this.sources.sort((a, b) => a.alias.localeCompare(b.alias));
     this.loading = false;
   },
   methods: {
