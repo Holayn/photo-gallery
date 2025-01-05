@@ -344,6 +344,7 @@ export default {
 
     toggleSelectionMode(val) {
       this.isSelectionMode = val;
+      this.selected = {};
     },
     select({ id, sourceId, sourceFileId }) {
       if (this.selected[id]) {
