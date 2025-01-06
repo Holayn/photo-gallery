@@ -3,11 +3,23 @@
     <h1 class="text-5xl">Albums</h1>
     <div class="mt-4">
       <Loading v-if="loading" class="w-16 h-16"></Loading>
-      <div v-else class="grid gap-2">
-        <div v-for="album in albums" :key="album.id">
-          <button class="py-2 px-4 bg-slate-50 flex w-full text-left" @click="openAlbum(album)">
-            <div class="flex-auto">{{ album.name }}</div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      <div v-else class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
+        <div v-for="album in albums" :key="album.id" class="w-full md:w-auto">
+          <button class="p-1 bg-slate-100 rounded-md w-full" @click="openAlbum(album)">
+            <div class="md:w-64 md:h-64">
+              <div v-if="albumCovers[album.id]" class="grid grid-cols-2 grid-rows-2 gap-1 h-full">
+                <div v-for="photo in albumCovers[album.id]" :key="photo.id" class="relative">
+                  <div v-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full py-4">
+                    <Loading class="w-8 h-8"></Loading>
+                  </div>
+                  <img class="rounded-sm w-full h-full" :class="{ 'hidden': !loadedImages[photo.id] }" :src="photo" @load="imgLoad(photo)">
+                </div>
+              </div>
+              <div v-else class="flex h-full items-center justify-center">
+                <Loading class="w-8 h-8 my-4"></Loading>
+              </div>
+            </div>
+            <div class="break-all">{{ album.name }}</div>
           </button>
         </div>
       </div>
@@ -18,7 +30,7 @@
 <script>
 import Loading from '../components/Loading.vue';
 
-import { getAlbums } from '../services/api';
+import { getAlbums, getAlbumCover, toPhotoUrl, PHOTO_SIZES } from '../services/api';
 
 export default {
   name: 'Albums',
@@ -28,17 +40,27 @@ export default {
   data() {
     return {
       albums: [],
+      albumCovers: {},
       loading: true,
+      loadedImages: {},
     };
   },
   async mounted() {
     this.albums = await getAlbums();
     this.albums.sort((a, b) => a.name.localeCompare(b.name));
     this.loading = false;
+
+    await Promise.all(this.albums.map(async (album) => {
+      const { photos } = await getAlbumCover(album.id);
+      this.albumCovers[album.id] = photos.map(photo => toPhotoUrl(photo, PHOTO_SIZES.THUMB));
+    }));
   },
   methods: {
     openAlbum(album) {
       this.$router.push({ name: 'album', params: { albumId: album.id } });
+    },
+    imgLoad(photo) {
+      this.loadedImages[photo.id] = true;
     },
   },
 }

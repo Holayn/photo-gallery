@@ -3,21 +3,24 @@
     <h1 class="text-5xl">Sources</h1>
     <div class="mt-4">
       <Loading v-if="loading" class="w-16 h-16"></Loading>
-      <div v-else class="grid gap-4 md:gap-2">
-        <div v-for="source in sources" :key="source.id">
-          <div class="flex gap-1">
-            <button class="flex items-center py-2 px-4 bg-slate-50 w-full text-left" @click="openSource(source)">
-              <div class="flex-auto">{{ source.alias }}</div>
-              <div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      <div v-else class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
+        <div v-for="source in sources" :key="source.id" class="w-full md:w-auto">
+          <button class="p-1 bg-slate-100 rounded-md w-full" @click="openSource(source)">
+            <div class="md:w-64 md:h-64">
+              <div v-if="sourceCovers[source.id]" class="grid grid-cols-2 grid-rows-2 gap-1 h-full">
+                <div v-for="photo in sourceCovers[source.id]" :key="photo.id" class="relative">
+                  <div v-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full py-4">
+                    <Loading class="w-8 h-8"></Loading>
+                  </div>
+                  <img class="rounded-sm w-full h-full" :class="{ 'hidden': !loadedImages[photo.id] }" :src="photo" @load="imgLoad(photo)">
+                </div>
               </div>
-            </button>
-            <button class="flex items-center gap-1 py-2 px-4 bg-slate-50" @click="openSource(source, true)">
-              <div class="flex-auto whitespace-nowrap">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <div v-else class="flex h-full items-center justify-center">
+                <Loading class="w-8 h-8 my-4"></Loading>
               </div>
-            </button>
-          </div>
+            </div>
+            <div class="break-all">{{ source.alias }}</div>
+          </button>
         </div>
       </div>
     </div>
@@ -27,7 +30,7 @@
 <script>
 import Loading from '../components/Loading.vue';
 
-import { getSources } from '../services/api';
+import { getSources, getSourceCover, toPhotoUrl, PHOTO_SIZES } from '../services/api';
 
 export default {
   name: 'Sources',
@@ -37,13 +40,20 @@ export default {
   data() {
     return {
       sources: [],
+      sourceCovers: {},
       loading: true,
+      loadedImages: {},
     };
   },
   async mounted() {
     this.sources = await getSources();
     this.sources.sort((a, b) => a.alias.localeCompare(b.alias));
     this.loading = false;
+
+    await Promise.all(this.sources.map(async (source) => {
+      const { photos } = await getSourceCover(source.id);
+      this.sourceCovers[source.id] = photos.map(photo => toPhotoUrl(photo, PHOTO_SIZES.THUMB));
+    }));
   },
   methods: {
     openSource(source, directory) {
@@ -52,6 +62,9 @@ export default {
       } else {
         this.$router.push({ name: 'source', params: { sourceId: source.id } });
       }
+    },
+    imgLoad(photo) {
+      this.loadedImages[photo.id] = true;
     },
   },
 }

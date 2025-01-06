@@ -49,4 +49,22 @@ router.get('/source/directories', requiredParams(['id']), (req, res) => {
   res.send(SourceService.getDirectories(sourceId));
 });
 
+router.get(
+  '/source/cover',
+  requiredParams(['id']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { id: sourceId } = req.query;
+
+    const files = SourceService.findCoverFiles(sourceId);
+    if (!files) {
+      res.sendStatus(400);
+    } else {
+      res.send({
+        files,
+      });
+    }
+  }
+);
+
 module.exports = router;

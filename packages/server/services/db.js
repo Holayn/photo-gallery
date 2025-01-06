@@ -34,7 +34,7 @@ const AlbumFileDAO = {
     );
   },
   findByAlbumId(albumId) {
-    return DB.prepare('SELECT file_id FROM album_file WHERE album_id = ?')
+    return DB.prepare('SELECT * FROM album_file WHERE album_id = ?')
       .all(albumId)
       .map((af) => toAlbumFileModel(af));
   },

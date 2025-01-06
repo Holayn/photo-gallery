@@ -89,6 +89,26 @@ class ProcessorSource {
       .map((f) => toModel(f));
   }
 
+  findLatest(count) {
+    return this.db
+    .prepare(
+      `SELECT * FROM ${FILES_TABLE_NAME} ORDER BY date DESC LIMIT ${count}`
+    )
+    .all()
+    .map((f) => toModel(f));
+  }
+
+  findRandom(count) {
+    const files = [];
+
+
+    for (let i = 0; i < count; i++) {
+      files.push(this.db.prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE processed != 0 LIMIT 1 OFFSET ABS(RANDOM()) % (SELECT COUNT(*) FROM ${FILES_TABLE_NAME} WHERE processed != 0);`).get());
+    }
+
+    return files.map((f) => toModel(f));
+  }
+
   async getFileData(id, size) {
     const fileRecord = this.db
       .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE id = ?`)

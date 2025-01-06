@@ -110,6 +110,17 @@ export async function getSource(sourceId) {
     throw new ApiError(res.error.status);
   }
 }
+export async function getSourceCover(sourceId) {
+  const res = await fetcher.fetch(`${BASE}/source/cover?id=${sourceId}`);
+  if (res.data) {
+    const { files } = res.data;
+    return {
+      photos: apiFilesResponseToPhotos(files),
+    }
+  } else if (res.error) {
+    throw new ApiError(res.error.status);
+  }
+}
 export async function getSourceDirectories(sourceId) {
   const res = await fetcher.fetch(`${BASE}/source/directories?id=${sourceId}`);
   if (res.data) {
@@ -172,6 +183,17 @@ export async function getAlbum(albumId, albumToken) {
     }
   } else if (res.error) {
     throw new ApiError(res.error.status, albumToken ? 'Bad album link' : null);
+  }
+}
+export async function getAlbumCover(albumId) {
+  const res = await fetcher.fetch(`${BASE}/album/cover?id=${albumId}`);
+  if (res.data) {
+    const { files } = res.data;
+    return {
+      photos: apiFilesResponseToPhotos(files),
+    }
+  } else if (res.error) {
+    throw new ApiError(res.error.status);
   }
 }
 export function createAlbum(name, files) {

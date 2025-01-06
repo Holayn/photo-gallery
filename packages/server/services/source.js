@@ -75,6 +75,17 @@ module.exports = {
     }));
   },
 
+  findCoverFiles(sourceId) {
+    const source = new ProcessorSource(SourceDAO.getById(sourceId));
+    const sourceFiles = source.findRandom(4);
+    return sourceFiles.map(({ id, date, metadata }) => ({
+      date,
+      metadata,
+      sourceFileId: id,
+      sourceId,
+    }));
+  },
+
   getFile(sourceId, sourceFileId) {
     const processorSource = new ProcessorSource(SourceDAO.getById(sourceId));
     const sourceFile = processorSource.getFile(sourceFileId);

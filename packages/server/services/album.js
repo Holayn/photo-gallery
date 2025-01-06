@@ -79,6 +79,19 @@ module.exports = {
       .filter((f) => !!f.sourceFileId);
   },
 
+  findCoverFiles(albumId) {
+    const albumFiles = AlbumFileDAO.findByAlbumId(albumId);
+
+    const files = generateUniqueRandomNumbers(albumFiles.length, 4).map(index => albumFiles[index]);
+    const fileIds = files.map(f => f.fileId);
+
+    return GalleryFileDAO.findByIds(fileIds)
+      .map(({ sourceId, sourceFileId }) => ({
+        ...SourceService.getFile(sourceId, sourceFileId),
+        sourceId,
+      }));
+  },
+
   generateAlbumToken(id) {
     const album = AlbumDAO.getById(id);
     if (album.token) {
@@ -89,3 +102,13 @@ module.exports = {
     return album.token;
   },
 };
+
+function generateUniqueRandomNumbers(n, count) {
+  const numsToFind = n < count ? n : count;
+  const uniqueNumbers = new Set();
+  while (uniqueNumbers.size < numsToFind) {
+    const randomNumber = Math.floor(Math.random() * n);
+    uniqueNumbers.add(randomNumber);
+  }
+  return Array.from(uniqueNumbers);
+}

@@ -267,7 +267,7 @@ export default {
       return photo.urls[getFetchedGalleryPhotoSize()];
     },
 
-    async imgLoad(photo) {
+    imgLoad(photo) {
       this.loadedImages[photo.id] = true;
     },
     

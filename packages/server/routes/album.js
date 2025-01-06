@@ -88,6 +88,25 @@ router.post(
   }
 );
 
+router.get(
+  '/album/cover',
+  requiredParams(['id']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { id: albumId } = req.query;
+
+    const album = AlbumDAO.getByIdAlias(albumId);
+    const files = AlbumService.findCoverFiles(album.id);
+    if (!files) {
+      res.sendStatus(400);
+    } else {
+      res.send({
+        files,
+      });
+    }
+  }
+);
+
 router.post(
   '/album/delete-files',
   requiredBody(['albumId', 'files']),
