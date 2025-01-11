@@ -47,7 +47,6 @@ export default {
   },
   async mounted() {
     this.albums = await getAlbums();
-    this.albums.sort((a, b) => b.name.localeCompare(a.name));
     this.loading = false;
 
     await Promise.all(this.albums.map(async (album) => {

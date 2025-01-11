@@ -47,7 +47,6 @@ export default {
   },
   async mounted() {
     this.sources = await getSources();
-    this.sources.sort((a, b) => b.alias.localeCompare(a.alias));
     this.loading = false;
 
     await Promise.all(this.sources.map(async (source) => {

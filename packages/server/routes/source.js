@@ -9,7 +9,7 @@ const { requiredParams } = require('../util/route-utils');
 const router = express.Router();
 
 router.get('/sources', AuthController.authAdmin, (req, res) => {
-  res.send(SourceDAO.findAll());
+  res.send(SourceDAO.findAll().sort((a, b) => b.id - a.id));
 });
 
 router.get(

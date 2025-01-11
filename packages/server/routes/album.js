@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.get('/albums', AuthController.authAdmin, (req, res) => {
   res.send(
-    AlbumDAO.findAll().map((album) => ({ ...album, id: album.idAlias }))
+    AlbumDAO.findAll().sort((a, b) => b.id - a.id).map((album) => ({ ...album, id: album.idAlias }))
   );
 });
 
