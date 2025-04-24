@@ -1,7 +1,7 @@
 const ProcessorSource = require('./processor-source/processor-source');
 const logger = require('./logger');
 
-const { SourceDAO, GalleryFileDAO, transaction } = require('./db');
+const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = require('./db');
 const Source = require('../model/source');
 
 module.exports = {
@@ -66,13 +66,18 @@ module.exports = {
   },
 
   findFiles(sourceId, startDateRange, directory) {
-    const source = new ProcessorSource(SourceDAO.getById(sourceId));
-    const sourceFiles = source.findFiles(startDateRange, directory);
-    return sourceFiles.map(({ id, date, metadata }) => ({
-      date,
-      metadata,
-      sourceFileId: id,
-    }));
+    const source = SourceDAO.getById(sourceId);
+    if (source) {
+      const processorSource = new ProcessorSource(source);
+      const sourceFiles = processorSource.findFiles(startDateRange, directory);
+      return setFileAlbums(sourceId, sourceFiles.map(({ id, date, metadata }) => ({
+        date,
+        metadata,
+        sourceFileId: id,
+      })));
+    }
+
+    return [];
   },
 
   findCoverFiles(sourceId) {
@@ -117,3 +122,49 @@ module.exports = {
     return new ProcessorSource(SourceDAO.getById(sourceId)).getDirectories();
   },
 };
+
+function setFileAlbums(sourceId, sourceFiles) {
+  const galleryFiles = GalleryFileDAO.findBySourceFileIds(sourceId, sourceFiles.map(f => f.sourceFileId));
+  const albumFiles = AlbumFileDAO.findByFileIds(galleryFiles.map(f => f.id));
+
+  // Get album info
+  const albums = {};
+  const albumIds = new Set();
+  albumFiles.forEach(af => {
+    albumIds.add(af.albumId);
+  });
+  albumIds.forEach(albumId => {
+    const album = AlbumDAO.getById(albumId);
+    albums[albumId] = {
+      name: album.name,
+      idAlias: album.idAlias,
+    };
+  });
+
+  // Map fileId to albumId for better lookup.
+  const fileIdToAlbum = {};
+  albumFiles.forEach(af => {
+    if (!fileIdToAlbum[af.fileId]) {
+      fileIdToAlbum[af.fileId] = [];
+    }
+    fileIdToAlbum[af.fileId].push(albums[af.albumId]);
+  });
+
+  // Map source file ids to albums
+  const sourceFileIdToAlbums = {};
+  galleryFiles.forEach(gf => {
+    if (fileIdToAlbum[gf.id]) {
+      sourceFileIdToAlbums[gf.sourceFileId] = {
+        sourceFileId: gf.sourceFileId,
+        fileId: gf.id,
+        albums: fileIdToAlbum[gf.id]
+      }
+      albumIds.add(...fileIdToAlbum[gf.id]);
+    }
+  });
+
+  return sourceFiles.map(sf => ({
+    ...sf,
+    albums: sourceFileIdToAlbums[sf.sourceFileId]?.albums ?? [],
+  }));
+}

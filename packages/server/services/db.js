@@ -38,6 +38,13 @@ const AlbumFileDAO = {
       .all(albumId)
       .map((af) => toAlbumFileModel(af));
   },
+  findByFileIds(fileIds) {
+    return DB.prepare(
+      `SELECT * FROM album_file WHERE file_id IN (${fileIds.map(() => '?').join(',')})`
+    )
+      .all(fileIds)
+      .map((af) => toAlbumFileModel(af));
+  },
   deleteByFileId(fileId) {
     DB.prepare('DELETE FROM album_file WHERE file_id = ?').run(fileId);
   },
@@ -129,6 +136,13 @@ const GalleryFileDAO = {
       `SELECT * FROM file WHERE id IN (${fileIds.join(', ')}) ORDER BY date`
     )
       .all()
+      .map((f) => toGalleryFileModel(f));
+  },
+  findBySourceFileIds(sourceId, sourceFileIds) {
+    return DB.prepare(
+      `SELECT * FROM file WHERE source_id = ? AND source_file_id IN (${sourceFileIds.map(() => '?').join(',')})`
+    )
+      .all(sourceId, sourceFileIds)
       .map((f) => toGalleryFileModel(f));
   },
 };

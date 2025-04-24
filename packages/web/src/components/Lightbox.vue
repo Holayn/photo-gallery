@@ -99,6 +99,13 @@
                   </div>
                   <div v-else>Unknown</div>
                 </div>
+
+                <div v-if="currentPhoto.albums.length">
+                  <h2 class="text-sm text-slate-600">Albums</h2>
+                  <div v-for="album in currentPhoto.albums" :key="album.idAlias"> 
+                    <router-link class="text-blue-600 underline" :to="{ name: 'album', params: { albumId: album.idAlias } }">{{ album.name }}</router-link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

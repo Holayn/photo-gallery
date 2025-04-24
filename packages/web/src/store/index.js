@@ -23,6 +23,7 @@ export default createStore({
           sourceId: photoSourceId,
           sourceFileId: photo.sourceFileId,
           metadata: photo.metadata,
+          albums: photo.albums || [],
         }
         modPhoto.urls = {
           [PHOTO_SIZES.LARGE]: toPhotoUrl(modPhoto, PHOTO_SIZES.LARGE) + `&${urlParams}`,

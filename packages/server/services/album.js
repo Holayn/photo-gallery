@@ -9,9 +9,10 @@ const GalleryFile = require('../model/gallery-file');
 
 module.exports = {
   createAlbum(name, files = {}) {
-    transaction(() => {
+    return transaction(() => {
       const albumId = AlbumDAO.insert(new Album({ name }));
       this.addToAlbum(albumId, files);
+      return albumId;
     });
   },
 

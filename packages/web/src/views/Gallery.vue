@@ -68,9 +68,14 @@
             @load="imgLoad(photo)"
           >
         </button>
-        <div v-if="photo.metadata.video" class="overlay">
+        <div v-if="photo.metadata.video" class="overlay flex items-end justify-end">
           <div class="text-white text-xs md:text-base md:mb-1 mr-1 md:mr-2">{{ photo.metadata.duration }}</div>
           <svg class="w-4 h-4 md:w-6 md:h-6 md:mb-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </div>
+        <div v-if="photo.albums.length" class="overlay flex justify-end items-start">
+          <div class="bg-gray-500/50 md:mt-1 md:mr-1 p-1 rounded-full">
+            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>  
+          </div>
         </div>
         <template v-if="isSelectionMode">
           <div v-if="selected[photo.id]" class="absolute top-0 w-full h-full pointer-events-none bg-white/50"></div>
@@ -101,7 +106,7 @@
           <Loading class="w-16 h-16"></Loading>
         </div>
         <div v-else class="grid gap-2">
-          <button v-for="album in albums" :key="album.id" class="py-2 px-4 bg-slate-50 flex w-full text-left" @click="addToAlbumFromSelected(album.id)">
+          <button v-for="album in albums" :key="album.id" class="py-2 px-4 bg-slate-50 flex w-full text-left" @click="addToAlbumFromSelected(album)">
             <div class="flex-auto">{{ album.name }}</div>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
@@ -273,9 +278,11 @@ export default {
     
     async scrollLightboxImageIntoView() {
       const ref = this.getGalleryImageRefForLightboxPhoto();
-      const fullyInView = await isElementFullyInView(ref.el);
-      if (ref && !fullyInView) {
-        ref.el.scrollIntoView();
+      if (ref) {
+        const fullyInView = await isElementFullyInView(ref.el);
+        if (!fullyInView) {
+          ref.el.scrollIntoView();
+        }
       }
     },
     setGalleryImageRef(el) {
@@ -289,9 +296,6 @@ export default {
     getGalleryImageRefForLightboxPhoto() {
       const lightboxPhoto = this.photos[this.lightboxIndex];
       const galleryPhotoRef = this.galleryImageRefs.find(ref => ref.photo === lightboxPhoto);
-      if (!galleryPhotoRef) {
-        throw new Error('Could not find gallery photo to scroll to.');
-      }
       return galleryPhotoRef;
     },
 
@@ -311,17 +315,19 @@ export default {
         // Helps to show which photo was just being viewed in the lightbox.
         if (showTransition) {
           const ref = this.getGalleryImageRefForLightboxPhoto();
-          ref.el.style.zIndex = '1';
-          ref.el.animate([
-            {
-              transform: 'scale(4)',
-            },
-            {
-              transform: 'scale(1)',
-            }
-          ], { duration: 250, easing: 'ease-in' }).finished.then(() => {
-            ref.el.style.zIndex = '';
-          });
+          if (ref) {
+            ref.el.style.zIndex = '1';
+            ref.el.animate([
+              {
+                transform: 'scale(4)',
+              },
+              {
+                transform: 'scale(1)',
+              }
+            ], { duration: 250, easing: 'ease-in' }).finished.then(() => {
+              ref.el.style.zIndex = '';
+            });
+          }
         }
       }
     },
@@ -389,18 +395,21 @@ export default {
       this.albums = await getAlbums();
       this.loadingAlbums = false;
     },
-    async addToAlbumFromSelected(albumId) {
+    async addToAlbumFromSelected({ id, name }) {
       this.loadingAlbums = true;
 
-      try {
-        await addToAlbum(albumId, Object.values(this.selected));
-        alert(`Album updated.`);
-        this.selected = {};
-        this.isSelectionMode = false;
-        this.showAddToExistingAlbum = false;
-      } catch (e) {
-        alert(e);
-      }
+      await addToAlbum(id, Object.values(this.selected));
+      Object.keys(this.selected).forEach(selected => {
+        const file = this.photos.find(photo => photo.id === selected);
+        file.albums.push({
+          name,
+          idAlias: id,
+        });
+      });
+      alert(`Album updated.`);
+      this.selected = {};
+      this.isSelectionMode = false;
+      this.showAddToExistingAlbum = false;
       
       this.loadingAlbums = false;
     },
@@ -410,14 +419,17 @@ export default {
       if (!albumName) {
         alert('Album name required.');
       } else {
-        try {
-          await createAlbum(albumName, Object.values(this.selected));
-          alert(`Album "${albumName}" created.`);
-          this.selected = {};
-          this.isSelectionMode = false;
-        } catch (e) {
-          alert(e);
-        }
+        const { id, name } = await createAlbum(albumName, Object.values(this.selected));
+        alert(`Album "${name}" created.`);
+        Object.keys(this.selected).forEach(selected => {
+          const file = this.photos.find(photo => photo.id === selected);
+          file.albums.push({
+            name,
+            idAlias: id,
+          });
+        });
+        this.selected = {};
+        this.isSelectionMode = false;
       }
 
       this.loadingCreateAlbum = false;
@@ -456,9 +468,6 @@ export default {
     left: 0;
     height: 100%;
     width: 100%;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
     pointer-events: none;
   }
 </style>

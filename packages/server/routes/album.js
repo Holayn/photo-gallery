@@ -80,11 +80,18 @@ router.post(
       }
 
       AlbumService.addToAlbum(album.id, files);
+      res.send({
+        id: albumId,
+        name: album.name,
+      });
     } else {
-      AlbumService.createAlbum(name, files);
+      const id = AlbumService.createAlbum(name, files);
+      const album = AlbumDAO.getById(id);
+      res.send({
+        id: album.idAlias,
+        name: album.name,
+      });
     }
-
-    res.sendStatus(200);
   }
 );
 

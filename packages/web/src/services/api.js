@@ -26,7 +26,7 @@ class ApiError extends Error {
 }
 
 function apiFilesResponseToPhotos(files) {
-  return files.map(({ date, sourceId, sourceFileId, metadata }) => ({ 
+  return files.map(({ date, sourceId, sourceFileId, metadata, albums }) => ({ 
     date, 
     sourceId,
     sourceFileId, 
@@ -45,6 +45,7 @@ function apiFilesResponseToPhotos(files) {
       device: metadata.device,
       duration: metadata.duration,
     },
+    albums,
   }))
 }
 
