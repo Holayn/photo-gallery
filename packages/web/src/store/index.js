@@ -22,6 +22,7 @@ export default createStore({
           id: `${photoSourceId}_${photo.sourceFileId}`,
           sourceId: photoSourceId,
           sourceFileId: photo.sourceFileId,
+          date: photo.date,
           metadata: photo.metadata,
           albums: photo.albums || [],
         }

@@ -133,7 +133,6 @@ import Toast from './Toast.vue';
 
 import { getLocationInfo, toPhotoDownloadUrl, PHOTO_SIZES } from '../services/api';
 
-const DATE_FORMAT = 'YYYY:MM:DD HH:mm:ss';
 dayjs.extend(localizedFormat);
 dayjs.extend(customParseFormat);
 
@@ -173,8 +172,9 @@ export default {
       return this.$store.state.photos[this.$store.state.lightbox.photoIndex];
     },
     currentPhotoMetadata() {
-      const { date, fileName, fileSize, width, height, location, device } = this.currentPhoto.metadata;
-      const parsedDate = dayjs(date, DATE_FORMAT);
+      const { fileName, fileSize, width, height, location, device } = this.currentPhoto.metadata;
+      const date = this.currentPhoto.date;
+      const parsedDate = dayjs(date);
       return {
         date: {
           date: parsedDate.format('LL'),

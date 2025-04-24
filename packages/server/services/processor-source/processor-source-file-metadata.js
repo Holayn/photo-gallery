@@ -1,12 +1,10 @@
 const dayjs = require('dayjs');
 dayjs.extend(require('dayjs/plugin/customParseFormat'));
 
-const DATE_FORMAT = 'YYYY:MM:DD HH:mm:ss';
 const MIME_VIDEO_REGEX = /^video\/.*$/;
 
 class ProcessorSourceFileMetadata {
   constructor(exif) {
-    this.date = getDate(exif);
     this.video = isVideo(exif);
     const size = getDimensions(exif);
     this.width = size.width;
@@ -18,22 +16,6 @@ class ProcessorSourceFileMetadata {
     this.device = getDevice(exif);
     this.duration = normalizeDuration(exif.QuickTime?.Duration);
   }
-}
-
-function getDate(exif) {
-  const date =
-    exif.EXIF?.DateTimeOriginal ||
-    exif.EXIF?.ModifyDate ||
-    exif.H264?.DateTimeOriginal ||
-    exif.QuickTime?.ContentCreateDate ||
-    exif.QuickTime?.CreationDate ||
-    exif.QuickTime?.CreateDate ||
-    exif.XMP?.CreateDate ||
-    exif.XMP?.DateCreated;
-  if (date && dayjs(date, DATE_FORMAT).isValid()) {
-    return dayjs(date, DATE_FORMAT).format(DATE_FORMAT);
-  }
-  return dayjs(exif.File.FileModifyDate, DATE_FORMAT).format(DATE_FORMAT);
 }
 
 function getLocation(exif) {

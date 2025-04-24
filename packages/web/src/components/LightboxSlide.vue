@@ -85,7 +85,7 @@ export default {
       }
 
       setTimeout(() => {
-        document.querySelector('.plyr__progress').classList.add('swiper-no-swiping');
+        document.querySelector('.plyr__progress')?.classList.add('swiper-no-swiping');
       });
     } else {
       loadPhotoToBase64(this.photo.urls[PHOTO_SIZES.LARGE]).then(data => {
