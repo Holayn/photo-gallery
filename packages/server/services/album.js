@@ -73,8 +73,9 @@ module.exports = {
     const albumFiles = AlbumFileDAO.findByAlbumId(id);
     const fileIds = albumFiles.map((f) => f.fileId);
     return GalleryFileDAO.findByIds(fileIds)
-      .map(({ sourceId, sourceFileId = null }) => ({
+      .map(({ id, sourceId, sourceFileId = null }) => ({
         ...SourceService.getFile(sourceId, sourceFileId),
+        albumFileId: id,
         sourceId,
       }))
       .filter((f) => !!f.sourceFileId);
@@ -87,8 +88,9 @@ module.exports = {
     const fileIds = files.map(f => f.fileId);
 
     return GalleryFileDAO.findByIds(fileIds)
-      .map(({ sourceId, sourceFileId }) => ({
+      .map(({ id, sourceId, sourceFileId }) => ({
         ...SourceService.getFile(sourceId, sourceFileId),
+        albumFileId: id,
         sourceId,
       }));
   },
