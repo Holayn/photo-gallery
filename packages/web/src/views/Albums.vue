@@ -8,11 +8,11 @@
           <button class="p-1 bg-slate-100 rounded-md w-full" @click="openAlbum(album)">
             <div class="md:w-64 md:h-64">
               <div v-if="albumCovers[album.id]" class="grid grid-cols-2 grid-rows-2 gap-1 h-full">
-                <div v-for="photo in albumCovers[album.id]" :key="photo.id" class="relative">
-                  <div v-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full py-4">
+                <div v-for="photo in albumCovers[album.id]" :key="photo" class="relative">
+                  <div v-if="!loadedImages[photo]" class="flex justify-center items-center w-full h-full py-4">
                     <Loading class="w-8 h-8"></Loading>
                   </div>
-                  <img class="rounded-sm w-full h-full" :class="{ 'hidden': !loadedImages[photo.id] }" :src="photo" @load="imgLoad(photo)">
+                  <img class="rounded-sm w-full h-full" :class="{ 'hidden': !loadedImages[photo] }" :src="photo" @load="imgLoad(photo)">
                 </div>
               </div>
               <div v-else class="flex h-full items-center justify-center">
@@ -30,7 +30,7 @@
 <script>
 import Loading from '../components/Loading.vue';
 
-import { getAlbums, getAlbumCover, toPhotoUrl, PHOTO_SIZES } from '../services/api';
+import { getAlbums, getAlbumCover, PHOTO_SIZES } from '../services/api';
 
 export default {
   name: 'Albums',
@@ -51,7 +51,7 @@ export default {
 
     await Promise.all(this.albums.map(async (album) => {
       const { photos } = await getAlbumCover(album.id);
-      this.albumCovers[album.id] = photos.map(photo => toPhotoUrl(photo, PHOTO_SIZES.THUMB));
+      this.albumCovers[album.id] = photos.map(photo => photo.urls.view[PHOTO_SIZES.THUMB]);
     }));
   },
   methods: {
@@ -59,7 +59,7 @@ export default {
       this.$router.push({ name: 'album', params: { albumId: album.id } });
     },
     imgLoad(photo) {
-      this.loadedImages[photo.id] = true;
+      this.loadedImages[photo] = true;
     },
   },
 }

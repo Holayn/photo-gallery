@@ -1,8 +1,11 @@
 const ProcessorSource = require('./processor-source/processor-source');
 const logger = require('./logger');
+require('dotenv').config();
 
 const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = require('./db');
 const Source = require('../model/source');
+
+const PHOTO_SIZES = ['large', 'small', 'thumb', 'original'];
 
 module.exports = {
   addSource(sourcePath, alias) {
@@ -74,6 +77,7 @@ module.exports = {
         date,
         metadata,
         sourceFileId: id,
+        urls: generateSourceFileUrls(sourceId, id),
       })));
     }
 
@@ -88,6 +92,7 @@ module.exports = {
       metadata,
       sourceFileId: id,
       sourceId,
+      urls: generateSourceFileUrls(sourceId, id),
     }));
   },
 
@@ -101,6 +106,7 @@ module.exports = {
         date,
         metadata,
         sourceFileId,
+        urls: generateSourceFileUrls(sourceId, sourceFileId),
       };
     }
 
@@ -167,4 +173,18 @@ function setFileAlbums(sourceId, sourceFiles) {
     ...sf,
     albums: sourceFileIdToAlbums[sf.sourceFileId]?.albums ?? [],
   }));
+}
+
+function generateSourceFileUrls(sourceId, sourceFileId) {
+  return {
+    view: PHOTO_SIZES.reduce((acc, size) => {
+      if (sourceId && sourceFileId) {
+        acc[size] = `${process.env.BASE_URL || ''}/api/photo?sourceId=${sourceId}&sourceFileId=${sourceFileId}&size=${size}`;
+      } else {
+        acc[size] = null;
+      }
+      return acc;
+    }, {}),
+    download: (sourceId && sourceFileId) ? `${process.env.BASE_URL || ''}/api/photo/download?sourceId=${sourceId}&sourceFileId=${sourceFileId}` : null,
+  }
 }

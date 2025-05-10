@@ -131,7 +131,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import LightboxSlide from './LightboxSlide.vue';
 import Toast from './Toast.vue';
 
-import { getLocationInfo, toPhotoDownloadUrl, PHOTO_SIZES } from '../services/api';
+import { getLocationInfo, PHOTO_SIZES } from '../services/api';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(customParseFormat);
@@ -254,7 +254,7 @@ export default {
     },
 
     download() {
-      window.location.href = toPhotoDownloadUrl(this.currentPhoto);
+      window.location.href = this.currentPhoto.urls.download;
     },
 
     _swiperOnAfterInit() {

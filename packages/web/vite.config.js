@@ -5,6 +5,9 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
+    build: {
+      sourcemap: true,
+    },
     plugins: [vue()],
     base: mode === 'production'
     ? env.VUE_APP_BASE_URL

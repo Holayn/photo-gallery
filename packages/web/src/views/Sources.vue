@@ -8,11 +8,11 @@
           <button class="p-1 bg-slate-100 rounded-md w-full" @click="openSource(source)">
             <div class="md:w-64 md:h-64">
               <div v-if="sourceCovers[source.id]" class="grid grid-cols-2 grid-rows-2 gap-1 h-full">
-                <div v-for="photo in sourceCovers[source.id]" :key="photo.id" class="relative">
-                  <div v-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full py-4">
+                <div v-for="photo in sourceCovers[source.id]" :key="photo" class="relative">
+                  <div v-if="!loadedImages[photo]" class="flex justify-center items-center w-full h-full py-4">
                     <Loading class="w-8 h-8"></Loading>
                   </div>
-                  <img class="rounded-sm w-full h-full" :class="{ 'hidden': !loadedImages[photo.id] }" :src="photo" @load="imgLoad(photo)">
+                  <img class="rounded-sm w-full h-full" :class="{ 'hidden': !loadedImages[photo] }" :src="photo" @load="imgLoad(photo)">
                 </div>
               </div>
               <div v-else class="flex h-full items-center justify-center">
@@ -30,7 +30,7 @@
 <script>
 import Loading from '../components/Loading.vue';
 
-import { getSources, getSourceCover, toPhotoUrl, PHOTO_SIZES } from '../services/api';
+import { getSources, getSourceCover, PHOTO_SIZES } from '../services/api';
 
 export default {
   name: 'Sources',
@@ -52,7 +52,7 @@ export default {
 
     await Promise.all(this.sources.map(async (source) => {
       const { photos } = await getSourceCover(source.id);
-      this.sourceCovers[source.id] = photos.map(photo => toPhotoUrl(photo, PHOTO_SIZES.THUMB));
+      this.sourceCovers[source.id] = photos.map(photo => photo.urls.view[PHOTO_SIZES.THUMB]);
     }));
   },
   methods: {
@@ -64,7 +64,7 @@ export default {
       }
     },
     imgLoad(photo) {
-      this.loadedImages[photo.id] = true;
+      this.loadedImages[photo] = true;
     },
   },
 }

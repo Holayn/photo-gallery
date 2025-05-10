@@ -38,6 +38,8 @@
       </Teleport>
     </div>
 
+    <slot v-if="$slots.notices" name="notices"></slot>
+
     <div ref="photos" class="mt-4 relative" :style="{ height: `${layout?.containerHeight}px` }">
       <div 
         v-if="layout" 
@@ -169,7 +171,7 @@ export default {
       return this.$store.state.lightbox.photoIndex;
     },
     isNoPhotos() {
-      return this.$store.state.photos.length === 0;
+      return this.photos.length === 0;
     },
     token() {
       return this.$store.state.token;
@@ -269,7 +271,7 @@ export default {
     },
     
     getPhotoUrl(photo) {
-      return photo.urls[getFetchedGalleryPhotoSize()];
+      return photo.urls.view[getFetchedGalleryPhotoSize()];
     },
 
     imgLoad(photo) {

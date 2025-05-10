@@ -1,3 +1,4 @@
+import Photo from '../model/photo';
 import fetcher from './fetcher';
 
 export const BASE = import.meta.env.DEV ? '/api' : `${import.meta.env.BASE_URL}/api`;
@@ -23,29 +24,6 @@ class ApiError extends Error {
     this.status = status;
     this.description = description;
   }
-}
-
-function apiFilesResponseToPhotos(files) {
-  return files.map(({ date, sourceId, sourceFileId, metadata, albums }) => ({ 
-    date, 
-    sourceId,
-    sourceFileId, 
-    metadata: {
-      video: metadata.video || false,
-      width: metadata.width,
-      height: metadata.height,
-      fileSize: metadata.fileSize,
-      fileName: metadata.fileName,
-      location: {
-        lat: metadata.location.lat,
-        long: metadata.location.long,
-        altitude: metadata.location.altitude,
-      },
-      device: metadata.device,
-      duration: metadata.duration,
-    },
-    albums,
-  }))
 }
 
 export function error(error) {
@@ -115,7 +93,7 @@ export async function getSourceCover(sourceId) {
   if (res.data) {
     const { files } = res.data;
     return {
-      photos: apiFilesResponseToPhotos(files),
+      photos: files.map(f => new Photo(f)),
     }
   } else if (res.error) {
     throw new ApiError(res.error.status);
@@ -143,7 +121,10 @@ export async function getPhotosFromSource(sourceId, date, directory) {
   if (res.data) {
     const { files } = res.data;
     return {
-      photos: apiFilesResponseToPhotos(files),
+      photos: files.map(f => new Photo({
+        ...f,
+        sourceId,
+      })),
     }
   } else if (res.error) {
     throw new ApiError(res.error.status);
@@ -161,7 +142,7 @@ export async function getPhotosFromAlbum(albumId, albumToken) {
   if (res.data) {
     const { files } = res.data;
     return {
-      photos: apiFilesResponseToPhotos(files),
+      photos: files.map(f => new Photo(f)),
     }
   } else if (res.error) {
     throw new ApiError(res.error.status);
@@ -190,7 +171,7 @@ export async function getAlbumCover(albumId) {
   if (res.data) {
     const { files } = res.data;
     return {
-      photos: apiFilesResponseToPhotos(files),
+      photos: files.map(f => new Photo(f)),
     }
   } else if (res.error) {
     throw new ApiError(res.error.status);
@@ -253,12 +234,4 @@ export async function getLocationInfo(lat, long) {
       label: res.data.label,
     }
   }
-}
-
-export function toPhotoUrl(photo, size) {
-  return `${BASE}/photo?sourceFileId=${photo.sourceFileId}&sourceId=${photo.sourceId}&size=${size}`;
-}
-
-export function toPhotoDownloadUrl(photo) {
-  return `${BASE}/photo/download?sourceFileId=${photo.sourceFileId}&sourceId=${photo.sourceId}`;
 }

@@ -15,6 +15,11 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
           </button>
         </template>
+        <template v-if="brokenAlbumPhotos.length" #notices>
+          <div class="bg-yellow-200 border-yellow-400 py-1 px-2 mt-4">
+            There are {{ brokenAlbumPhotos.length }} broken album links - see log for details.
+          </div>
+        </template>
         <template v-if="loadingPhotoInfo" #loading>
           <div class="flex flex-col items-center justify-center pb-4">
             <Loading class="w-16 h-16"></Loading>
@@ -73,6 +78,7 @@ export default {
       loadingAlbumInfo: false,
 
       album: null,
+      photos: [],
     };
   },
   computed: {
@@ -91,11 +97,19 @@ export default {
     token() {
       return this.$route.query.token;
     },
+    brokenAlbumPhotos() {
+      return this.photos.filter(photo => photo.isBrokenAlbumFile());
+    },
   },
   watch: {
     isModalAlbumLinkShowing() {
       if (this.isModalAlbumLinkShowing) {
         this.isModalAlbumLinkCopied = false;
+      }
+    },
+    brokenAlbumPhotos() {
+      if (this.brokenAlbumPhotos.length) {
+        console.log('broken album links', this.brokenAlbumPhotos.map(bap => bap.galleryFileId));
       }
     }
   },
@@ -114,9 +128,10 @@ export default {
     async loadPhotoInfo() {
       this.loadingPhotoInfo = true;
       const { photos } = await getPhotosFromAlbum(this.albumId, this.albumToken);
+      this.photos = photos;
       this.loadingPhotoInfo = false;
 
-      this.$store.dispatch('setPhotos', { photos, urlParams: `id=${this.albumId}&token=${this.albumToken}` });
+      this.$store.dispatch('setPhotos', { photos: photos.filter(photo => !photo.isBrokenAlbumFile()) });
       this.$refs.gallery.updateRenderPhotos();
     },
 

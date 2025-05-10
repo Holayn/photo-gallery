@@ -75,10 +75,9 @@ module.exports = {
     return GalleryFileDAO.findByIds(fileIds)
       .map(({ id, sourceId, sourceFileId = null }) => ({
         ...SourceService.getFile(sourceId, sourceFileId),
-        albumFileId: id,
+        galleryFileId: id,
         sourceId,
-      }))
-      .filter((f) => !!f.sourceFileId);
+      }));
   },
 
   findCoverFiles(albumId) {
@@ -90,7 +89,7 @@ module.exports = {
     return GalleryFileDAO.findByIds(fileIds)
       .map(({ id, sourceId, sourceFileId }) => ({
         ...SourceService.getFile(sourceId, sourceFileId),
-        albumFileId: id,
+        galleryFileId: id,
         sourceId,
       }));
   },

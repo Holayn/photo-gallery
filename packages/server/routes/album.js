@@ -54,7 +54,22 @@ router.get(
       res.sendStatus(400);
     } else {
       res.send({
-        files,
+        files: files.map(f => {
+          if (!f.urls) {
+            return f;
+          }
+
+          return {
+            ...f,
+            urls: {
+              view: Object.keys(f.urls.view).reduce((acc, size) => {
+                acc[size] = f.urls.view[size] += `&id=${albumId}`;
+                return acc;
+              }, {}),
+              download: f.urls.download += `&id=${albumId}${req.query.albumToken ? `&token=${req.query.albumToken}` : ''}`,
+            } ,
+          };
+        }),
       });
     }
   }
