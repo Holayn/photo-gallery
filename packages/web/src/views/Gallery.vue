@@ -55,7 +55,10 @@
           height: layout.boxes[i + renderPhotosStart].height + 'px',
         }"
       >
-        <div v-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full">
+        <div v-if="loadedImageErrors[photo.id]" class="flex justify-center items-center w-full h-full text-xs">
+          load failed
+        </div>
+        <div v-else-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full">
           <Loading class="w-8 h-8"></Loading>
         </div>
         <button @click="openLightbox(photo)">
@@ -68,6 +71,7 @@
             }"
             style="transition: opacity 500ms linear;"
             @load="imgLoad(photo)"
+            @error="imgError(photo)"
           >
         </button>
         <div v-if="photo.metadata.video" class="overlay flex items-end justify-end">
@@ -156,6 +160,7 @@ export default {
       renderPhotosStart: 0,
       renderPhotosEnd: 0,
       loadedImages: {},
+      loadedImageErrors: {},
       layout: null,
 
       isSelectionMode: false,
@@ -276,6 +281,10 @@ export default {
 
     imgLoad(photo) {
       this.loadedImages[photo.id] = true;
+    },
+    imgError(photo) {
+      this.loadedImageErrors[photo.id] = true;
+      console.error('Failed to load photo', photo);
     },
     
     async scrollLightboxImageIntoView() {

@@ -6,6 +6,9 @@
         <Loading class="w-16 h-16"></Loading>
       </div>
     </div>
+    <div v-else-if="!loading && error" class="flex items-center justify-center w-full h-full text-white">
+      Failed to load
+    </div>
     <div v-else="!loading" class="flex justify-center w-full h-full">
       <img :src="large" class="max-w-full max-h-full object-contain">
       <!-- HACK: Force browser to render base64 image. -->
@@ -17,7 +20,7 @@
     <!-- h-full flex is needed to size and position the video responsively. -->
     <div class="z-50 h-full flex" @click.stop="">
       <video ref="video" playsinline controls :data-poster="preview">
-        <source :src="photo.urls[PHOTO_SIZES.LARGE]" type="video/mp4"/>
+        <source :src="photo.urls.view[PHOTO_SIZES.LARGE]" type="video/mp4"/>
       </video>
     </div>
   </div>
@@ -47,6 +50,7 @@ export default {
   data() {
     return {
       loading: true,
+      error: false,
       PHOTO_SIZES,
       large: null,
       preview: null,
@@ -69,7 +73,7 @@ export default {
       await this.$nextTick();
     }
 
-    loadPhotoToBase64(this.photo.urls[getFetchedGalleryPhotoSize()]).then(data => {
+    loadPhotoToBase64(this.photo.urls.view[getFetchedGalleryPhotoSize()]).then(data => {
       this.preview = data;
     });
 
@@ -88,8 +92,11 @@ export default {
         document.querySelector('.plyr__progress')?.classList.add('swiper-no-swiping');
       });
     } else {
-      loadPhotoToBase64(this.photo.urls[PHOTO_SIZES.LARGE]).then(data => {
+      loadPhotoToBase64(this.photo.urls.view[PHOTO_SIZES.LARGE]).then(data => {
         this.large = data;
+        this.loading = false;
+      }).catch(() => {
+        this.error = true;
         this.loading = false;
       });
     }

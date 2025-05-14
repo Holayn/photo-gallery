@@ -17,7 +17,7 @@ export default class Photo {
     this.urls = urls;
   }
 
-  get clientId() {
+  get id() {
     return `${this.sourceId}_${this.sourceFileId}`;
   }
 

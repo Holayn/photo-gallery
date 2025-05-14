@@ -190,7 +190,7 @@ export default {
       };
     },
     currentPhotoOriginalUrl() {
-      return this.currentPhoto.urls[PHOTO_SIZES.ORIGINAL];
+      return this.currentPhoto.urls.view[PHOTO_SIZES.ORIGINAL];
     },
     location() {
       if (this.currentPhotoMetadata.location?.unknown) {

@@ -35,12 +35,8 @@ export async function loadPhotoToBase64(url) {
       }
     });
   };
-
-  return new Promise((resolve) => {
-    imageUrlToBase64(url).then(data => {
-      resolve(data);
-    });
-  });
+  
+  return imageUrlToBase64(url);
 }
 
 export function debounce(func, delay, { leading } = {}) {
