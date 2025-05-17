@@ -85,6 +85,14 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  // Prevent sourcemaps from being served in production.
+  if (req.url.endsWith('.js.map') || req.url.endsWith('.css.map')) {
+    return res.status(404).end();
+  }
+  next();
+});
+
 app.use('/', express.static(path.join(__dirname, '../web/dist')));
 app.use('/api', routes);
 
