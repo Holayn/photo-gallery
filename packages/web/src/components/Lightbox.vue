@@ -229,17 +229,36 @@ export default {
     this.close();
   },
   methods: {
-    async loadLocation() {
+    async loadLocation(retry = false) {
       if (this.location) {
+        if (this._getLocationInfoAbortController) {
+          this._getLocationInfoAbortController.abort();
+        }
+
         this.loadingLocationInfo = true;
+        this.currentPhotoLocationInfo = null;
         const { lat, long } = this.location;
         try {
-          const response = await getLocationInfo(lat, long);
-          if (response) {
-            this.currentPhotoLocationInfo = response.label;
+          this._getLocationInfoAbortController = new AbortController();
+          const data = await getLocationInfo(lat, long, this._getLocationInfoAbortController);
+          if (data) {
+            this.currentPhotoLocationInfo = data.label;
+            this.loadingLocationInfo = false;
+            this._getLocationInfoAbortController = null;
+          } else {
+            if (!retry) {
+              setTimeout(() => {
+                this.loadLocation(true);
+              }, 3000);
+            } else {
+              this.loadingLocationInfo = false;
+              this._getLocationInfoAbortController = null;
+            }
           }
-        } finally {
-          this.loadingLocationInfo = false;
+        } catch (e) {
+          if (e.name !== 'AbortError') {
+            this.loadingLocationInfo = false;
+          }
         }
       }
     },

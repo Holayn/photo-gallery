@@ -227,11 +227,21 @@ export async function shareAlbum(album) {
   return res.data.token;
 }
 
-export async function getLocationInfo(lat, long) {
-  const res = await fetcher.fetch(`${BASE}/location?lat=${lat}&long=${long}`);
+const locationCache = {};
+export async function getLocationInfo(lat, long, controller) {
+  const cacheKey = `${lat}_${long}`;
+  if (locationCache[cacheKey]) {
+    return locationCache[cacheKey];
+  }
+
+  const res = await fetcher.fetch(`${BASE}/location?lat=${lat}&long=${long}`, {
+    signal: controller.signal,
+  });
   if (res.data) {
-    return {
+    locationCache[cacheKey] = {
       label: res.data.label,
-    }
+    };
+    
+    return locationCache[cacheKey];
   }
 }
