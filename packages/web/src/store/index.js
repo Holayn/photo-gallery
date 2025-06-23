@@ -2,8 +2,6 @@ import { createStore } from 'vuex'
 
 export default createStore({
   state: {
-    albumToken: '',
-
     photos: [],
     lightbox: {
       photoIndex: 0,

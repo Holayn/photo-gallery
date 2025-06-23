@@ -63,10 +63,10 @@ router.get(
             ...f,
             urls: {
               view: Object.keys(f.urls.view).reduce((acc, size) => {
-                acc[size] = f.urls.view[size] += `&id=${albumId}`;
+                acc[size] = f.urls.view[size] += `&id=${albumId}${req.query.token ? `&token=${req.query.token}` : ''}`;
                 return acc;
               }, {}),
-              download: f.urls.download += `&id=${albumId}${req.query.albumToken ? `&token=${req.query.albumToken}` : ''}`,
+              download: f.urls.download += `&id=${albumId}${req.query.token ? `&token=${req.query.token}` : ''}`,
             } ,
           };
         }),

@@ -135,7 +135,7 @@ export async function getPhotosFromAlbum(albumId, albumToken) {
   const url = new URL(`${BASE}/album/photos`, window.location.origin);
   url.searchParams.append('id', albumId);
   if (albumToken) {
-    url.searchParams.append('albumToken', albumToken);
+    url.searchParams.append('token', albumToken);
   }
 
   const res = await fetcher.fetch(url.toString());
@@ -155,7 +155,7 @@ export async function getAlbums() {
   }
 }
 export async function getAlbum(albumId, albumToken) {
-  const res = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${albumToken ? `&albumToken=${albumToken}` : ''}`);
+  const res = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${albumToken ? `&token=${albumToken}` : ''}`);
   if (res.data) {
     return {
       id: res.data.id,

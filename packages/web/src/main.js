@@ -50,7 +50,7 @@ window.addEventListener('unauthorized', () => {
 });
 
 router.beforeEach(async (to) => {
-  if (to.name === 'album' && to.query.albumToken) {
+  if (to.name === 'album' && to.query.token) {
     return true;
   }
   if (to.name === 'login' || to.name === '2fa') {

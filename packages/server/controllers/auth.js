@@ -264,7 +264,7 @@ const AuthController = {
   },
 
   authPhoto(req, res, next) {
-    const { sourceFileId, sourceId, token: albumId, albumToken } = req.query;
+    const { sourceFileId, sourceId, id: albumId, token: albumToken } = req.query;
 
     if (validateAdmin(req)) {
       next();
