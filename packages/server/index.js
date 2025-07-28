@@ -30,6 +30,7 @@ app.use(
         '\'self\'',
         '\'unsafe-inline\'',
         'https://cdn.plyr.io/3.7.8/plyr.svg',
+        'https://www.google.com/maps',
       ],
       fontSrc: [
         '\'self\'',
