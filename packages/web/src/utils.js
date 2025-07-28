@@ -9,9 +9,8 @@ export const getGalleryImageHeight = () => {
   return isMobileScreen() ? getMobileGalleryImageHeight() : Math.min(200, window.innerWidth / 5);
 }
 
-const BASE_TITLE = 'kaifotos';
 export function setDocumentTitle(title) {
-  document.title = `${title} - ${BASE_TITLE}`;
+  document.title = `${title}`;
 }
 
 export function isMobileScreen() {

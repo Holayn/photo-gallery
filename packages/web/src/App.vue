@@ -36,17 +36,9 @@
         </div>
       </nav>
     </div>
-    <div v-else>
-      <header class="sticky top-0 bg-white z-40 shadow-md flex items-center gap-2 px-4 md:px-8 py-4">
-        <div class="flex-auto">
-          <h1 class="text-base">kaifotos</h1>
-        </div>
-        <div id="headerAdditionalControls"></div>
-      </header>
-
-      <div class="py-12">
-        <router-view></router-view>
-      </div>
+    <div v-else style="--header-height: 0">
+      <div id="headerAdditionalControls" hidden></div>
+      <router-view></router-view>
     </div>
 
     <Toast></Toast>
