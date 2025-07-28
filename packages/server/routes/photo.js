@@ -1,5 +1,4 @@
 const express = require('express');
-const axios = require('axios');
 const path = require('path');
 
 const SourceService = require('../services/source');
@@ -7,13 +6,6 @@ const AuthController = require('../controllers/auth');
 const { asyncHandler, requiredParams } = require('../util/route-utils');
 
 const router = express.Router();
-
-require('dotenv').config();
-
-if (!process.env.POSITIONSTACK_APIKEY) {
-  // TODO: remove location, just link google maps
-  console.warn('Warning: no PositionStack API key set.');
-}
 
 router.get(
   '/photo',
@@ -56,32 +48,6 @@ router.get(
       res.sendFile(p);
     } else {
       res.sendStatus(404);
-    }
-  })
-);
-
-router.get(
-  '/location',
-  requiredParams(['lat', 'long']),
-  asyncHandler(async (req, res) => {
-    if (!process.env.POSITIONSTACK_APIKEY) {
-      res.sendStatus(503);
-      return;
-    }
-
-    const { lat, long } = req.query;
-    try {
-      const { data } = await axios(
-        `http://api.positionstack.com/v1/reverse?access_key=${process.env.POSITIONSTACK_APIKEY}&query=${lat},${long}`
-      );
-      if (data) {
-        const [result] = data.data;
-        res.send(result);
-      } else {
-        res.sendStatus(503);
-      }
-    } catch (e) {
-      res.sendStatus(400);
     }
   })
 );

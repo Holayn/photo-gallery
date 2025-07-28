@@ -87,17 +87,29 @@
                 </div>
 
                 <div>
-                  <h2 class="text-sm text-slate-600">Location</h2>
-                  <div v-if="location">
+                  <div class="flex gap-2">
                     <div>
-                      <a class="text-black underline" :href="location.link" target="_blank">{{ loadingLocationInfo ? 'loading...' : currentPhotoLocationInfo ?? 'Unknown' }}</a>
+                      <h2 class="text-sm text-slate-600">Location</h2>
+                      <div v-if="location && location.lat != null && location.long != null">
+                        <div class="text-sm text-slate-600">
+                          <a class="text-black underline" :href="location.link" target="_blank">lat:{{ location.lat }}, long:{{ location.long }}</a>
+                          <div>alt:{{ location.altitude ?? '--' }}</div>
+                        </div>
+                      </div>
+                      <div v-else>Unknown</div>
                     </div>
-                    <div class="text-sm text-slate-600">
-                      <div>lat:{{ location.lat ?? '--' }}, long:{{ location.long ?? '--' }},</div>
-                      <div>alt:{{ location.altitude ?? '--' }}</div>
+                    <div v-if="location && location.lat != null && location.long != null">
+                      <iframe
+                        width="360"
+                        height="120"
+                        style="border:0"
+                        loading="lazy"
+                        allowfullscreen
+                        referrerpolicy="no-referrer-when-downgrade"
+                        :src="`https://www.google.com/maps?q=${location.lat},${location.long}&z=14&output=embed`"
+                      ></iframe>
                     </div>
                   </div>
-                  <div v-else>Unknown</div>
                 </div>
 
                 <div v-if="currentPhoto.albums.length">
@@ -131,7 +143,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import LightboxSlide from './LightboxSlide.vue';
 import Toast from './Toast.vue';
 
-import { getLocationInfo, PHOTO_SIZES } from '../services/api';
+import { PHOTO_SIZES } from '../services/api';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(customParseFormat);
@@ -160,9 +172,6 @@ export default {
   data() {
     return {
       swiper: null,
-
-      currentPhotoLocationInfo: null,
-      loadingLocationInfo: false,
       showMetadata: false,
       showMenu: true,
     }
@@ -210,18 +219,6 @@ export default {
       return this.selected[this.currentPhoto.id];
     }
   },
-  watch: {
-    location() {
-      if (this.showMetadata) {
-        this.loadLocation();
-      }
-    },
-    showMetadata() {
-      if (this.showMetadata) {
-        this.loadLocation();
-      }
-    }
-  },
   mounted() {
     this.$refs.dialog.showModal();
   },
@@ -229,40 +226,6 @@ export default {
     this.close();
   },
   methods: {
-    async loadLocation(retry = false) {
-      if (this.location) {
-        if (this._getLocationInfoAbortController) {
-          this._getLocationInfoAbortController.abort();
-        }
-
-        this.loadingLocationInfo = true;
-        this.currentPhotoLocationInfo = null;
-        const { lat, long } = this.location;
-        try {
-          this._getLocationInfoAbortController = new AbortController();
-          const data = await getLocationInfo(lat, long, this._getLocationInfoAbortController);
-          if (data) {
-            this.currentPhotoLocationInfo = data.label;
-            this.loadingLocationInfo = false;
-            this._getLocationInfoAbortController = null;
-          } else {
-            if (!retry) {
-              setTimeout(() => {
-                this.loadLocation(true);
-              }, 3000);
-            } else {
-              this.loadingLocationInfo = false;
-              this._getLocationInfoAbortController = null;
-            }
-          }
-        } catch (e) {
-          if (e.name !== 'AbortError') {
-            this.loadingLocationInfo = false;
-          }
-        }
-      }
-    },
-
     close() {
       this.$refs.dialog.close();
       this.$emit('close');
