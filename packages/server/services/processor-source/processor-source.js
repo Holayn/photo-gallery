@@ -141,9 +141,8 @@ class ProcessorSource {
       const photoPath = path.resolve(this.path, convertedPath);
       const exists = await fs.pathExists(photoPath);
       if (exists) {
-        const data = await fs.readFile(photoPath);
         return {
-          data,
+          path: photoPath,
           fileType: path.extname(photoPath),
         };
       }
@@ -153,9 +152,8 @@ class ProcessorSource {
     const exists = await fs.pathExists(photoPath);
 
     if (exists) {
-      const data = await fs.readFile(photoPath);
       return {
-        data,
+        path: photoPath,
         fileType: path.extname(photoPath),
       };
     }

@@ -11,6 +11,7 @@ const router = express.Router();
 require('dotenv').config();
 
 if (!process.env.POSITIONSTACK_APIKEY) {
+  // TODO: remove location, just link google maps
   console.warn('Warning: no PositionStack API key set.');
 }
 
@@ -28,10 +29,10 @@ router.get(
     );
 
     if (fileData) {
-      const { data, fileType } = fileData;
+      const { path, fileType } = fileData;
       res.contentType(fileType);
       res.setHeader('Cache-Control', 'public, max-age=86400');
-      res.send(data);
+      res.sendFile(path);
     } else {
       res.sendStatus(404);
     }
