@@ -103,7 +103,7 @@ router.post(
       const id = AlbumService.createAlbum(name, files);
       const album = AlbumDAO.getById(id);
       res.send({
-        id: album.idAlias, // todo: why this error?
+        id: album.idAlias,
         name: album.name,
       });
     }

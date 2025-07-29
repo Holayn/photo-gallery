@@ -430,7 +430,7 @@ export default {
       if (!albumName) {
         alert('Album name required.');
       } else {
-        const { id, name } = await createAlbum(albumName, Object.values(this.selected));
+        const { id, name } = (await createAlbum(albumName, Object.values(this.selected))).data;
         alert(`Album "${name}" created.`);
         Object.keys(this.selected).forEach(selected => {
           const file = this.photos.find(photo => photo.id === selected);

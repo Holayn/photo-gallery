@@ -209,8 +209,8 @@ module.exports = {
   SourceDAO,
   UserDAO,
   transaction: (fn) => {
-    DB.transaction(() => {
-      fn();
+    return DB.transaction(() => {
+      return fn();
     })();
   },
 };
