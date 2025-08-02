@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="mt-4">
-      <Gallery ref="gallery" :show-lightbox="showLightbox" :album="true" :album-id="albumId">
+      <Gallery ref="gallery" :show-lightbox="showLightbox" :album="true" :album-id="albumId" default-sort="dateAsc">
         <template #heading>
-          <h1 class="flex-auto text-3xl md:text-5xl">
+          <h1 class="text-3xl md:text-5xl">
             <div v-if="showLoadingAlbumInfo" class="flex justify-center">
               <Loading class="w-16 h-16"></Loading>
             </div>
@@ -16,7 +16,7 @@
           </button>
         </template>
         <template v-if="brokenAlbumPhotos.length" #notices>
-          <div class="bg-yellow-200 border-yellow-400 py-1 px-2 mt-4">
+          <div class="bg-yellow-200 border border-yellow-300 py-1 px-2">
             There are {{ brokenAlbumPhotos.length }} broken album links - see log for details.
           </div>
         </template>

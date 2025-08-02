@@ -6,8 +6,9 @@ export default class Photo {
   metadata = {};
   albums = [];
   urls = {};
+  createdAt;
 
-  constructor({ date, sourceId, sourceFileId, galleryFileId, metadata = {}, albums = [], urls = {} }) {
+  constructor({ date, sourceId, sourceFileId, galleryFileId, metadata = {}, albums = [], urls = {}, createdAt }) {
     this.date = date;
     this.sourceId = sourceId;
     this.sourceFileId = sourceFileId;
@@ -15,6 +16,7 @@ export default class Photo {
     this.metadata = metadata;
     this.albums = albums;
     this.urls = urls;
+    this.createdAt = createdAt;
   }
 
   get id() {

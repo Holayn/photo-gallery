@@ -18,6 +18,9 @@ module.exports = {
 
   addToAlbum(albumId, files = {}) {
     transaction(() => {
+      // Make all added files have the same createdAt time, so that they appear to have been added at the same time rather than milliseconds apart.
+      const createdAt = new Date().getTime();
+
       Object.keys(files).forEach((file) => {
         const f = files[file];
         const existingFile = GalleryFileDAO.getBySource(
@@ -31,7 +34,7 @@ module.exports = {
           );
           if (!existsInAlbum) {
             AlbumFileDAO.insert(
-              new AlbumFile({ albumId, fileId: existingFile.id })
+              new AlbumFile({ albumId, fileId: existingFile.id, createdAt })
             );
           }
         } else {
@@ -77,6 +80,7 @@ module.exports = {
         ...SourceService.getFile(sourceId, sourceFileId),
         galleryFileId: id,
         sourceId,
+        createdAt: albumFiles.find(f => f.fileId === id).createdAt,
       }));
   },
 

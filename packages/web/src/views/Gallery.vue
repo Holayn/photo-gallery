@@ -1,8 +1,36 @@
 <template>
   <div ref="gallery" class="absolute inset-0 overflow-auto py-12" style="top: var(--header-height);">
-    <div class="px-4 md:px-8 md:flex md:gap-8 items-center">
+    <div class="px-4 md:px-8 flex gap-4">
       <div class="flex-auto break-all">
         <slot name="heading"></slot>
+      </div>
+      <div>
+        <sl-dropdown>
+          <sl-icon-button slot="trigger" class="text-xl" name="arrow-down-up"></sl-icon-button>
+          <sl-menu @sl-select="onSortSelect">
+            <sl-menu-label>Sort by...</sl-menu-label>
+            <sl-menu-item value="dateAsc">
+              <sl-icon v-if="sort === 'dateAsc'" slot="prefix" name="check-lg"></sl-icon>
+              Date (Earliest)
+            </sl-menu-item>
+            <sl-menu-item value="dateDesc">
+              <sl-icon v-if="sort === 'dateDesc'" slot="prefix" name="check-lg"></sl-icon>
+              Date (Latest)
+            </sl-menu-item>
+            <sl-menu-item v-if="canSortByDateAdded" value="dateAdded">
+              <sl-icon v-if="sort === 'dateAdded'" slot="prefix" name="check-lg"></sl-icon>
+              Date Added
+            </sl-menu-item>
+          </sl-menu>
+        </sl-dropdown>
+        <sl-dropdown>
+          <sl-icon-button slot="trigger" class="text-xl" name="three-dots-vertical"></sl-icon-button>
+          <sl-menu @sl-select="onOptionsSelect">
+            <sl-menu-item value="viewDates" type="checkbox">
+              Show Dates
+            </sl-menu-item>
+          </sl-menu>
+        </sl-dropdown>
       </div>
       <Teleport to="#headerAdditionalControls">
         <div v-if="$store.state.isLoggedIn" class="flex gap-4 justify-end">
@@ -38,7 +66,24 @@
       </Teleport>
     </div>
 
-    <slot v-if="$slots.notices" name="notices"></slot>
+    <div v-if="$slots.notices || hasNewPhotos" class="px-4 md:px-8 mt-2 flex flex-col gap-1">
+      <slot name="notices"></slot>
+      <template v-if="hasNewPhotos && !isViewModeNewOnly">
+        <div class="bg-blue-200 border border-blue-300 py-1 px-2 flex items-center gap-2 h-10">
+          <div class="flex items-center gap-1">
+            <sl-icon class="text-white" name="stars"></sl-icon>
+            New photos have been added
+          </div>
+          <sl-button size="small" @click="viewNewPhotos">View</sl-button>
+        </div>
+      </template>
+      <template v-if="hasNewPhotos && isViewModeNewOnly">
+        <div class="bg-blue-200 border border-blue-300 py-1 px-2 flex items-center gap-2 h-10">
+          Viewing new photos
+          <sl-button size="small" @click="viewAllPhotos">View All Photos</sl-button>
+        </div>
+      </template>
+    </div>
 
     <div ref="photos" class="mt-4 relative" :style="{ height: `${layout?.containerHeight}px` }">
       <div 
@@ -61,6 +106,9 @@
         <div v-else-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full">
           <Loading class="w-8 h-8"></Loading>
         </div>
+        <div v-if="showDates" class="absolute -bottom-8 h-8 px-1">
+          <div class="text-xs">{{ formatPhotoDate(photo.date) }}</div>
+        </div>
         <button @click="openLightbox(photo)">
           <img 
             :src="getPhotoUrl(photo)"
@@ -81,6 +129,11 @@
         <div v-if="photo.albums.length" class="overlay flex justify-end items-start">
           <div class="bg-gray-500/50 md:mt-1 md:mr-1 p-1 rounded-full">
             <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>  
+          </div>
+        </div>
+        <div v-if="isPhotoNew(photo)" class="overlay flex justify-start items-end">
+          <div class="bg-gray-500/50 md:mb-1 md:ml-1 p-1 rounded-full flex items-center">
+            <sl-icon class="text-white" name="stars"></sl-icon>
           </div>
         </div>
         <template v-if="isSelectionMode">
@@ -124,6 +177,7 @@
 
 <script>
 import justifiedLayout from 'justified-layout';
+import dayjs from 'dayjs';
 
 import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum } from '../services/api';
 import { debounce, getGalleryImageHeight, getMobileGalleryImageHeight, isMobileScreen, getFetchedGalleryPhotoSize, isElementFullyInView } from '../utils';
@@ -144,6 +198,10 @@ export default {
     albumId: String,
     showDateSelection: Boolean,
     showLightbox: Boolean,
+    defaultSort: {
+      type: String,
+      default: 'dateDesc',
+    }
   },
   data() {
     return {
@@ -169,6 +227,10 @@ export default {
       isShiftPressed: false,
 
       isShowLightbox: false,
+
+      sort: this.defaultSort,
+      viewMode: null,
+      showDates: false,
     };
   },
   computed: {
@@ -182,10 +244,34 @@ export default {
       return this.$store.state.token;
     },
     photos() {
-      return this.$store.state.photos;
+      if (this.isViewModeNewOnly) {
+        return this.$store.state.photos.filter(photo => this.isPhotoNew(photo));
+      }
+
+      return this.$store.state.photos.sort((a, b) => {
+        if (this.sort === 'dateDesc') {
+          return b.date - a.date;
+        } else if (this.sort === 'dateAsc') {
+          return a.date - b.date;
+        } else if (this.sort === 'dateAdded') {
+          return (b.createdAt || b.date) - (a.createdAt || a.date);
+        }
+      });
     },
     renderPhotos() {
       return this.photos.slice(this.renderPhotosStart, this.renderPhotosEnd);
+    },
+    hasNewPhotos() {
+      if (!getLastViewed(this.albumId)) {
+        return false;
+      }
+      return this.photos.some(photo => photo.createdAt > getLastViewed(this.albumId));
+    },
+    isViewModeNewOnly() {
+      return this.viewMode === 'newOnly';
+    },
+    canSortByDateAdded() {
+      return this.photos.some(photo => photo.createdAt);
     },
   },
   watch: {
@@ -212,6 +298,8 @@ export default {
     this.removeLightboxParam(true);
 
     this._updateRenderPhotosDebounce = debounce(() => this.updateRenderPhotos(), 50);
+
+    this.updateLastViewed();
   },
   async mounted() {
     this.$refs.gallery.addEventListener('scroll', this._updateRenderPhotosDebounce);
@@ -244,7 +332,10 @@ export default {
         containerPadding: 0,
         containerWidth: this.$refs.photos?.getBoundingClientRect().width,
         targetRowHeight: getGalleryImageHeight(),
-        boxSpacing: 2,
+        boxSpacing: {
+          horizontal: 2,
+          vertical: this.showDates ? 32 : 2,
+        }
       });
     },
     async updateRenderPhotos() {
@@ -316,6 +407,9 @@ export default {
 
         if (photo) {
           this.$store.state.lightbox.photoIndex = this.photos.findIndex(p => p === photo);
+          if (this.isPhotoNew(photo)) {
+            this.clearLastViewed();
+          }
         }
       }
     },
@@ -468,7 +562,53 @@ export default {
     reset() {
       this.$store.dispatch('clearPhotos');
     },
+
+    onSortSelect(e) {
+      const item = e.detail.item;
+      this.sort = item.value;
+      if (this.sort === 'dateAdded') {
+        this.clearLastViewed();
+      }
+      this.updateRenderPhotos();
+    },
+
+    formatPhotoDate(date) {
+      return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
+    },
+
+    viewNewPhotos() {
+      this.viewMode = 'newOnly';
+      this.clearLastViewed();
+    },
+    viewAllPhotos() {
+      this.viewMode = null;
+    },
+
+    updateLastViewed() {
+      if (!getLastViewed(this.albumId) || localStorage.getItem(`canClearLastViewed-${this.albumId}`)) {
+        localStorage.setItem(`lastViewed-${this.albumId}`, new Date().getTime());
+        localStorage.removeItem(`canClearLastViewed-${this.albumId}`);
+      }
+    },
+    clearLastViewed() {
+      localStorage.setItem(`canClearLastViewed-${this.albumId}`, true);
+    },
+    isPhotoNew(photo) {
+      return  photo.createdAt && getLastViewed(this.albumId) < photo.createdAt;
+    },
+
+    onOptionsSelect(e) {
+      const item = e.detail.item;
+      if (item.value === 'viewDates') {
+        this.showDates = item.checked;
+        this.updateRenderPhotos();
+      }
+    }
   },
+}
+
+function getLastViewed(albumId) {
+  return parseInt(localStorage.getItem(`lastViewed-${albumId}`));
 }
 </script>
 

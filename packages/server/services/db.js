@@ -17,14 +17,14 @@ fs.mkdirpSync(path.dirname(DB_PATH));
 const DB = new Database(DB_PATH);
 
 DB.exec(
-  'CREATE TABLE IF NOT EXISTS album_file (id INTEGER PRIMARY KEY, album_id INTEGER, file_id INTEGER, FOREIGN KEY(album_id) REFERENCES album(id), FOREIGN KEY(file_id) REFERENCES file(id))'
+  'CREATE TABLE IF NOT EXISTS album_file (id INTEGER PRIMARY KEY, album_id INTEGER, file_id INTEGER, created_at INTEGER, FOREIGN KEY(album_id) REFERENCES album(id), FOREIGN KEY(file_id) REFERENCES file(id))'
 );
 const toAlbumFileModel = toModelFactory(AlbumFile);
 const AlbumFileDAO = {
-  insert({ albumId, fileId }) {
+  insert({ albumId, fileId, createdAt = new Date().getTime() }) {
     return DB.prepare(
-      'INSERT INTO album_file (album_id, file_id) VALUES (@albumId, @fileId)'
-    ).run({ albumId, fileId }).lastInsertRowid;
+      'INSERT INTO album_file (album_id, file_id, created_at) VALUES (@albumId, @fileId, @createdAt)'
+    ).run({ albumId, fileId, createdAt }).lastInsertRowid;
   },
   getByAlbumIdFileId(albumId, fileId) {
     return toAlbumFileModel(

@@ -8,7 +8,14 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: true,
     },
-    plugins: [vue()],
+    plugins: [vue({
+      template: {
+        compilerOptions: {
+          // Add the tag names of your custom elements here to ignore them
+          isCustomElement: (tag) => tag.startsWith('sl-'),
+        }
+      }
+    })],
     base: mode === 'production'
     ? env.VUE_APP_BASE_URL
     : '/',
