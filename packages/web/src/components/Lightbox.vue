@@ -87,19 +87,10 @@
                 </div>
 
                 <div>
-                  <div class="flex gap-2">
-                    <div>
-                      <h2 class="text-sm text-slate-600">Location</h2>
-                      <div v-if="location && location.lat != null && location.long != null">
-                        <div class="text-sm text-slate-600">
-                          <a class="text-black underline" :href="location.link" target="_blank">lat:{{ location.lat }}, long:{{ location.long }}</a>
-                          <div>alt:{{ location.altitude ?? '--' }}</div>
-                        </div>
-                      </div>
-                      <div v-else>Unknown</div>
-                    </div>
+                  <div class="flex flex-col md:flex-row gap-2">
                     <div v-if="location && location.lat != null && location.long != null">
                       <iframe
+                        class="max-w-full"
                         width="360"
                         height="120"
                         style="border:0"
@@ -108,6 +99,15 @@
                         referrerpolicy="no-referrer-when-downgrade"
                         :src="`https://www.google.com/maps?q=${location.lat},${location.long}&z=14&output=embed`"
                       ></iframe>
+                    </div>
+                    <div>
+                      <div v-if="location && location.lat != null && location.long != null">
+                        <div class="text-sm text-slate-600">
+                          <a class="text-black underline" :href="location.link" target="_blank">lat:{{ location.lat }}, long:{{ location.long }}</a>
+                          <div>alt:{{ location.altitude ?? '--' }}</div>
+                        </div>
+                      </div>
+                      <div v-else>Unknown Location</div>
                     </div>
                   </div>
                 </div>
