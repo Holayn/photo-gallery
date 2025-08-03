@@ -5,6 +5,7 @@ const AuthController = require('../controllers/auth');
 const SourceService = require('../services/source');
 const { SourceDAO } = require('../services/db');
 const { requiredParams } = require('../util/route-utils');
+const wakeDisk = require('../services/wake-disk');
 
 const router = express.Router();
 
@@ -37,6 +38,7 @@ router.get(
     if (!files) {
       res.sendStatus(400);
     } else {
+      wakeDisk();
       res.send({
         files,
       });

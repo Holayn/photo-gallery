@@ -4,6 +4,7 @@ const AlbumService = require('../services/album');
 const { AlbumDAO } = require('../services/db');
 const AuthController = require('../controllers/auth');
 const { requiredBody, requiredParams } = require('../util/route-utils');
+const wakeDisk = require('../services/wake-disk');
 
 const router = express.Router();
 
@@ -53,6 +54,7 @@ router.get(
     if (!files) {
       res.sendStatus(400);
     } else {
+      wakeDisk();
       res.send({
         files: files.map(f => {
           if (!f.urls) {
