@@ -31,6 +31,7 @@ app.use(
         '\'unsafe-inline\'',
         'https://cdn.plyr.io/3.7.8/plyr.svg',
         'https://www.google.com/maps',
+        'https://cdn.jsdelivr.net',
       ],
       fontSrc: [
         '\'self\'',
@@ -46,6 +47,7 @@ app.use(
         'https://b.tile.openstreetmap.org',
         'https://c.tile.openstreetmap.org',
         'https://cdnjs.cloudflare.com',
+        'https://cdn.jsdelivr.net',
       ],
       mediaSrc: ['\'self\'', 'data:'],
       styleSrc: [
@@ -54,11 +56,13 @@ app.use(
         'https://cdnjs.cloudflare.com',
         'https://fonts.googleapis.com',
         'https://cdn.plyr.io/3.7.8/plyr.css',
+        'https://cdn.jsdelivr.net',
       ],
       scriptSrc: [
         '\'self\'',
         'https://storage.googleapis.com',
         'https://cdnjs.cloudflare.com',
+        'https://cdn.jsdelivr.net',
       ],
       upgradeInsecureRequests: null,
     },
