@@ -19,6 +19,9 @@ const DB = new Database(DB_PATH);
 DB.exec(
   'CREATE TABLE IF NOT EXISTS album_file (id INTEGER PRIMARY KEY, album_id INTEGER, file_id INTEGER, created_at INTEGER, FOREIGN KEY(album_id) REFERENCES album(id), FOREIGN KEY(file_id) REFERENCES file(id))'
 );
+try {
+  DB.exec('ALTER TABLE album_file ADD COLUMN created_at INTEGER');
+} catch (e) {}
 const toAlbumFileModel = toModelFactory(AlbumFile);
 const AlbumFileDAO = {
   insert({ albumId, fileId, createdAt = new Date().getTime() }) {
