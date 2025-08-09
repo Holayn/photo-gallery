@@ -157,7 +157,17 @@
       <div v-if="isNoPhotos" class="text-center">No photos found.</div>
     </slot>
     
-    <Lightbox v-if="isShowLightbox" :is-selection-mode="isSelectionMode" :selected="selected" @close="closeLightbox()" @enable-selection-mode="toggleSelectionMode(true)" @select="photo => select(photo)"></Lightbox>
+    <Lightbox 
+      v-if="isShowLightbox" 
+      :photos="photos" 
+      :index="lightboxIndex" 
+      :is-selection-mode="isSelectionMode" 
+      :selected="selected" 
+      @close="closeLightbox()" 
+      @enable-selection-mode="toggleSelectionMode(true)" 
+      @select="photo => select(photo)"
+      @index-update="lightboxIndex = $event"
+    ></Lightbox>
 
     <Modal v-if="showAddToExistingAlbum" @close="showAddToExistingAlbum = false">
       <div class="w-[500px] max-w-full">
@@ -231,6 +241,7 @@ export default {
       isShiftPressed: false,
 
       isShowLightbox: false,
+      lightboxIndex: 0,
 
       sort: this.defaultSort,
       viewMode: null,
@@ -238,9 +249,6 @@ export default {
     };
   },
   computed: {
-    lightboxIndex() {
-      return this.$store.state.lightbox.photoIndex;
-    },
     isNoPhotos() {
       return this.photos.length === 0;
     },
@@ -417,7 +425,7 @@ export default {
         this.isShowLightbox = true;
 
         if (photo) {
-          this.$store.state.lightbox.photoIndex = this.photos.findIndex(p => p === photo);
+          this.lightboxIndex = this.photos.findIndex(p => p === photo);
           if (this.isPhotoNew(photo)) {
             this.clearLastViewed();
           }

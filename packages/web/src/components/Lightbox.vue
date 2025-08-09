@@ -39,7 +39,7 @@
           :modules="modules"
           :space-between="50"
           :threshold="10"
-          :initial-slide="$store.state.lightbox.photoIndex"
+          :initial-slide="index"
           centered-slides
           virtual
           zoom
@@ -48,14 +48,14 @@
           @click="toggleMenu"
         >
           <swiper-slide
-            v-for="(photo, index) in $store.state.photos"
-            :key="index"
-            :virtualIndex="index"
+            v-for="(photo, i) in photos"
+            :key="i"
+            :virtualIndex="i"
             :zoom="!photo.metadata.video"
           >
             <lightbox-slide
-              :active="index === $store.state.lightbox.photoIndex"
-              :index="index"
+              :active="i === index"
+              :index="i"
               :photo="photo"
             ></lightbox-slide>
           </swiper-slide>
@@ -159,6 +159,14 @@ export default {
   props: {
     isSelectionMode: Boolean,
     selected: Object,
+    index: {
+      type: Number,
+      required: true,
+    },
+    photos: {
+      type: Array,
+      required: true,
+    },
   },
   setup() {
     return {
@@ -178,7 +186,7 @@ export default {
   },
   computed: {
     currentPhoto() {
-      return this.$store.state.photos[this.$store.state.lightbox.photoIndex];
+      return this.photos[this.index];
     },
     currentPhotoMetadata() {
       const { fileName, fileSize, width, height, location, device } = this.currentPhoto.metadata;
@@ -247,7 +255,7 @@ export default {
       });
     },
     _swiperOnActiveIndexChange({ activeIndex }) {
-      this.$store.state.lightbox.photoIndex = activeIndex;
+      this.$emit('index-update', activeIndex);
     },
 
     enableSelectionMode() {
