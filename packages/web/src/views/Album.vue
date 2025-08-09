@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="mt-4">
-      <Gallery ref="gallery" :show-lightbox="showLightbox" :album="true" :album-id="albumId" default-sort="dateAsc">
+      <Gallery ref="gallery" :id="albumId" :show-lightbox="showLightbox" :album="true" :album-id="albumId" default-sort="dateAsc">
         <template #heading>
           <h1 class="text-3xl md:text-5xl">
             <div v-if="showLoadingAlbumInfo" class="flex justify-center">

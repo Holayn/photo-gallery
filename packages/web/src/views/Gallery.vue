@@ -194,6 +194,10 @@ export default {
     Modal,
   },
   props: {
+    id: {
+      type: String,
+      required: true,
+    },
     album: Boolean,
     albumId: String,
     showDateSelection: Boolean,
@@ -201,7 +205,7 @@ export default {
     defaultSort: {
       type: String,
       default: 'dateDesc',
-    }
+    },
   },
   data() {
     return {
@@ -262,10 +266,10 @@ export default {
       return this.photos.slice(this.renderPhotosStart, this.renderPhotosEnd);
     },
     hasNewPhotos() {
-      if (!getLastViewed(this.albumId)) {
+      if (!getLastViewed(this.id)) {
         return false;
       }
-      return this.photos.some(photo => photo.createdAt > getLastViewed(this.albumId));
+      return this.photos.some(photo => photo.createdAt > getLastViewed(this.id));
     },
     isViewModeNewOnly() {
       return this.viewMode === 'newOnly';
@@ -292,6 +296,9 @@ export default {
     isSelectionMode() {
       this.lastSelected = null;
     },
+    sort() {
+      localStorage.setItem(`sort-${this.id}`, this.sort);
+    },
   },
   created() {
     // Ensure the page isn't loaded with this query parameter set.
@@ -300,6 +307,10 @@ export default {
     this._updateRenderPhotosDebounce = debounce(() => this.updateRenderPhotos(), 50);
 
     this.updateLastViewed();
+
+    if (localStorage.getItem(`sort-${this.id}`)) {
+      this.sort = localStorage.getItem(`sort-${this.id}`);
+    }
   },
   async mounted() {
     this.$refs.gallery.addEventListener('scroll', this._updateRenderPhotosDebounce);
@@ -585,16 +596,16 @@ export default {
     },
 
     updateLastViewed() {
-      if (!getLastViewed(this.albumId) || localStorage.getItem(`canClearLastViewed-${this.albumId}`)) {
-        localStorage.setItem(`lastViewed-${this.albumId}`, new Date().getTime());
-        localStorage.removeItem(`canClearLastViewed-${this.albumId}`);
+      if (!getLastViewed(this.id) || localStorage.getItem(`canClearLastViewed-${this.id}`)) {
+        localStorage.setItem(`lastViewed-${this.id}`, new Date().getTime());
+        localStorage.removeItem(`canClearLastViewed-${this.id}`);
       }
     },
     clearLastViewed() {
-      localStorage.setItem(`canClearLastViewed-${this.albumId}`, true);
+      localStorage.setItem(`canClearLastViewed-${this.id}`, true);
     },
     isPhotoNew(photo) {
-      return  photo.createdAt && getLastViewed(this.albumId) < photo.createdAt;
+      return photo.createdAt && getLastViewed(this.id) < photo.createdAt;
     },
 
     onOptionsSelect(e) {
@@ -607,8 +618,8 @@ export default {
   },
 }
 
-function getLastViewed(albumId) {
-  return parseInt(localStorage.getItem(`lastViewed-${albumId}`));
+function getLastViewed(id) {
+  return parseInt(localStorage.getItem(`lastViewed-${id}`));
 }
 </script>
 

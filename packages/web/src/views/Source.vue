@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="mt-4">
-      <Gallery ref="gallery" :show-date-selection="true" :show-lightbox="showLightbox" @date="onDateUpdate($event)">
+      <Gallery ref="gallery" :id="sourceId" :show-date-selection="true" :show-lightbox="showLightbox" @date="onDateUpdate($event)">
         <template #heading>
           <h1 class="flex-auto text-3xl md:text-5xl">
             <div v-if="showLoadingSourceInfo" class="flex justify-center">
