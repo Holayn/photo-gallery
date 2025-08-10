@@ -18,10 +18,13 @@
   </div>
   <div v-else-if="photo.metadata.video" class="flex items-center justify-center h-full">
     <!-- h-full flex is needed to size and position the video responsively. -->
-    <div class="z-50 h-full flex justify-center" @click.stop="">
-      <video ref="video" playsinline controls :data-poster="preview">
+    <div class="z-50 h-full flex justify-center relative" @click.stop="">
+      <video ref="video" playsinline controls :data-poster="preview" @loadeddata="onVideoLoad">
         <source :src="photo.urls.view[PHOTO_SIZES.LARGE]" type="video/mp4"/>
       </video>
+      <div v-if="!videoLoaded && videoLoadTimeout" class="absolute top-0 left-0 w-full h-full flex items-center text-center text-white">
+        <div>Videos may take up to 10 seconds to load, please wait...</div>
+      </div>
     </div>
   </div>
 </template>
@@ -50,6 +53,8 @@ export default {
   data() {
     return {
       loading: true,
+      videoLoaded: false,
+      videoLoadTimeout: false,
       error: false,
       PHOTO_SIZES,
       large: null,
@@ -91,6 +96,10 @@ export default {
       setTimeout(() => {
         document.querySelector('.plyr__progress')?.classList.add('swiper-no-swiping');
       });
+
+      setTimeout(() => {
+        this.videoLoadTimeout = true;
+      }, 2000);
     } else {
       loadPhotoToBase64(this.photo.urls.view[PHOTO_SIZES.LARGE]).then(data => {
         this.large = data;
@@ -110,6 +119,9 @@ export default {
   methods: {
     onVideoOverlayClick() {
       this.player.togglePlay();
+    },
+    onVideoLoad() {
+      this.videoLoaded = true;
     }
   },
 }
