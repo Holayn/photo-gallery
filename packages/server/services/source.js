@@ -73,11 +73,12 @@ module.exports = {
     if (source) {
       const processorSource = new ProcessorSource(source);
       const sourceFiles = processorSource.findFiles(startDateRange, directory);
-      return setFileAlbums(sourceId, sourceFiles.map(({ id, date, metadata }) => ({
+      return setFileAlbums(sourceId, sourceFiles.map(({ id, date, metadata, createdAt }) => ({
         date,
         metadata,
         sourceFileId: id,
         urls: generateSourceFileUrls(sourceId, id),
+        createdAt,
       })));
     }
 
