@@ -22,7 +22,7 @@
       <video ref="video" playsinline controls :data-poster="preview" @loadstart="onVideoLoadStart" @loadeddata="onVideoLoad">
         <source :src="photo.urls.view[PHOTO_SIZES.LARGE]" type="video/mp4"/>
       </video>
-      <div v-if="!videoLoaded && videoLoadTimeout" class="absolute top-0 left-0 w-full h-full flex items-center text-center text-white pointer-events-none">
+      <div v-if="!videoLoaded && videoLoadTimeout" class="absolute top-0 left-0 w-full h-full flex items-center justify-center text-center text-white pointer-events-none">
         <div>Videos may take up to 10 seconds to load, please wait...</div>
       </div>
     </div>
