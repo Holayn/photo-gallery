@@ -1,6 +1,5 @@
-const crypto = require('crypto');
-
 const SourceService = require('./source');
+const { generateUniqueRandomNumbers, generateRandomString } = require('../util/random');
 
 const { AlbumDAO, AlbumFileDAO, GalleryFileDAO, transaction } = require('./db');
 const Album = require('../model/album');
@@ -103,18 +102,8 @@ module.exports = {
     if (album.token) {
       return album.token;
     }
-    album.token = crypto.randomBytes(32).toString('hex');
+    album.token = generateRandomString(72);
     AlbumDAO.update(album);
     return album.token;
   },
 };
-
-function generateUniqueRandomNumbers(n, count) {
-  const numsToFind = n < count ? n : count;
-  const uniqueNumbers = new Set();
-  while (uniqueNumbers.size < numsToFind) {
-    const randomNumber = Math.floor(Math.random() * n);
-    uniqueNumbers.add(randomNumber);
-  }
-  return Array.from(uniqueNumbers);
-}

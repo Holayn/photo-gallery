@@ -8,6 +8,7 @@ const AlbumFile = require('../model/album-file');
 const GalleryFile = require('../model/gallery-file');
 const Source = require('../model/source');
 const User = require('../model/user');
+const { generateRandomString } = require('../util/random');
 
 const DB_FILENAME = 'photo-gallery.db';
 const DB_PATH = path.resolve(__dirname, `../${DB_FILENAME}`);
@@ -53,10 +54,7 @@ const AlbumFileDAO = {
   },
 };
 
-const generateIdAlias = () =>
-  Array.from({ length: 6 }, () =>
-    Math.random().toString(36).substring(2, 3)
-  ).join('');
+const generateIdAlias = () => generateRandomString(16);
 DB.exec(
   'CREATE TABLE IF NOT EXISTS album (id INTEGER PRIMARY KEY, name TEXT, token TEXT, id_alias TEXT)'
 );
@@ -64,12 +62,7 @@ DB.exec(
 const toAlbumModel = toModelFactory(Album);
 const AlbumDAO = {
   insert({ name }) {
-    let idAlias = generateIdAlias();
-    while (
-      DB.prepare('SELECT * FROM album WHERE id_alias = ?').get(idAlias) != null
-    ) {
-      idAlias = generateIdAlias();
-    }
+    const idAlias = generateIdAlias();
     return DB.prepare(
       'INSERT INTO album (id_alias, name) VALUES (@idAlias, @name)'
     ).run({ idAlias, name }).lastInsertRowid;
