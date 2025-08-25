@@ -391,6 +391,7 @@ export default {
 
     imgLoad(photo) {
       this.loadedImages[photo.id] = true;
+      delete this.loadedImageErrors[photo.id];
     },
     imgError(photo) {
       this.loadedImageErrors[photo.id] = true;
