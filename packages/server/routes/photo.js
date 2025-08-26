@@ -56,7 +56,7 @@ router.get(
 function streamFile(req, res, filePath) {
   const fileType = path.extname(filePath);
 
-  if (fileType === 'mp4') {
+  if (fileType === '.mp4') {
     const stat = fs.statSync(filePath);
     const fileSize = stat.size;
     const range = req.headers.range;
