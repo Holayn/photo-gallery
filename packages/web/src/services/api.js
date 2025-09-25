@@ -1,7 +1,7 @@
 import Photo from '../model/photo';
 import fetcher from './fetcher';
 
-export const BASE = import.meta.env.DEV ? '/api' : `${import.meta.env.BASE_URL}/api`;
+export const BASE = import.meta.env.DEV ? '/api' : `${import.meta.env.BASE_URL}api`;
 
 export const PHOTO_SIZES = {
   LARGE: 'large',
