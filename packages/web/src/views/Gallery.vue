@@ -110,8 +110,10 @@
           <div class="text-xs">{{ formatPhotoDate(photo.date) }}</div>
         </div>
         <button @click="openLightbox(photo)">
-          <img 
+          <img
+            :ref="imgRender"
             :src="getPhotoUrl(photo)"
+            :data-photo-id="photo.id"
             :style="{
               width: layout.boxes[i + renderPhotosStart].width + 'px', 
               height: layout.boxes[i + renderPhotosStart].height + 'px',
@@ -270,6 +272,12 @@ export default {
         }
       });
     },
+    photosMap() {
+      return this.$store.state.photos.reduce((acc, photo) => {
+        acc[photo.id] = photo;
+        return acc;
+      }, {});
+    },
     renderPhotos() {
       return this.photos.slice(this.renderPhotosStart, this.renderPhotosEnd);
     },
@@ -413,6 +421,11 @@ export default {
           el,
           photo: this.photos.find(photo => photo.id === el.dataset.photoId),
         });
+      }
+    },
+    imgRender(el) {
+      if (el && el.complete) {
+        this.imgLoad(this.photosMap[el.dataset.photoId]);
       }
     },
     getGalleryImageRefForLightboxPhoto() {
