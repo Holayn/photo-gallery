@@ -21,23 +21,6 @@ export function getFetchedGalleryPhotoSize() {
   return isMobileScreen() ? PHOTO_SIZES.THUMB : PHOTO_SIZES.SMALL;
 }
 
-export async function loadPhotoToBase64(url) {
-  const imageUrlToBase64 = async url => {
-    const blob = await fetcher.fetch(url, { blob: true });
-    return new Promise((resolve, reject) => {
-      try {
-        const reader = new FileReader();
-        reader.onload = function () { resolve(this.result) };
-        reader.readAsDataURL(blob);
-      } catch (e) {
-        reject(e);
-      }
-    });
-  };
-  
-  return imageUrlToBase64(url);
-}
-
 export function debounce(func, delay, { leading } = {}) {
   let timerId
 

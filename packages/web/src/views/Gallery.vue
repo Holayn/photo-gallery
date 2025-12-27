@@ -100,9 +100,10 @@
           height: layout.boxes[i + renderPhotosStart].height + 'px',
         }"
       >
-        <div v-if="loadedImageErrors[photo.id]" class="flex justify-center items-center w-full h-full text-xs">
-          load failed
-        </div>
+        <button v-if="loadedImageErrors[photo.id]" class="w-full h-full border rounded-sm flex flex-col justify-center items-center gap-1" style="border-color: var(--theme-color-main);" @click="retryLoadImg(photo)">
+          <div class="text-xs">load failed</div>
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
+        </button>
         <div v-else-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full">
           <Loading class="w-8 h-8"></Loading>
         </div>
@@ -111,6 +112,7 @@
         </div>
         <button @click="openLightbox(photo)">
           <img
+            v-if="!loadedImageErrors[photo.id]"
             :ref="imgRender"
             :src="getPhotoUrl(photo)"
             :data-photo-id="photo.id"
@@ -315,6 +317,14 @@ export default {
     sort() {
       localStorage.setItem(`sort-${this.id}`, this.sort);
     },
+    renderPhotos() {
+      const renderedPhotoIds = new Set(this.renderPhotos.map(photo => photo.id));
+      Object.keys(this.loadedImages).forEach(photoId => {
+        if (!renderedPhotoIds.has(photoId)) {
+          delete this.loadedImages[photoId];
+        }
+      });
+    },
   },
   created() {
     // Ensure the page isn't loaded with this query parameter set.
@@ -403,7 +413,9 @@ export default {
     },
     imgError(photo) {
       this.loadedImageErrors[photo.id] = true;
-      console.error('Failed to load photo', photo);
+    },
+    retryLoadImg(photo) {
+      delete this.loadedImageErrors[photo.id];
     },
     
     async scrollLightboxImageIntoView() {
@@ -424,7 +436,7 @@ export default {
       }
     },
     imgRender(el) {
-      if (el && el.complete) {
+      if (el && el.complete && !this.loadedImages[el.dataset.photoId] && !this.loadedImageErrors[el.dataset.photoId]) {
         this.imgLoad(this.photosMap[el.dataset.photoId]);
       }
     },

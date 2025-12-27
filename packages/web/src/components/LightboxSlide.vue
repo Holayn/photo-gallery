@@ -1,28 +1,29 @@
 <template>
-  <div v-if="photo && !photo.metadata.video" class="h-full w-full">
-    <div v-if="loading" class="relative flex items-center justify-center h-full w-full">
+  <div class="h-full w-full">
+    <div v-if="loading || error" class="relative flex items-center justify-center h-full w-full">
       <img class="w-full h-full object-contain blur-sm" :src="preview">
       <div class="absolute flex flex-col items-center justify-center">
-        <Loading class="w-16 h-16"></Loading>
+        <Loading v-if="loading" class="w-16 h-16"></Loading>
+        <div v-else-if="error" class="text-white">Failed to load</div>
+        <button v-if="error" class="text-white mt-1" @click="retryLoad">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
+        </button>
       </div>
     </div>
-    <div v-else-if="!loading && error" class="flex items-center justify-center w-full h-full text-white">
-      Failed to load
-    </div>
-    <div v-else="!loading" class="flex justify-center w-full h-full">
-      <img :src="large" class="max-w-full max-h-full object-contain">
-      <!-- HACK: Force browser to render base64 image. -->
-      <!-- Intermittent issue of where the browser just refuses to render the image. -->
-      <img :src="large" class="w-0 h-0">
-    </div>
-  </div>
-  <div v-else-if="photo.metadata.video" class="flex items-center justify-center h-full">
-    <!-- h-full flex is needed to size and position the video responsively. -->
-    <div class="z-50 h-full flex justify-center relative" @click.stop="">
-      <video ref="video" playsinline controls :data-poster="preview">
-        <source :src="photo.urls.view[PHOTO_SIZES.LARGE]" type="video/mp4"/>
-      </video>
-    </div>
+
+    <template v-if="!error">
+      <div v-if="!photo.metadata.video" class="flex justify-center w-full h-full">
+        <img :ref="imgRef" :src="photoSrc" class="max-w-full max-h-full object-contain" @load="onImgLoad" @error="onImgLoadError">
+      </div>
+      <div v-else class="flex items-center justify-center h-full">
+        <!-- h-full flex is needed to size and position the video responsively. -->
+        <div class="z-50 h-full flex justify-center relative" @click.stop="">
+          <video ref="video" playsinline controls :data-poster="preview">
+            <source :src="photo.urls.view[PHOTO_SIZES.LARGE]" type="video/mp4" @error="onVideoLoadError">
+          </video>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -30,7 +31,7 @@
 import Plyr from 'plyr';
 
 import { PHOTO_SIZES } from '../services/api';
-import { getFetchedGalleryPhotoSize, loadPhotoToBase64 } from '../utils';
+import { getFetchedGalleryPhotoSize } from '../utils';
 
 import Loading from './Loading.vue';
 
@@ -52,10 +53,16 @@ export default {
       loading: true,
       error: false,
       PHOTO_SIZES,
-      large: null,
-      preview: null,
       player: null,
     }
+  },
+  computed: {
+    preview() {
+      return this.photo.urls.view[getFetchedGalleryPhotoSize()];
+    },
+    photoSrc() {
+      return this.photo.urls.view[PHOTO_SIZES.LARGE];
+    },
   },
   watch: {
     active() {
@@ -69,35 +76,21 @@ export default {
     }
   },
   async mounted() {
-    if (!this.active) {
-      await this.$nextTick();
-    }
-
-    loadPhotoToBase64(this.photo.urls.view[getFetchedGalleryPhotoSize()]).then(data => {
-      this.preview = data;
-    });
-
     if (this.photo.metadata.video) {
-      this.loading = false;
-
-      this.player = new Plyr(this.$refs.video, {
+      const player = this.player = new Plyr(this.$refs.video, {
         controls: ['play-large', 'play', 'progress', 'current-time', 'settings', 'fullscreen'],
       });
 
+      player.on('ready', () => {
+        this.loading = false;
+      });
+
       if (this.active) {
-        this.player.play();
+        player.play();
       }
 
       setTimeout(() => {
         document.querySelector('.plyr__progress')?.classList.add('swiper-no-swiping');
-      });
-    } else {
-      loadPhotoToBase64(this.photo.urls.view[PHOTO_SIZES.LARGE]).then(data => {
-        this.large = data;
-        this.loading = false;
-      }).catch(() => {
-        this.error = true;
-        this.loading = false;
       });
     }
   },
@@ -107,7 +100,29 @@ export default {
       this.player.destroy();
     }
   },
+  methods: {
+    onImgLoad() {
+      this.loading = false;
+    },
+    onImgLoadError() {
+      this.error = true;
+      this.loading = false;
+    },
+    onVideoLoadError() {
+      this.error = true;
+      this.loading = false;
+    },
+
+    imgRef(el) {
+      if (el?.complete) {
+        this.loading = false;
+      }
+    },
+
+    retryLoad() {
+      this.error = false;
+      this.loading = true;
+    },
+  }
 }
 </script>
-<style scoped>
-</style>
