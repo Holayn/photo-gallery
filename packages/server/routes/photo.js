@@ -4,6 +4,7 @@ const fs = require('fs');
 
 const SourceService = require('../services/source');
 const AuthController = require('../controllers/auth');
+const logger = require('../services/logger');
 const { asyncHandler, requiredParams } = require('../util/route-utils');
 
 const router = express.Router();
@@ -56,37 +57,72 @@ router.get(
 function streamFile(req, res, filePath) {
   const fileType = path.extname(filePath);
 
-  if (fileType === '.mp4') {
-    const stat = fs.statSync(filePath);
-    const fileSize = stat.size;
-    const range = req.headers.range;
+  try {
+    if (fileType === '.mp4') {
+      const stat = fs.statSync(filePath);
+      const fileSize = stat.size;
+      const range = req.headers.range;
 
-    if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
 
-      const chunksize = (end - start) + 1;
-      const file = fs.createReadStream(filePath, { start, end });
-      const head = {
-        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': chunksize,
-        'Content-Type': 'video/mp4',
-      };
+        const chunksize = (end - start) + 1;
+        const file = fs.createReadStream(filePath, { start, end });
+        
+        file.on('error', (e) => {
+          logger.error(`Error streaming file: ${filePath}`, e);
+          if (!res.headersSent) {
+            res.sendStatus(500);
+          } else {
+            res.end();
+          }
+        });
 
-      res.writeHead(206, head);
-      file.pipe(res);
+        const head = {
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunksize,
+          'Content-Type': 'video/mp4',
+        };
+
+        res.writeHead(206, head);
+        file.pipe(res);
+      } else {
+        const head = {
+          'Content-Length': fileSize,
+          'Content-Type': 'video/mp4',
+        };
+        res.writeHead(200, head);
+        const file = fs.createReadStream(filePath);
+        file.on('error', (e) => {
+          logger.error(`Error streaming file: ${filePath}`, e);
+          if (!res.headersSent) {
+            res.sendStatus(500);
+          } else {
+            res.end();
+          }
+        });
+        file.pipe(res);
+      }
     } else {
-      const head = {
-        'Content-Length': fileSize,
-        'Content-Type': 'video/mp4',
-      };
-      res.writeHead(200, head);
-      fs.createReadStream(filePath).pipe(res);
+      const file = fs.createReadStream(filePath);
+      file.on('error', (e) => {
+        logger.error(`Error streaming file: ${filePath}`, e);
+        if (!res.headersSent) {
+          res.sendStatus(500);
+        } else {
+          res.end();
+        }
+      });
+      file.pipe(res);
     }
-  } else {
-    fs.createReadStream(filePath).pipe(res);
+  } catch (e) {
+    logger.error(`Error accessing file: ${filePath}`, e);
+    if (!res.headersSent) {
+      res.sendStatus(500);
+    }
   }
 }
 
