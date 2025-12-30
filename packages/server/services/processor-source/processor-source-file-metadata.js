@@ -21,7 +21,7 @@ class ProcessorSourceFileMetadata {
 function getLocation(exif) {
   const altitudeVal = exif.EXIF?.GPSAltitude;
   if (altitudeVal) {
-    const [altNum, altUnit] = altitudeVal.split(' ');
+    const [altNum, altUnit] = typeof altitudeVal === 'string' ? altitudeVal.split(' ') : [altitudeVal, 'm'];
     const latRef = exif.EXIF?.GPSLatitudeRef;
     const longRef = exif.EXIF?.GPSLongitudeRef;
     const latVal = exif.EXIF?.GPSLatitude;
@@ -68,7 +68,10 @@ function getDimensions(exif) {
   if (
     exif.EXIF?.Orientation === 'Rotate 90 CW' ||
     exif.EXIF?.Orientation === 'Rotate 270 CW' ||
-    exif.Composite?.Rotation === 90
+    exif.Composite?.Rotation === 90 ||
+    exif.Composite?.Rotation === 270 ||
+    exif.Composite?.Rotation === 'Rotate 90 CW' ||
+    exif.Composite?.Rotation === 'Rotate 270 CW'
   ) {
     return {
       width: dimensions.height,
@@ -82,15 +85,22 @@ function getDimensions(exif) {
 // Can come as: 0:01:11 or 1.63 s
 function normalizeDuration(duration) {
   if (duration) {
-    if (duration.includes('s')) {
-      const numericPart = duration.replace(/\s+/g, '');
-      const seconds = parseFloat(numericPart);
+    if (typeof duration === 'string') {
+      if (duration.includes('s')) {
+        const numericPart = duration.replace(/\s+/g, '');
+        const seconds = parseFloat(numericPart);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toFixed(0).padStart(2, '0')}`;
+      }
+      if (duration.includes(':')) {
+        return duration;
+      }
+    } else {
+      const seconds = parseFloat(duration);
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = seconds % 60;
       return `${minutes}:${remainingSeconds.toFixed(0).padStart(2, '0')}`;
-    }
-    if (duration.includes(':')) {
-      return duration;
     }
   }
 
