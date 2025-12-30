@@ -200,6 +200,8 @@ import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
 import Modal from '../components/Modal.vue';
 
+const imgEls = {};
+
 export default {
   name: 'Gallery',
   components: {
@@ -283,6 +285,9 @@ export default {
     renderPhotos() {
       return this.photos.slice(this.renderPhotosStart, this.renderPhotosEnd);
     },
+    renderPhotosIds() {
+      return new Set(this.renderPhotos.map(photo => photo.id));
+    },
     hasNewPhotos() {
       if (!getLastViewed(this.id)) {
         return false;
@@ -318,10 +323,16 @@ export default {
       localStorage.setItem(`sort-${this.id}`, this.sort);
     },
     renderPhotos() {
-      const renderedPhotoIds = new Set(this.renderPhotos.map(photo => photo.id));
       Object.keys(this.loadedImages).forEach(photoId => {
-        if (!renderedPhotoIds.has(photoId)) {
+        if (!this.renderPhotosIds.has(photoId)) {
           delete this.loadedImages[photoId];
+        }
+      });
+      Object.keys(imgEls).forEach(photoId => {
+        if (!this.renderPhotosIds.has(photoId)) {
+          imgEls[photoId].src = '';
+          delete imgEls[photoId];
+          delete this.loadedImageErrors[photoId];
         }
       });
     },
@@ -330,7 +341,8 @@ export default {
     // Ensure the page isn't loaded with this query parameter set.
     this.removeLightboxParam(true);
 
-    this._updateRenderPhotosDebounce = debounce(() => this.updateRenderPhotos(), 50);
+    this._updateRenderPhotosDebounce = debounce(() => this.updateRenderPhotos(false));
+    this._updateRenderPhotosUpdateLayoutDebounce = debounce(() => this.updateRenderPhotos(), 50);
 
     this.updateLastViewed();
 
@@ -340,7 +352,7 @@ export default {
   },
   async mounted() {
     this.$refs.gallery.addEventListener('scroll', this._updateRenderPhotosDebounce);
-    window.addEventListener('resize', this._updateRenderPhotosDebounce);
+    window.addEventListener('resize', this._updateRenderPhotosUpdateLayoutDebounce);
     this.keydown = (e => {
       this.isShiftPressed = e.key === 'Shift';
     }).bind(this);
@@ -353,7 +365,7 @@ export default {
     window.addEventListener('keyup', this.keyup);
   },
   beforeUnmount() {
-    window.removeEventListener('resize', this._updateRenderPhotosDebounce);
+    window.removeEventListener('resize', this._updateRenderPhotosUpdateLayoutDebounce);
     window.removeEventListener('keydown', this.keydown);
     window.removeEventListener('keyup', this.keyup);
   },
@@ -375,8 +387,11 @@ export default {
         }
       });
     },
-    async updateRenderPhotos() {
-      this.updateLayout();
+    async updateRenderPhotos(updateLayout = true) {
+      if (updateLayout) {
+        this.updateLayout();
+      }
+      
       let start = null;
       let end = null;
       for (let i = 0; i < this.layout.boxes.length; i++) {
@@ -398,9 +413,11 @@ export default {
       this.renderPhotosStart = start;
       this.renderPhotosEnd = end;
 
-      // Scrollbar may show now, so re-update layout to accommodate for that.
-      await this.$nextTick();
-      this.updateLayout();
+      if (updateLayout) {
+        // Scrollbar may show now, so re-update layout to accommodate for that.
+        await this.$nextTick();
+        this.updateLayout();
+      }
     },
     
     getPhotoUrl(photo) {
@@ -412,7 +429,9 @@ export default {
       delete this.loadedImageErrors[photo.id];
     },
     imgError(photo) {
-      this.loadedImageErrors[photo.id] = true;
+      if (this.renderPhotosIds.has(photo.id)) {
+        this.loadedImageErrors[photo.id] = true;
+      }
     },
     retryLoadImg(photo) {
       delete this.loadedImageErrors[photo.id];
@@ -438,6 +457,9 @@ export default {
     imgRender(el) {
       if (el && el.complete && !this.loadedImages[el.dataset.photoId] && !this.loadedImageErrors[el.dataset.photoId]) {
         this.imgLoad(this.photosMap[el.dataset.photoId]);
+      }
+      if (el) {
+        imgEls[el.dataset.photoId] = el;
       }
     },
     getGalleryImageRefForLightboxPhoto() {
