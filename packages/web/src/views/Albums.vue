@@ -9,10 +9,13 @@
             <div class="md:w-64 md:h-64">
               <div v-if="albumCovers[album.id]" class="grid grid-cols-2 grid-rows-2 gap-1 h-full">
                 <div v-for="photo in albumCovers[album.id]" :key="photo" class="relative">
-                  <div v-if="!loadedImages[photo]" class="flex justify-center items-center w-full h-full py-4">
+                  <div v-if="errorImages[photo]" class="flex justify-center items-center w-full h-full py-4">
+                    <div>:(</div>
+                  </div>
+                  <div v-else-if="!loadedImages[photo]" class="flex justify-center items-center w-full h-full py-4">
                     <Loading class="w-8 h-8"></Loading>
                   </div>
-                  <img class="rounded-sm w-full h-full" :class="{ 'hidden': !loadedImages[photo] }" :src="photo" @load="imgLoad(photo)">
+                  <img class="rounded-sm w-full h-full" :class="{ 'hidden': !loadedImages[photo] }" :src="photo" @load="imgLoad(photo)" @error="imgError(photo)">
                 </div>
               </div>
               <div v-else class="flex h-full items-center justify-center">
@@ -43,6 +46,7 @@ export default {
       albumCovers: {},
       loading: true,
       loadedImages: {},
+      errorImages: {},
     };
   },
   async mounted() {
@@ -60,6 +64,9 @@ export default {
     },
     imgLoad(photo) {
       this.loadedImages[photo] = true;
+    },
+    imgError(photo) {
+      this.errorImages[photo] = true;
     },
   },
 }
