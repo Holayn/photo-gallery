@@ -92,6 +92,7 @@
         :ref="setGalleryImageRef"
         :key="photo.id" 
         :data-photo-id="photo.id"
+        :data-photo="getPhotoUrl(photo)"
         style="position: absolute;" 
         :style="{ 
           top: layout.boxes[i + renderPhotosStart].top + 'px', 
