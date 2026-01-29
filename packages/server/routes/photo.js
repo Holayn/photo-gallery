@@ -64,7 +64,7 @@ function sendFile(filePath, req, res) {
   if (process.env.ENV !== 'development' && !process.env.DISABLE_NGINX_REDIRECT) {
     if (filePath.startsWith(process.env.FILES_PATH)) {
       filePath = filePath.substring(`${process.env.FILES_PATH}/`.length);
-      logger.info(`X-Accel-Redirect: /files/${filePath}`);
+      logger.info(`X-Accel-Redirect: /files/${filePath} (${req.url})`);
       res.setHeader('X-Accel-Redirect', `/files/${filePath}`);
       res.end();
     } else {
