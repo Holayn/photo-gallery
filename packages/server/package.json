@@ -22,6 +22,7 @@
     "fs-extra": "^10.1.0",
     "helmet": "^4.5.0",
     "morgan": "^1.10.0",
+    "send": "^1.2.1",
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^4.7.1",
     "yargs": "^17.5.1"

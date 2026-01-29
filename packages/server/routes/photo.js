@@ -1,11 +1,17 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
+const send = require('send');
 
 const SourceService = require('../services/source');
 const AuthController = require('../controllers/auth');
 const logger = require('../services/logger');
 const { asyncHandler, requiredParams } = require('../util/route-utils');
+
+require('dotenv').config();
+
+if (process.env.ENV !== 'development' && !process.env.FILES_PATH) {
+  throw new Error('FILES_PATH needs to be configured in the .env file.');
+}
 
 const router = express.Router();
 
@@ -26,7 +32,7 @@ router.get(
       const { path, fileType } = fileData;
       res.contentType(fileType);
       res.setHeader('Cache-Control', 'public, max-age=86400');
-      streamFile(req, res, path);
+      sendFile(path, req, res);
     } else {
       res.sendStatus(404);
     }
@@ -47,82 +53,32 @@ router.get(
         'Content-Disposition',
         `attachment; filename=${path.basename(p)}`
       );
-      streamFile(req, res, p);
+      sendFile(p, req, res);
     } else {
       res.sendStatus(404);
     }
   })
 );
 
-function streamFile(req, res, filePath) {
-  const fileType = path.extname(filePath);
-
-  try {
-    if (fileType === '.mp4') {
-      const stat = fs.statSync(filePath);
-      const fileSize = stat.size;
-      const range = req.headers.range;
-
-      if (range) {
-        const parts = range.replace(/bytes=/, "").split("-");
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-
-        const chunksize = (end - start) + 1;
-        const file = fs.createReadStream(filePath, { start, end });
-        
-        file.on('error', (e) => {
-          logger.error(`Error streaming file: ${filePath}`, e);
-          if (!res.headersSent) {
-            res.sendStatus(500);
-          } else {
-            res.end();
-          }
-        });
-
-        const head = {
-          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunksize,
-          'Content-Type': 'video/mp4',
-        };
-
-        res.writeHead(206, head);
-        file.pipe(res);
-      } else {
-        const head = {
-          'Content-Length': fileSize,
-          'Content-Type': 'video/mp4',
-        };
-        res.writeHead(200, head);
-        const file = fs.createReadStream(filePath);
-        file.on('error', (e) => {
-          logger.error(`Error streaming file: ${filePath}`, e);
-          if (!res.headersSent) {
-            res.sendStatus(500);
-          } else {
-            res.end();
-          }
-        });
-        file.pipe(res);
-      }
+function sendFile(filePath, req, res) {
+  if (process.env.ENV !== 'development' && !process.env.DISABLE_NGINX_REDIRECT) {
+    if (filePath.startsWith(process.env.FILES_PATH)) {
+      filePath = filePath.substring(`${process.env.FILES_PATH}/`.length);
+      logger.info(`X-Accel-Redirect: /files/${filePath}`);
+      res.setHeader('X-Accel-Redirect', `/files/${filePath}`);
+      res.end();
     } else {
-      const file = fs.createReadStream(filePath);
-      file.on('error', (e) => {
-        logger.error(`Error streaming file: ${filePath}`, e);
+      throw new Error(`File path (${filePath}) is not under FILES_PATH (${process.env.FILES_PATH}).`);
+    }
+  } else {
+    send(req, filePath)
+      .on('error', (error) => {
+        logger.error(`Error streaming file: ${filePath}`, error);
         if (!res.headersSent) {
-          res.sendStatus(500);
-        } else {
-          res.end();
+          res.status(500).json({ error: 'Error streaming file' });
         }
-      });
-      file.pipe(res);
-    }
-  } catch (e) {
-    logger.error(`Error accessing file: ${filePath}`, e);
-    if (!res.headersSent) {
-      res.sendStatus(500);
-    }
+      })
+      .pipe(res);
   }
 }
 
