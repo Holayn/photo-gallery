@@ -121,6 +121,7 @@
               width: layout.boxes[i + renderPhotosStart].width + 'px', 
               height: layout.boxes[i + renderPhotosStart].height + 'px',
               opacity: loadedImages[photo.id] ? 1 : 0,
+              objectFit: 'cover',
             }"
             style="transition: opacity 500ms linear;"
             @load="imgLoad(photo)"

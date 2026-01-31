@@ -15,7 +15,7 @@
                   <div v-else-if="!loadedImages[photo]" class="flex justify-center items-center w-full h-full py-4">
                     <Loading class="w-8 h-8"></Loading>
                   </div>
-                  <img class="rounded-sm w-full h-full" :class="{ 'hidden': !loadedImages[photo] }" :src="photo" @load="imgLoad(photo)" @error="imgError(photo)">
+                  <img class="rounded-sm w-full object-cover" :class="{ 'hidden': !loadedImages[photo] }" :src="photo" style="aspect-ratio: 1/1;" @load="imgLoad(photo)" @error="imgError(photo)">
                 </div>
               </div>
               <div v-else class="flex h-full items-center justify-center">
