@@ -6,7 +6,7 @@
       <div v-else class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
         <div v-for="album in albums" :key="album.id" class="w-full md:w-auto">
           <button class="p-1 bg-slate-100 rounded-md w-full" @click="openAlbum(album)">
-            <div class="md:w-64 md:h-64">
+            <div class="md:w-60 md:h-60">
               <div v-if="albumCovers[album.id]" class="grid grid-cols-2 grid-rows-2 gap-1 h-full">
                 <div v-for="photo in albumCovers[album.id]" :key="photo" class="relative">
                   <div v-if="errorImages[photo]" class="flex justify-center items-center w-full h-full py-4">

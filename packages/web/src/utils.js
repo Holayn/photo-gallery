@@ -1,24 +1,30 @@
 import { PHOTO_SIZES } from './services/api';
-import fetcher from './services/fetcher';
-
-export function getMobileGalleryImageHeight() {
-  return window.innerWidth / 5 - 5;
-}
-
-export const getGalleryImageHeight = () => {
-  return isMobileScreen() ? getMobileGalleryImageHeight() : Math.min(200, window.innerWidth / 5);
-}
 
 export function setDocumentTitle(title) {
   document.title = `${title}`;
 }
 
-export function isMobileScreen() {
+export function getSmallTileModeImageHeight() {
+  return (window.innerWidth / 5) - 10;
+}
+
+export const getGalleryImageHeight = () => {
+  return isSmallTileMode() ? getSmallTileModeImageHeight() : Math.min(200, window.innerWidth / 5)
+}
+
+export function isSmallScreen() {
   return window.innerWidth < 500;
 }
 
-export function getFetchedGalleryPhotoSize() {
-  return isMobileScreen() ? PHOTO_SIZES.THUMB : PHOTO_SIZES.SMALL;
+export function isSmallTileMode() {
+  return isSmallScreen();
+}
+
+export function getGalleryPhotoSize() {
+  if (isSmallTileMode()) {
+    return PHOTO_SIZES.THUMB;
+  }
+  return PHOTO_SIZES.SMALL;
 }
 
 export function debounce(func, delay, { leading } = {}) {

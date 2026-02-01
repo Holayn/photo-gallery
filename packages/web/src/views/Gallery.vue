@@ -196,7 +196,7 @@ import justifiedLayout from 'justified-layout';
 import dayjs from 'dayjs';
 
 import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum } from '../services/api';
-import { debounce, getGalleryImageHeight, getMobileGalleryImageHeight, isMobileScreen, getFetchedGalleryPhotoSize, isElementFullyInView } from '../utils';
+import { debounce, getGalleryImageHeight, getSmallTileModeImageHeight, isSmallTileMode, getGalleryPhotoSize, isElementFullyInView } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
@@ -377,8 +377,8 @@ export default {
   methods: {
     updateLayout() {
       this.layout = justifiedLayout([...this.photos.map(p => ({
-        width: isMobileScreen() ? getMobileGalleryImageHeight() : p.metadata.width,
-        height: isMobileScreen() ? getMobileGalleryImageHeight() : p.metadata.height,
+        width: isSmallTileMode() ? getSmallTileModeImageHeight() : p.metadata.width,
+        height: isSmallTileMode() ? getSmallTileModeImageHeight() : p.metadata.height,
       }))], {
         containerPadding: 0,
         containerWidth: this.$refs.photos?.getBoundingClientRect().width,
@@ -423,7 +423,7 @@ export default {
     },
     
     getPhotoUrl(photo) {
-      return photo.urls.view[getFetchedGalleryPhotoSize()];
+      return photo.urls.view[getGalleryPhotoSize()];
     },
 
     imgLoad(photo) {
