@@ -3,6 +3,7 @@
     <h1 class="text-5xl">Albums</h1>
     <div class="mt-4">
       <Loading v-if="loading" class="w-16 h-16"></Loading>
+      <div v-else-if="error" class="text-red-500">Failed to load albums</div>
       <div v-else class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
         <div v-for="album in albums" :key="album.id" class="w-full md:w-auto">
           <button class="p-1 bg-slate-100 rounded-md w-full" @click="openAlbum(album)">
@@ -17,6 +18,9 @@
                   </div>
                   <img class="rounded-sm w-full object-cover" :class="{ 'hidden': !loadedImages[photo] }" :src="photo" style="aspect-ratio: 1/1;" @load="imgLoad(photo)" @error="imgError(photo)">
                 </div>
+              </div>
+              <div v-else-if="errorAlbums[album.id]" class="flex h-full items-center justify-center">
+                <div class="text-red-500">Failed to load cover</div>
               </div>
               <div v-else class="flex h-full items-center justify-center">
                 <Loading class="w-8 h-8 my-4"></Loading>
@@ -46,17 +50,28 @@ export default {
       albumCovers: {},
       loading: true,
       loadedImages: {},
+      error: false,
       errorImages: {},
+      errorAlbums: {},
     };
   },
   async mounted() {
-    this.albums = await getAlbums();
-    this.loading = false;
-
-    await Promise.all(this.albums.map(async (album) => {
-      const { photos } = await getAlbumCover(album.id);
-      this.albumCovers[album.id] = photos.map(photo => photo.urls.view[PHOTO_SIZES.THUMB]);
-    }));
+    try {
+      this.albums = await getAlbums();
+      
+      await Promise.all(this.albums.map(async (album) => {
+        try {
+          const { photos } = await getAlbumCover(album.id);
+          this.albumCovers[album.id] = photos.map(photo => photo.urls.view[PHOTO_SIZES.THUMB]);
+        } catch (e) {
+          this.errorAlbums[album.id] = true;
+        }
+      }));
+    } catch (e) {
+      this.error = true;
+    } finally {
+      this.loading = false;
+    }
   },
   methods: {
     openAlbum(album) {
