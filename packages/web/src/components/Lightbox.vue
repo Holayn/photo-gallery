@@ -137,6 +137,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/zoom';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
@@ -147,6 +149,8 @@ import { PHOTO_SIZES } from '../services/api';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export default {
   name: 'Lightbox',
@@ -191,7 +195,19 @@ export default {
     currentPhotoMetadata() {
       const { fileName, fileSize, width, height, location, device } = this.currentPhoto.metadata;
       const date = this.currentPhoto.date;
-      const parsedDate = dayjs(date);
+      let parsedDate = dayjs(date);
+
+      if (this.currentPhoto.metadata.timezone) {
+        if (this.currentPhoto.metadata.timezone === 'UTC') {
+          parsedDate = parsedDate.utc();
+        } else {
+          const offsetValue = parseInt(this.currentPhoto.metadata.timezone.replace('UTC', ''), 10);
+          if (offsetValue) {
+            parsedDate = parsedDate.utc().utcOffset(offsetValue);
+          }
+        }
+      }
+
       return {
         date: {
           date: parsedDate.format('LL'),

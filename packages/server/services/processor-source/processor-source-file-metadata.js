@@ -4,36 +4,46 @@ dayjs.extend(require('dayjs/plugin/customParseFormat'));
 const MIME_VIDEO_REGEX = /^video\/.*$/;
 
 class ProcessorSourceFileMetadata {
-  constructor(exif) {
-    this.video = isVideo(exif);
-    const size = getDimensions(exif);
+  constructor(metadata) {
+    this.video = isVideo(metadata);
+    const size = getDimensions(metadata);
     this.width = size.width;
     this.height = size.height;
-    this.appleLivePhoto = !!exif.QuickTime?.LivePhotoAuto;
-    this.fileSize = exif.File?.FileSize;
-    this.fileName = exif.File?.FileName;
-    this.location = getLocation(exif);
-    this.device = getDevice(exif);
-    this.duration = normalizeDuration(exif.QuickTime?.Duration);
+    this.appleLivePhoto = !!metadata.QuickTime?.LivePhotoAuto;
+    this.fileSize = metadata.File?.FileSize;
+    this.fileName = metadata.File?.FileName;
+    this.location = getLocation(metadata);
+    this.device = getDevice(metadata);
+    this.duration = normalizeDuration(metadata.QuickTime?.Duration);
+    this.timezone = metadata.WebImg?.Date?.timezone;
   }
 }
 
-function getLocation(exif) {
-  const altitudeVal = exif.EXIF?.GPSAltitude;
+function getLocation(metadata) {
+  const altitudeVal = metadata.EXIF?.GPSAltitude;
   if (altitudeVal) {
-    const [altNum, altUnit] = typeof altitudeVal === 'string' ? altitudeVal.split(' ') : [altitudeVal, 'm'];
-    const latRef = exif.EXIF?.GPSLatitudeRef;
-    const longRef = exif.EXIF?.GPSLongitudeRef;
-    const latVal = exif.EXIF?.GPSLatitude;
-    const longVal = exif.EXIF?.GPSLongitude;
-    const lat = latRef === 'North' ? latVal : -1 * latVal;
-    const long = longRef === 'East' ? latVal : -1 * longVal;
+    let altNum, altUnit, lat, long;
+    const latRef = metadata.EXIF?.GPSLatitudeRef;
+    const longRef = metadata.EXIF?.GPSLongitudeRef;
+    const latVal = metadata.EXIF?.GPSLatitude;
+    const longVal = metadata.EXIF?.GPSLongitude;
+
+    if (typeof altitudeVal === 'string') {
+      [altNum, altUnit] = altitudeVal.split(' ');
+      lat = (latRef === 'North') ? latVal : -1 * latVal;
+      long = (longRef === 'East') ? longVal : -1 * longVal;
+    } else {
+      altNum = altitudeVal;
+      altUnit = 'm';
+      lat = latVal;
+      long = longVal;
+    }
 
     return {
       lat,
       long,
       altitude: `${Math.round(altNum)}${altUnit} ${
-        exif.EXIF?.GPSAltitudeRef || ''
+        metadata.EXIF?.GPSAltitudeRef || ''
       }`,
     };
   }
@@ -42,23 +52,23 @@ function getLocation(exif) {
   };
 }
 
-function getDevice(exif) {
-  return exif.EXIF?.HostComputer || exif.EXIF?.Model;
+function getDevice(metadata) {
+  return metadata.EXIF?.HostComputer || metadata.EXIF?.Model;
 }
 
-function isVideo(exif) {
-  return MIME_VIDEO_REGEX.test(exif.File?.MIMEType);
+function isVideo(metadata) {
+  return MIME_VIDEO_REGEX.test(metadata.File?.MIMEType);
 }
 
-function getDimensions(exif) {
-  // Use the Composite field to avoid having to check all possible tag groups (EXIF, QuickTime, ASF...)
-  if (!exif.Composite || !exif.Composite.ImageSize) {
+function getDimensions(metadata) {
+  // Use the Composite field to avoid having to check all possible tag groups (metadata, QuickTime, ASF...)
+  if (!metadata.Composite || !metadata.Composite.ImageSize) {
     return {
       width: null,
       height: null,
     };
   }
-  const size = exif.Composite.ImageSize;
+  const size = metadata.Composite.ImageSize;
   const x = size.indexOf('x');
   const dimensions = {
     width: parseInt(size.substr(0, x), 10),
@@ -66,12 +76,12 @@ function getDimensions(exif) {
   };
 
   if (
-    exif.EXIF?.Orientation === 'Rotate 90 CW' ||
-    exif.EXIF?.Orientation === 'Rotate 270 CW' ||
-    exif.Composite?.Rotation === 90 ||
-    exif.Composite?.Rotation === 270 ||
-    exif.Composite?.Rotation === 'Rotate 90 CW' ||
-    exif.Composite?.Rotation === 'Rotate 270 CW'
+    metadata.EXIF?.Orientation === 'Rotate 90 CW' ||
+    metadata.EXIF?.Orientation === 'Rotate 270 CW' ||
+    metadata.Composite?.Rotation === 90 ||
+    metadata.Composite?.Rotation === 270 ||
+    metadata.Composite?.Rotation === 'Rotate 90 CW' ||
+    metadata.Composite?.Rotation === 'Rotate 270 CW'
   ) {
     return {
       width: dimensions.height,
