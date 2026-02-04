@@ -4,7 +4,18 @@
       <div class="flex-auto break-all">
         <slot name="heading"></slot>
       </div>
-      <div>
+      <div class="flex items-center">
+        <sl-tooltip
+          v-if="unknownDateCount"
+          :content="`${unknownDateCount} items with unknown date`"
+          placement="bottom"
+          trigger="click"
+          hoist
+        >
+          <button class="mr-2 px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-xs font-medium transition-colors">
+            {{ unknownDateCount }}
+          </button>
+        </sl-tooltip>
         <sl-dropdown>
           <sl-icon-button slot="trigger" class="text-xl" name="arrow-down-up"></sl-icon-button>
           <sl-menu @sl-select="onSortSelect">
@@ -301,6 +312,9 @@ export default {
     },
     canSortByDateAdded() {
       return this.photos.some(photo => photo.createdAt);
+    },
+    unknownDateCount() {
+      return this.photos.filter(photo => !photo.date).length;
     },
   },
   watch: {
@@ -642,7 +656,7 @@ export default {
     },
 
     formatPhotoDate(date) {
-      return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
+      return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : 'Unknown Date';
     },
 
     viewNewPhotos() {

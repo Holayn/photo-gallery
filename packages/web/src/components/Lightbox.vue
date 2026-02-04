@@ -2,7 +2,7 @@
   <dialog ref="dialog">
     <div class="lightbox">
       <div class="lightbox_menu p-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
-        <div class="flex">
+        <div class="flex h-9">
           <button @click.stop="showMetadata = !showMetadata">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
           </button>
@@ -10,13 +10,16 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"/></svg>
           </button>
         </div>
-        <div>
-          <div class="text-white text-center">
-            <div class="text-sm">{{ currentPhotoMetadata.date?.day }} {{ currentPhotoMetadata.date?.date }}</div>
-            <div class="text-xs">{{ currentPhotoMetadata.date?.time }}</div>
+        <div class="h-9 flex items-center">
+          <div v-if="currentPhoto.date" class="text-white text-center">
+            <div class="text-sm">{{ currentPhotoMetadata.date.day }} {{ currentPhotoMetadata.date.date }}</div>
+            <div class="text-xs">{{ currentPhotoMetadata.date.time }}</div>
+          </div>
+          <div v-else>
+            <div class="text-sm text-white text-center">Unknown Date</div>
           </div>
         </div>
-        <div class="flex justify-end">
+        <div class="flex justify-end h-9">
           <template v-if="$store.state.isLoggedIn">
             <button v-if="isSelectionMode" class="mr-4" @click="select()">
               <svg v-if="isCurrentPhotoSelected" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
