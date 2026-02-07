@@ -68,6 +68,7 @@ app.use(
         '\'self\'',
         'data:',
         'https://cdn.jsdelivr.net',
+        'https://cdn.plyr.io',
       ],
       upgradeInsecureRequests: null,
     },
