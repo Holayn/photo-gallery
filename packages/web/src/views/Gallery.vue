@@ -38,7 +38,10 @@
           <sl-icon-button slot="trigger" class="text-xl" name="three-dots-vertical"></sl-icon-button>
           <sl-menu @sl-select="onOptionsSelect">
             <sl-menu-item value="viewDates" type="checkbox">
-              Show Dates
+              Show dates
+            </sl-menu-item>
+            <sl-menu-item value="viewUnknownDateItems" type="checkbox">
+              Show photos with unknown dates
             </sl-menu-item>
           </sl-menu>
         </sl-dropdown>
@@ -278,8 +281,13 @@ export default {
       if (this.isViewModeNewOnly) {
         return this.$store.state.photos.filter(photo => this.isPhotoNew(photo));
       }
+      if (this.isViewModeShowUnknownDateItems) {
+        return this.$store.state.photos.filter(photo => !photo.date);
+      }
 
-      return this.$store.state.photos.sort((a, b) => {
+      return this.$store.state.photos
+      .filter(photo => photo.date)
+      .sort((a, b) => {
         if (this.sort === 'dateDesc') {
           return b.date - a.date;
         } else if (this.sort === 'dateAsc') {
@@ -310,11 +318,14 @@ export default {
     isViewModeNewOnly() {
       return this.viewMode === 'newOnly';
     },
+    isViewModeShowUnknownDateItems() {
+      return this.viewMode === 'showUnknownDateItems';
+    },
     canSortByDateAdded() {
       return this.photos.some(photo => photo.createdAt);
     },
     unknownDateCount() {
-      return this.photos.filter(photo => !photo.date).length;
+      return this.$store.state.photos.filter(photo => !photo.date).length;
     },
   },
   watch: {
@@ -684,6 +695,10 @@ export default {
       const item = e.detail.item;
       if (item.value === 'viewDates') {
         this.showDates = item.checked;
+        this.updateRenderPhotos();
+      }
+      if (item.value === 'viewUnknownDateItems') {
+        this.viewMode = item.checked ? 'showUnknownDateItems' : null;
         this.updateRenderPhotos();
       }
     }
