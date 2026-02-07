@@ -38,7 +38,8 @@ class ProcessorSource {
       if (!connections[sourcePath]) {
         logger.info(`Opening photo-web-processor source: ${sourcePath}`);
         const sourceIndexDb = new Database(
-          path.join(sourcePath, SOURCE_INDEX_DB_FILENAME)
+          path.join(sourcePath, SOURCE_INDEX_DB_FILENAME),
+          { readonly: true }
         );
         this.db = sourceIndexDb;
         connections[sourcePath] = sourceIndexDb;
