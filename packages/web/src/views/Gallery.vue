@@ -107,6 +107,7 @@
         :key="photo.id" 
         :data-photo-id="photo.id"
         :data-photo="getPhotoUrl(photo)"
+        :data-photo-name="photo.metadata.fileName"
         style="position: absolute;" 
         :style="{ 
           top: layout.boxes[i + renderPhotosStart].top + 'px', 
