@@ -64,6 +64,11 @@ app.use(
         'https://cdnjs.cloudflare.com',
         'https://cdn.jsdelivr.net',
       ],
+      connectSrc: [
+        '\'self\'',
+        'data:',
+        'https://cdn.jsdelivr.net',
+      ],
       upgradeInsecureRequests: null,
     },
   })
