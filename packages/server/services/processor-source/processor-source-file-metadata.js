@@ -76,12 +76,9 @@ function getDimensions(metadata) {
   };
 
   if (
-    metadata.EXIF?.Orientation === 'Rotate 90 CW' ||
-    metadata.EXIF?.Orientation === 'Rotate 270 CW' ||
+    metadata.EXIF?.Orientation > 4 ||
     metadata.Composite?.Rotation === 90 ||
-    metadata.Composite?.Rotation === 270 ||
-    metadata.Composite?.Rotation === 'Rotate 90 CW' ||
-    metadata.Composite?.Rotation === 'Rotate 270 CW'
+    metadata.Composite?.Rotation === 270
   ) {
     return {
       width: dimensions.height,
