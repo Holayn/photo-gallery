@@ -43,6 +43,14 @@
             <sl-menu-item value="viewUnknownDateItems" type="checkbox">
               Show photos with unknown dates
             </sl-menu-item>
+            <sl-menu-item>
+              Gallery Layout
+              <sl-menu slot="submenu" @sl-select="onGalleryLayoutSelect">
+                <sl-menu-item :value="GALLERY_LAYOUTS.AUTO" type="checkbox" :checked="galleryLayout === GALLERY_LAYOUTS.AUTO">Auto</sl-menu-item>
+                <sl-menu-item :value="GALLERY_LAYOUTS.JUSTIFIED" type="checkbox" :checked="galleryLayout === GALLERY_LAYOUTS.JUSTIFIED">Justified</sl-menu-item>
+                <sl-menu-item :value="GALLERY_LAYOUTS.TILE" type="checkbox" :checked="galleryLayout === GALLERY_LAYOUTS.TILE">Tile</sl-menu-item>
+              </sl-menu>
+            </sl-menu-item>
           </sl-menu>
         </sl-dropdown>
       </div>
@@ -183,6 +191,7 @@
       :index="lightboxIndex" 
       :is-selection-mode="isSelectionMode" 
       :selected="selected" 
+      :preview-size="getGalleryPhotoSize(galleryLayout)"
       @close="closeLightbox()" 
       @enable-selection-mode="toggleSelectionMode(true)" 
       @select="photo => select(photo)"
@@ -209,12 +218,43 @@
 import justifiedLayout from 'justified-layout';
 import dayjs from 'dayjs';
 
-import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum } from '../services/api';
-import { debounce, getGalleryImageHeight, getSmallTileModeImageHeight, isSmallTileMode, getGalleryPhotoSize, isElementFullyInView } from '../utils';
+import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum, PHOTO_SIZES } from '../services/api';
+import { debounce, isElementFullyInView } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
 import Modal from '../components/Modal.vue';
+
+const GALLERY_LAYOUTS = {
+  AUTO: 'auto',
+  JUSTIFIED: 'justified',
+  TILE: 'tile',
+};
+
+const SMALL_SCREEN_THRESHOLD = 500;
+const TILE_MODE_IMAGE_HEIGHT = 90;
+const TILE_MODE_SMALL_SCREEN_NUM_COLUMNS = 5;
+const JUSTIFIED_MODE_IMAGE_HEIGHT = 150;
+const GALLERY_ITEM_GAP = 2;
+
+function isSmallScreen() {
+  return window.innerWidth < SMALL_SCREEN_THRESHOLD;
+}
+
+function isTileMode(galleryLayout) {
+  return galleryLayout === GALLERY_LAYOUTS.TILE || (galleryLayout === GALLERY_LAYOUTS.AUTO && isSmallScreen());
+}
+
+function getTileModeImageHeight() {
+  return Math.min((window.innerWidth / TILE_MODE_SMALL_SCREEN_NUM_COLUMNS) - (GALLERY_ITEM_GAP * 4), TILE_MODE_IMAGE_HEIGHT);
+}
+
+function getGalleryImageHeight(galleryLayout = GALLERY_LAYOUTS.JUSTIFIED) {
+  if (galleryLayout === GALLERY_LAYOUTS.TILE) {
+    return getTileModeImageHeight();
+  }
+  return JUSTIFIED_MODE_IMAGE_HEIGHT;
+}
 
 const imgEls = {};
 
@@ -268,6 +308,9 @@ export default {
       sort: this.defaultSort,
       viewMode: null,
       showDates: false,
+      galleryLayout: GALLERY_LAYOUTS.JUSTIFIED,
+
+      GALLERY_LAYOUTS,
     };
   },
   computed: {
@@ -402,15 +445,15 @@ export default {
   methods: {
     updateLayout() {
       this.layout = justifiedLayout([...this.photos.map(p => ({
-        width: isSmallTileMode() ? getSmallTileModeImageHeight() : p.metadata.width,
-        height: isSmallTileMode() ? getSmallTileModeImageHeight() : p.metadata.height,
+        width: isTileMode(this.galleryLayout) ? getTileModeImageHeight() : p.metadata.width,
+        height: isTileMode(this.galleryLayout) ? getTileModeImageHeight() : p.metadata.height,
       }))], {
         containerPadding: 0,
         containerWidth: this.$refs.photos?.getBoundingClientRect().width,
-        targetRowHeight: getGalleryImageHeight(),
+        targetRowHeight: getGalleryImageHeight(this.galleryLayout),
         boxSpacing: {
-          horizontal: 2,
-          vertical: this.showDates ? 32 : 2,
+          horizontal: GALLERY_ITEM_GAP,
+          vertical: this.showDates ? 32 : GALLERY_ITEM_GAP,
         }
       });
     },
@@ -448,7 +491,7 @@ export default {
     },
     
     getPhotoUrl(photo) {
-      return photo.urls.view[getGalleryPhotoSize()];
+      return photo.urls.view[this.getGalleryPhotoSize(this.galleryLayout)];
     },
 
     imgLoad(photo) {
@@ -701,7 +744,20 @@ export default {
         this.viewMode = item.checked ? 'showUnknownDateItems' : null;
         this.updateRenderPhotos();
       }
-    }
+    },
+    
+    onGalleryLayoutSelect(e) {
+      const item = e.detail.item;
+      this.galleryLayout = item.value;
+      this.updateRenderPhotos();
+    },
+
+    getGalleryPhotoSize(galleryLayout = GALLERY_LAYOUTS.JUSTIFIED) {
+      if (galleryLayout === GALLERY_LAYOUTS.TILE) {
+        return PHOTO_SIZES.THUMB;
+      }
+      return PHOTO_SIZES.SMALL;
+    },
   },
 }
 

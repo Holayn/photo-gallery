@@ -1,30 +1,5 @@
-import { PHOTO_SIZES } from './services/api';
-
 export function setDocumentTitle(title) {
   document.title = `${title}`;
-}
-
-export function getSmallTileModeImageHeight() {
-  return (window.innerWidth / 5) - 10;
-}
-
-export const getGalleryImageHeight = () => {
-  return isSmallTileMode() ? getSmallTileModeImageHeight() : Math.min(150, window.innerWidth / 5)
-}
-
-export function isSmallScreen() {
-  return window.innerWidth < 500;
-}
-
-export function isSmallTileMode() {
-  return isSmallScreen();
-}
-
-export function getGalleryPhotoSize() {
-  if (isSmallTileMode()) {
-    return PHOTO_SIZES.THUMB;
-  }
-  return PHOTO_SIZES.SMALL;
 }
 
 export function debounce(func, delay, { leading } = {}) {

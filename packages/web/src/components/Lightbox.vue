@@ -60,6 +60,7 @@
               :active="i === index"
               :index="i"
               :photo="photo"
+              :preview-size="previewSize"
             ></lightbox-slide>
           </swiper-slide>
         </swiper>
@@ -173,6 +174,10 @@ export default {
     photos: {
       type: Array,
       required: true,
+    },
+    previewSize: {
+      type: String,
+      default: PHOTO_SIZES.SMALL,
     },
   },
   setup() {

@@ -31,7 +31,6 @@
 import Plyr from 'plyr';
 
 import { PHOTO_SIZES } from '../services/api';
-import { getGalleryPhotoSize } from '../utils';
 
 import Loading from './Loading.vue';
 
@@ -47,6 +46,10 @@ export default {
     },
     photo: Object,
     index: Number,
+    previewSize: {
+      type: String,
+      default: PHOTO_SIZES.SMALL,
+    },
   },
   data() {
     return {
@@ -58,7 +61,7 @@ export default {
   },
   computed: {
     preview() {
-      return this.photo.urls.view[getGalleryPhotoSize()];
+      return this.photo.urls.view[this.previewSize];
     },
     photoSrc() {
       return this.photo.urls.view[PHOTO_SIZES.LARGE];
