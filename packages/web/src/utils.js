@@ -9,7 +9,7 @@ export function getSmallTileModeImageHeight() {
 }
 
 export const getGalleryImageHeight = () => {
-  return isSmallTileMode() ? getSmallTileModeImageHeight() : Math.min(200, window.innerWidth / 5)
+  return isSmallTileMode() ? getSmallTileModeImageHeight() : Math.min(150, window.innerWidth / 5)
 }
 
 export function isSmallScreen() {
