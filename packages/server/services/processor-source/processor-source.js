@@ -200,4 +200,24 @@ class ProcessorSource {
   }
 }
 
+function cleanupConnections() {
+  Object.keys(connections).forEach(sourcePath => {
+    const db = connections[sourcePath];
+    if (db && db.close) {
+      db.close();
+    }
+  });
+}
+
+// Register cleanup hook
+process.on('exit', cleanupConnections);
+process.on('SIGINT', () => {
+  cleanupConnections();
+  process.exit(0);
+});
+process.on('SIGTERM', () => {
+  cleanupConnections();
+  process.exit(0);
+});
+
 module.exports = ProcessorSource;
