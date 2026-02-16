@@ -230,3 +230,47 @@ export async function shareAlbum(album) {
 export async function getMemories() {
   return (await fetcher.fetch(`${BASE}/memories`)).data;
 }
+
+// User-Source management
+export async function getUsers() {
+  const res = await fetcher.fetch(`${BASE}/users`);
+  if (res.data) {
+    return res.data;
+  } else if (res.error) {
+    throw new ApiError(res.error.status);
+  }
+}
+
+export async function getSourceUsers(sourceId) {
+  const res = await fetcher.fetch(`${BASE}/source/users?id=${sourceId}`);
+  if (res.data) {
+    return res.data;
+  } else if (res.error) {
+    throw new ApiError(res.error.status);
+  }
+}
+
+export async function addSourceUser(sourceId, userId) {
+  const res = await fetcher.fetch(`${BASE}/source/users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sourceId, userId }),
+  });
+  if (res.error) {
+    throw new ApiError(res.error.status);
+  }
+  return res.data;
+}
+
+export async function removeSourceUser(sourceId, userId) {
+  const res = await fetcher.fetch(`${BASE}/source/users`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sourceId, userId }),
+  });
+  return res.data;
+}

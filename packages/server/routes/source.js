@@ -3,8 +3,8 @@ const express = require('express');
 
 const AuthController = require('../controllers/auth');
 const SourceService = require('../services/source');
-const { SourceDAO } = require('../services/db');
-const { requiredParams } = require('../util/route-utils');
+const { SourceDAO, UserSourceDAO, UserDAO } = require('../services/db');
+const { requiredParams, requiredBody } = require('../util/route-utils');
 
 const router = express.Router();
 
@@ -64,6 +64,47 @@ router.get(
         files,
       });
     }
+  }
+);
+
+router.get('/users', AuthController.authAdmin, (req, res) => {
+  res.send(UserDAO.findAll());
+});
+
+router.get(
+  '/source/users',
+  requiredParams(['id']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { id: sourceId } = req.query;
+    const users = UserSourceDAO.findUsersBySourceId(sourceId);
+    res.send(users);
+  }
+);
+
+router.post(
+  '/source/users',
+  requiredBody(['sourceId', 'userId']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { sourceId, userId } = req.body;
+    const result = UserSourceDAO.insert({ userId: parseInt(userId), sourceId: parseInt(sourceId) });
+    if (result) {
+      res.send({ success: true, id: result });
+    } else {
+      res.send({ success: false, message: 'Association already exists or failed' });
+    }
+  }
+);
+
+router.delete(
+  '/source/users',
+  requiredBody(['sourceId', 'userId']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { sourceId, userId } = req.body;
+    const changes = UserSourceDAO.delete({ userId: parseInt(userId), sourceId: parseInt(sourceId) });
+    res.send({ success: changes > 0 });
   }
 );
 

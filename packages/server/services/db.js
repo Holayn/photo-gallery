@@ -196,6 +196,55 @@ const UserDAO = {
       DB.prepare('SELECT * FROM user WHERE name = ?').get(username)
     );
   },
+  getById(id) {
+    return toUserModel(
+      DB.prepare('SELECT * FROM user WHERE id = ?').get(id)
+    );
+  },
+  findAll() {
+    return DB.prepare('SELECT id, name, notify_user FROM user')
+      .all()
+      .map((u) => toUserModel(u));
+  },
+};
+
+DB.exec(
+  'CREATE TABLE IF NOT EXISTS user_source (id INTEGER PRIMARY KEY, user_id INTEGER, source_id INTEGER, FOREIGN KEY(user_id) REFERENCES user(id), FOREIGN KEY(source_id) REFERENCES source(id))'
+);
+// Create unique index to prevent duplicate associations
+try {
+  DB.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_user_source_unique ON user_source(user_id, source_id)');
+} catch (e) {}
+
+const UserSourceDAO = {
+  insert({ userId, sourceId }) {
+    try {
+      return DB.prepare(
+        'INSERT INTO user_source (user_id, source_id) VALUES (@userId, @sourceId)'
+      ).run({ userId, sourceId }).lastInsertRowid;
+    } catch (e) {
+      // Ignore duplicate entries
+      return null;
+    }
+  },
+  delete({ userId, sourceId }) {
+    return DB.prepare(
+      'DELETE FROM user_source WHERE user_id = @userId AND source_id = @sourceId'
+    ).run({ userId, sourceId }).changes;
+  },
+  findUsersBySourceId(sourceId) {
+    return DB.prepare(
+      'SELECT u.id, u.name, u.notify_user FROM user u INNER JOIN user_source us ON u.id = us.user_id WHERE us.source_id = ?'
+    )
+      .all(sourceId)
+      .map((u) => toUserModel(u));
+  },
+  hasAccess(userId, sourceId) {
+    const result = DB.prepare(
+      'SELECT 1 FROM user_source WHERE user_id = ? AND source_id = ?'
+    ).get(userId, sourceId);
+    return !!result;
+  },
 };
 
 module.exports = {
@@ -204,6 +253,7 @@ module.exports = {
   GalleryFileDAO,
   SourceDAO,
   UserDAO,
+  UserSourceDAO,
   transaction: (fn) => {
     return DB.transaction(() => {
       return fn();
