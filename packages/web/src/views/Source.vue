@@ -1,27 +1,27 @@
 <template>
-  <div>
-    <div class="mt-4">
-      <Gallery ref="gallery" :id="sourceId" :show-date-selection="true" :show-lightbox="showLightbox" @date="onDateUpdate($event)">
-        <template #heading>
-          <h1 class="text-3xl md:text-5xl">
-            <div v-if="showLoadingSourceInfo" class="flex justify-center">
-              <Loading class="w-16 h-16"></Loading>
-            </div>
-            <template v-else>
-              <div>{{ title }}</div>
-              <div v-if="directory" class="text-xl mt-1">({{ directory }})</div>
-            </template>
-          </h1>
-        </template>
-        <template v-if="loadingPhotoInfo" #loading>
-          <div class="flex flex-col items-center justify-center pb-4">
-            <Loading class="w-16 h-16"></Loading>
-            <div>Retrieving photo info</div>
-          </div>
-        </template>
-      </Gallery>
-    </div>
+  <div class="px-8 mb-2">
+    <router-link to="/sources" class="underline">Sources</router-link>
   </div>
+
+  <Gallery :id="sourceId" :show-date-selection="true" :show-lightbox="showLightbox" @date="onDateUpdate($event)">
+    <template #heading>
+      <h1 class="text-3xl md:text-5xl">
+        <div v-if="showLoadingSourceInfo" class="flex justify-center">
+          <Loading class="w-16 h-16"></Loading>
+        </div>
+        <template v-else>
+          <div>{{ title }}</div>
+          <div v-if="directory" class="text-xl mt-1">({{ directory }})</div>
+        </template>
+      </h1>
+    </template>
+    <template v-if="loadingPhotoInfo" #loading>
+      <div class="flex flex-col items-center justify-center pb-4">
+        <Loading class="w-16 h-16"></Loading>
+        <div>Retrieving photo info</div>
+      </div>
+    </template>
+  </Gallery>
 </template>
 
 <script>
@@ -92,7 +92,6 @@ export default {
         this.loadingPhotoInfo = false;
 
         this.$store.dispatch('setPhotos', { photos, sourceId: this.sourceId });
-        this.$refs.gallery.updateRenderPhotos();
       } catch(e) {
         alert('An error occurred.');
         throw e;

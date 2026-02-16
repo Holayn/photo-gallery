@@ -106,6 +106,7 @@ module.exports = {
       return {
         date,
         metadata,
+        sourceId,
         sourceFileId,
         urls: generateSourceFileUrls(sourceId, sourceFileId),
       };

@@ -2,13 +2,14 @@ const yargs = require('yargs');
 
 const { filesMoved } = require('../services/files-moved');
 const logger = require('../services/logger');
+const { indexMemories } = require('../services/memories');
 
 logger.init();
 
 const SourceService = require('../services/source');
 
 process.on('uncaughtException', (err) => {
-  logger.error('Unexpected error:', err.message);
+  logger.error('Unexpected error:', err);
   process.exit(1);
 });
 
@@ -82,5 +83,15 @@ yargs(args)
     },
     (options) => {
       filesMoved(options.from, options.to);
+    }
+  )
+  .command(
+    'index-memories',
+    'Create memories index',
+    {},
+    () => {
+      console.log('Creating memories index...');
+      indexMemories();
+      console.log('Memories index created successfully');
     }
   ).argv;

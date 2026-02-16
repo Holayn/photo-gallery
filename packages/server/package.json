@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "ENV=development nodemon --inspect index.js",
-    "lint": "prettier --write . && eslint ./ --fix"
+    "lint": "prettier --write . && eslint ./ --fix",
+    "index-memories": "node bin/photo-gallery.js index-memories"
   },
   "dependencies": {
     "axios": "^1.2.2",
@@ -22,6 +23,7 @@
     "fs-extra": "^10.1.0",
     "helmet": "^4.5.0",
     "morgan": "^1.10.0",
+    "node-cron": "^4.2.1",
     "send": "^1.2.1",
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^4.7.1",

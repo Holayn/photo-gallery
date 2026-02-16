@@ -226,3 +226,7 @@ export async function shareAlbum(album) {
 
   return res.data.token;
 }
+
+export async function getMemories() {
+  return (await fetcher.fetch(`${BASE}/memories`)).data;
+}

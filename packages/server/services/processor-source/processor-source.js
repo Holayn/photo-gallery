@@ -92,15 +92,6 @@ class ProcessorSource {
       .map((f) => toModel(f));
   }
 
-  findLatest(count) {
-    return this.db
-    .prepare(
-      `SELECT * FROM ${FILES_TABLE_NAME} ORDER BY date DESC LIMIT ${count}`
-    )
-    .all()
-    .map((f) => toModel(f));
-  }
-
   findRandom(count) {
     const files = [];
 
@@ -110,6 +101,27 @@ class ProcessorSource {
     }
 
     return files.map((f) => toModel(f));
+  }
+
+  findEarliest() {
+    return toModel(this.db
+      .prepare(
+        `
+        SELECT * FROM ${FILES_TABLE_NAME} 
+        WHERE processed != 0 AND date != 0
+        ORDER BY date ASC
+        LIMIT 1
+      `)
+      .get());
+  }
+
+  findBetweenDates(startDate, endDate) {
+    return this.db
+      .prepare(
+        `SELECT * FROM ${FILES_TABLE_NAME} WHERE processed != 0 AND date >= ? AND date <= ? ORDER BY date ASC`
+      )
+      .all(startDate, endDate)
+      .map((f) => toModel(f));
   }
 
   async getFileData(id, sizeParam) {

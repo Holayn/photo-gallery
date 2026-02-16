@@ -26,6 +26,9 @@
           <div class="mt-4">
             <router-link :to="{ name: 'sources' }" @click="showLeftDrawer = false">Sources</router-link>
           </div>
+          <div class="mt-4">
+            <router-link :to="{ name: 'memories' }" @click="showLeftDrawer = false">Memories</router-link>
+          </div>
         </div>
       </nav>
       <nav v-if="showRightDrawer" class="fixed z-50 top-0 w-full h-full bg-black/25" @click="showRightDrawer = false">

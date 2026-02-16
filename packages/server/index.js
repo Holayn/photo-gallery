@@ -5,8 +5,10 @@ const path = require('path');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
+const cron = require('node-cron');
 
 const logger = require('./services/logger');
+const { indexMemories } = require('./services/memories');
 
 logger.init(true);
 
@@ -116,4 +118,11 @@ app.use((err, req, res, next) => {
 const port = process.env.PORT || 8000;
 app.listen(process.env.PORT || 8000, () => {
   console.info(`Listening on ${port}`);
+});
+
+// Schedule daily memory indexing at 12 AM
+cron.schedule('0 0 * * *', () => {
+  console.log('Running daily memory index...');
+  indexMemories();
+  console.log('Memories index created successfully');
 });

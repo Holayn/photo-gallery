@@ -1,7 +1,7 @@
 <template>
-  <div ref="gallery" class="absolute inset-0 overflow-auto py-12" style="top: var(--header-height);">
+  <div ref="gallery">
     <div class="px-4 md:px-8 flex gap-4">
-      <div class="flex-auto break-all">
+      <div class="flex-auto break-word">
         <slot name="heading"></slot>
       </div>
       <div class="flex items-center">
@@ -16,20 +16,20 @@
             {{ unknownDateCount }}
           </button>
         </sl-tooltip>
-        <sl-dropdown>
+        <sl-dropdown v-if="sortable">
           <sl-icon-button slot="trigger" class="text-xl" name="arrow-down-up"></sl-icon-button>
           <sl-menu @sl-select="onSortSelect">
             <sl-menu-label>Sort by...</sl-menu-label>
-            <sl-menu-item value="dateAsc">
-              <sl-icon v-if="sort === 'dateAsc'" slot="prefix" name="check-lg"></sl-icon>
+            <sl-menu-item :value="SORT_TYPES.DATE_ASC">
+              <sl-icon v-if="sort === SORT_TYPES.DATE_ASC" slot="prefix" name="check-lg"></sl-icon>
               Date (Earliest)
             </sl-menu-item>
-            <sl-menu-item value="dateDesc">
-              <sl-icon v-if="sort === 'dateDesc'" slot="prefix" name="check-lg"></sl-icon>
+            <sl-menu-item :value="SORT_TYPES.DATE_DESC">
+              <sl-icon v-if="sort === SORT_TYPES.DATE_DESC" slot="prefix" name="check-lg"></sl-icon>
               Date (Latest)
             </sl-menu-item>
-            <sl-menu-item v-if="canSortByDateAdded" value="dateAdded">
-              <sl-icon v-if="sort === 'dateAdded'" slot="prefix" name="check-lg"></sl-icon>
+            <sl-menu-item v-if="canSortByDateAdded" :value="SORT_TYPES.DATE_ADDED">
+              <sl-icon v-if="sort === SORT_TYPES.DATE_ADDED" slot="prefix" name="check-lg"></sl-icon>
               Date Added
             </sl-menu-item>
           </sl-menu>
@@ -46,9 +46,9 @@
             <sl-menu-item>
               Gallery Layout
               <sl-menu slot="submenu" @sl-select="onGalleryLayoutSelect">
-                <sl-menu-item :value="GALLERY_LAYOUTS.AUTO" type="checkbox" :checked="galleryLayout === GALLERY_LAYOUTS.AUTO">Auto</sl-menu-item>
-                <sl-menu-item :value="GALLERY_LAYOUTS.JUSTIFIED" type="checkbox" :checked="galleryLayout === GALLERY_LAYOUTS.JUSTIFIED">Justified</sl-menu-item>
-                <sl-menu-item :value="GALLERY_LAYOUTS.TILE" type="checkbox" :checked="galleryLayout === GALLERY_LAYOUTS.TILE">Tile</sl-menu-item>
+                <sl-menu-item :value="LAYOUT_TYPES.AUTO" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.AUTO">Auto</sl-menu-item>
+                <sl-menu-item :value="LAYOUT_TYPES.JUSTIFIED" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.JUSTIFIED">Justified</sl-menu-item>
+                <sl-menu-item :value="LAYOUT_TYPES.TILE" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.TILE">Tile</sl-menu-item>
               </sl-menu>
             </sl-menu-item>
           </sl-menu>
@@ -107,78 +107,18 @@
       </template>
     </div>
 
-    <div ref="photos" class="mt-4 relative" :style="{ height: `${layout?.containerHeight}px` }">
-      <div 
-        v-if="layout" 
-        v-for="(photo, i) in renderPhotos" 
-        :ref="setGalleryImageRef"
-        :key="photo.id" 
-        :data-photo-id="photo.id"
-        :data-photo="getPhotoUrl(photo)"
-        style="position: absolute;" 
-        :style="{ 
-          top: layout.boxes[i + renderPhotosStart].top + 'px', 
-          left: layout.boxes[i + renderPhotosStart].left + 'px', 
-          width: layout.boxes[i + renderPhotosStart].width + 'px', 
-          height: layout.boxes[i + renderPhotosStart].height + 'px',
-        }"
-      >
-        <button v-if="loadedImageErrors[photo.id]" class="w-full h-full border rounded-sm flex flex-col justify-center items-center gap-1" style="border-color: var(--theme-color-main);" @click="retryLoadImg(photo)">
-          <div class="text-xs">load failed</div>
-          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
-        </button>
-        <div v-else-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full">
-          <Loading class="w-8 h-8"></Loading>
-        </div>
-        <div v-if="showDates" class="absolute -bottom-8 h-8 px-1">
-          <div class="text-xs">{{ formatPhotoDate(photo.date) }}</div>
-        </div>
-        <button @click="openLightbox(photo)">
-          <img
-            v-if="!loadedImageErrors[photo.id]"
-            :ref="imgRender"
-            :src="getPhotoUrl(photo)"
-            :data-photo-id="photo.id"
-            :style="{
-              width: layout.boxes[i + renderPhotosStart].width + 'px', 
-              height: layout.boxes[i + renderPhotosStart].height + 'px',
-              opacity: loadedImages[photo.id] ? 1 : 0,
-              objectFit: 'cover',
-            }"
-            style="transition: opacity 500ms linear;"
-            @load="imgLoad(photo)"
-            @error="imgError(photo)"
-          >
-        </button>
-        <div v-if="photo.metadata.video" class="overlay flex items-end justify-end">
-          <div class="text-white text-xs md:text-base md:mb-1 mr-1 md:mr-2">{{ photo.metadata.duration }}</div>
-          <svg class="w-4 h-4 md:w-6 md:h-6 md:mb-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        </div>
-        <div v-if="photo.albums.length" class="overlay flex justify-end items-start">
-          <div class="bg-gray-500/50 md:mt-1 md:mr-1 p-1 rounded-full">
-            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>  
-          </div>
-        </div>
-        <div v-if="isPhotoNew(photo)" class="overlay flex justify-start items-end">
-          <div class="bg-gray-500/50 md:mb-1 md:ml-1 p-1 rounded-full flex items-center">
-            <sl-icon class="text-white" name="stars"></sl-icon>
-          </div>
-        </div>
-        <template v-if="isSelectionMode">
-          <div v-if="selected[photo.id]" class="absolute top-0 w-full h-full pointer-events-none bg-white/50"></div>
-          <div class="absolute top-0 right-0">
-            <button class="p-2" @click="select(photo)">
-              <div v-if="selected[photo.id]" class="text-orange-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              </div>
-              <div v-else class="text-orange-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-              </div>
-            </button>
-          </div>
-        </template>
-      </div>
-    </div>
+    <PhotoGrid
+      ref="photos"
+      class="mt-4"
+      :photos="photos"
+      :layout-type="galleryLayout"
+      :show-dates="showDates"
+      :is-selection-mode="isSelectionMode"
+      :selected="selected"
+      :new-photos="newPhotos"
+      @open-lightbox="openLightbox"
+      @selection-change="onSelectionChange"
+    ></PhotoGrid>
 
     <div v-if="$slots.loading" class="mt-8"></div>
     <slot name="loading">
@@ -191,7 +131,7 @@
       :index="lightboxIndex" 
       :is-selection-mode="isSelectionMode" 
       :selected="selected" 
-      :preview-size="getGalleryPhotoSize(galleryLayout)"
+      :preview-size="getLightboxPreviewSize(galleryLayout)"
       @close="closeLightbox()" 
       @enable-selection-mode="toggleSelectionMode(true)" 
       @select="photo => select(photo)"
@@ -215,48 +155,19 @@
 </template>
 
 <script>
-import justifiedLayout from 'justified-layout';
-import dayjs from 'dayjs';
-
 import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum, PHOTO_SIZES } from '../services/api';
-import { debounce, isElementFullyInView } from '../utils';
 
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
 import Modal from '../components/Modal.vue';
+import PhotoGrid from '../components/PhotoGrid.vue';
+import { LAYOUT_TYPES } from '../components/PhotoGrid.vue';
 
-const GALLERY_LAYOUTS = {
-  AUTO: 'auto',
-  JUSTIFIED: 'justified',
-  TILE: 'tile',
+export const SORT_TYPES = {
+  DATE_ASC: 'dateAsc',
+  DATE_DESC: 'dateDesc',
+  DATE_ADDED: 'dateAdded',
 };
-
-const SMALL_SCREEN_THRESHOLD = 500;
-const TILE_MODE_IMAGE_HEIGHT = 90;
-const TILE_MODE_SMALL_SCREEN_NUM_COLUMNS = 5;
-const JUSTIFIED_MODE_IMAGE_HEIGHT = 150;
-const GALLERY_ITEM_GAP = 2;
-
-function isSmallScreen() {
-  return window.innerWidth < SMALL_SCREEN_THRESHOLD;
-}
-
-function isTileMode(galleryLayout) {
-  return galleryLayout === GALLERY_LAYOUTS.TILE || (galleryLayout === GALLERY_LAYOUTS.AUTO && isSmallScreen());
-}
-
-function getTileModeImageHeight() {
-  return Math.min((window.innerWidth / TILE_MODE_SMALL_SCREEN_NUM_COLUMNS) - (GALLERY_ITEM_GAP * 4), TILE_MODE_IMAGE_HEIGHT);
-}
-
-function getGalleryImageHeight(galleryLayout = GALLERY_LAYOUTS.JUSTIFIED) {
-  if (galleryLayout === GALLERY_LAYOUTS.TILE) {
-    return getTileModeImageHeight();
-  }
-  return JUSTIFIED_MODE_IMAGE_HEIGHT;
-}
-
-const imgEls = {};
 
 export default {
   name: 'Gallery',
@@ -264,6 +175,7 @@ export default {
     Lightbox,
     Loading,
     Modal,
+    PhotoGrid,
   },
   props: {
     id: {
@@ -276,14 +188,20 @@ export default {
     showLightbox: Boolean,
     defaultSort: {
       type: String,
-      default: 'dateDesc',
+      default: SORT_TYPES.DATE_DESC,
     },
+    sortable: { 
+      type: Boolean,
+      default: true,
+    },
+    viewTracking: {
+      type: Boolean,
+      default: true,
+    }
   },
   data() {
     return {
       date: null,
-
-      galleryImageRefs: [],
 
       albums: [],
       loadingCreateAlbum: false,
@@ -291,16 +209,8 @@ export default {
       loadingRemoveFromAlbum: false,
       showAddToExistingAlbum: false,
 
-      renderPhotosStart: 0,
-      renderPhotosEnd: 0,
-      loadedImages: {},
-      loadedImageErrors: {},
-      layout: null,
-
       isSelectionMode: false,
       selected: {},
-      lastSelected: null,
-      isShiftPressed: false,
 
       isShowLightbox: false,
       lightboxIndex: 0,
@@ -308,9 +218,10 @@ export default {
       sort: this.defaultSort,
       viewMode: null,
       showDates: false,
-      galleryLayout: GALLERY_LAYOUTS.JUSTIFIED,
+      galleryLayout: LAYOUT_TYPES.JUSTIFIED,
 
-      GALLERY_LAYOUTS,
+      SORT_TYPES,
+      LAYOUT_TYPES,
     };
   },
   computed: {
@@ -331,32 +242,24 @@ export default {
       return this.$store.state.photos
       .filter(photo => photo.date)
       .sort((a, b) => {
-        if (this.sort === 'dateDesc') {
+        if (this.sort === SORT_TYPES.DATE_DESC) {
           return b.date - a.date;
-        } else if (this.sort === 'dateAsc') {
+        } else if (this.sort === SORT_TYPES.DATE_ASC) {
           return a.date - b.date;
-        } else if (this.sort === 'dateAdded') {
+        } else if (this.sort === SORT_TYPES.DATE_ADDED) {
           return (b.createdAt || b.date) - (a.createdAt || a.date);
         }
       });
     },
-    photosMap() {
-      return this.$store.state.photos.reduce((acc, photo) => {
-        acc[photo.id] = photo;
-        return acc;
-      }, {});
-    },
-    renderPhotos() {
-      return this.photos.slice(this.renderPhotosStart, this.renderPhotosEnd);
-    },
-    renderPhotosIds() {
-      return new Set(this.renderPhotos.map(photo => photo.id));
-    },
     hasNewPhotos() {
+      if (!this.viewTracking) return false;
       if (!getLastViewed(this.id)) {
         return false;
       }
-      return this.photos.some(photo => photo.createdAt > getLastViewed(this.id));
+      return this.photos.some(photo => this.isPhotoNew(photo));
+    },
+    newPhotos() {
+      return this.$store.state.photos.filter(photo => this.isPhotoNew(photo));
     },
     isViewModeNewOnly() {
       return this.viewMode === 'newOnly';
@@ -373,8 +276,7 @@ export default {
   },
   watch: {
     async lightboxIndex() {
-      await this.scrollLightboxImageIntoView();
-      this.updateRenderPhotos();
+      await this.scrollImageIntoView();
     },
     showLightbox() {
       if (this.showLightbox) {
@@ -386,156 +288,33 @@ export default {
     isShowLightbox() {
       this.updateLightboxQueryParam();
     },
-    isSelectionMode() {
-      this.lastSelected = null;
-    },
     sort() {
       localStorage.setItem(`sort-${this.id}`, this.sort);
-    },
-    renderPhotos() {
-      Object.keys(this.loadedImages).forEach(photoId => {
-        if (!this.renderPhotosIds.has(photoId)) {
-          delete this.loadedImages[photoId];
-        }
-      });
-      Object.keys(imgEls).forEach(photoId => {
-        if (!this.renderPhotosIds.has(photoId)) {
-          imgEls[photoId].src = '';
-          delete imgEls[photoId];
-          delete this.loadedImageErrors[photoId];
-        }
-      });
     },
   },
   created() {
     // Ensure the page isn't loaded with this query parameter set.
     this.removeLightboxParam(true);
 
-    this._updateRenderPhotosDebounce = debounce(() => this.updateRenderPhotos(false));
-    this._updateRenderPhotosUpdateLayoutDebounce = debounce(() => this.updateRenderPhotos(), 50);
+    if (this.viewTracking) {
+      this.updateLastViewed();
+    }
 
-    this.updateLastViewed();
-
-    if (localStorage.getItem(`sort-${this.id}`)) {
-      this.sort = localStorage.getItem(`sort-${this.id}`);
+    if (this.sortable) {
+      if (localStorage.getItem(`sort-${this.id}`)) {
+        this.sort = localStorage.getItem(`sort-${this.id}`);
+      }
     }
   },
-  async mounted() {
-    this.$refs.gallery.addEventListener('scroll', this._updateRenderPhotosDebounce);
-    window.addEventListener('resize', this._updateRenderPhotosUpdateLayoutDebounce);
-    this.keydown = (e => {
-      this.isShiftPressed = e.key === 'Shift';
-    }).bind(this);
-    this.keyup = (e => {
-      if (e.key === 'Shift') {
-        this.isShiftPressed = false;
-      }
-    }).bind(this);
-    window.addEventListener('keydown', this.keydown);
-    window.addEventListener('keyup', this.keyup);
-  },
-  beforeUnmount() {
-    window.removeEventListener('resize', this._updateRenderPhotosUpdateLayoutDebounce);
-    window.removeEventListener('keydown', this.keydown);
-    window.removeEventListener('keyup', this.keyup);
-  },
-  beforeUpdate() {
-    this.galleryImageRefs = [];
-  },
   methods: {
-    updateLayout() {
-      this.layout = justifiedLayout([...this.photos.map(p => ({
-        width: isTileMode(this.galleryLayout) ? getTileModeImageHeight() : p.metadata.width,
-        height: isTileMode(this.galleryLayout) ? getTileModeImageHeight() : p.metadata.height,
-      }))], {
-        containerPadding: 0,
-        containerWidth: this.$refs.photos?.getBoundingClientRect().width,
-        targetRowHeight: getGalleryImageHeight(this.galleryLayout),
-        boxSpacing: {
-          horizontal: GALLERY_ITEM_GAP,
-          vertical: this.showDates ? 32 : GALLERY_ITEM_GAP,
-        }
-      });
-    },
-    async updateRenderPhotos(updateLayout = true) {
-      if (updateLayout) {
-        this.updateLayout();
-      }
-      
-      let start = null;
-      let end = null;
-      for (let i = 0; i < this.layout.boxes.length; i++) {
-        const box = this.layout.boxes[i];
-        if ((box.top + box.height + 128 > this.$refs.gallery.scrollTop) && (box.top < this.$refs.gallery.scrollTop + this.$refs.gallery.getBoundingClientRect().height)) {
-          if (start === null) {
-            start = i;
-          }
-        } else {
-          if (start !== null) {
-            end = i;
-            break;
-          }
-        }
-      }
-      if (end === null) {
-        end = this.layout.boxes.length;
-      }
-      this.renderPhotosStart = start;
-      this.renderPhotosEnd = end;
-
-      if (updateLayout) {
-        // Scrollbar may show now, so re-update layout to accommodate for that.
-        await this.$nextTick();
-        this.updateLayout();
-      }
+    onSelectionChange({ selected }) {
+      this.selected = selected;
     },
     
-    getPhotoUrl(photo) {
-      return photo.urls.view[this.getGalleryPhotoSize(this.galleryLayout)];
-    },
-
-    imgLoad(photo) {
-      this.loadedImages[photo.id] = true;
-      delete this.loadedImageErrors[photo.id];
-    },
-    imgError(photo) {
-      if (this.renderPhotosIds.has(photo.id)) {
-        this.loadedImageErrors[photo.id] = true;
+    async scrollImageIntoView() {
+      if (this.$refs.photos && this.$refs.photos.scrollImageIntoView) {
+        await this.$refs.photos.scrollImageIntoView(this.lightboxIndex);
       }
-    },
-    retryLoadImg(photo) {
-      delete this.loadedImageErrors[photo.id];
-    },
-    
-    async scrollLightboxImageIntoView() {
-      const ref = this.getGalleryImageRefForLightboxPhoto();
-      if (ref) {
-        const fullyInView = await isElementFullyInView(ref.el);
-        if (!fullyInView) {
-          ref.el.scrollIntoView();
-        }
-      }
-    },
-    setGalleryImageRef(el) {
-      if (el) {
-        this.galleryImageRefs.push({
-          el,
-          photo: this.photos.find(photo => photo.id === el.dataset.photoId),
-        });
-      }
-    },
-    imgRender(el) {
-      if (el && el.complete && !this.loadedImages[el.dataset.photoId] && !this.loadedImageErrors[el.dataset.photoId]) {
-        this.imgLoad(this.photosMap[el.dataset.photoId]);
-      }
-      if (el) {
-        imgEls[el.dataset.photoId] = el;
-      }
-    },
-    getGalleryImageRefForLightboxPhoto() {
-      const lightboxPhoto = this.photos[this.lightboxIndex];
-      const galleryPhotoRef = this.galleryImageRefs.find(ref => ref.photo === lightboxPhoto);
-      return galleryPhotoRef;
     },
 
     openLightbox(photo) {
@@ -556,19 +335,21 @@ export default {
 
         // Helps to show which photo was just being viewed in the lightbox.
         if (showTransition) {
-          const ref = this.getGalleryImageRefForLightboxPhoto();
-          if (ref) {
-            ref.el.style.zIndex = '1';
-            ref.el.animate([
-              {
-                transform: 'scale(4)',
-              },
-              {
-                transform: 'scale(1)',
-              }
-            ], { duration: 250, easing: 'ease-in' }).finished.then(() => {
-              ref.el.style.zIndex = '';
-            });
+          if (this.$refs.photos && this.$refs.photos.getImageRefByPhotoIndex) {
+            const ref = this.$refs.photos.getImageRefByPhotoIndex(this.lightboxIndex);
+            if (ref) {
+              ref.el.style.zIndex = '1';
+              ref.el.animate([
+                {
+                  transform: 'scale(4)',
+                },
+                {
+                  transform: 'scale(1)',
+                }
+              ], { duration: 250, easing: 'ease-in' }).finished.then(() => {
+                ref.el.style.zIndex = '';
+              });
+            }
           }
         }
       }
@@ -593,42 +374,6 @@ export default {
     toggleSelectionMode(val) {
       this.isSelectionMode = val;
       this.selected = {};
-    },
-    select({ id, sourceId, sourceFileId }) {
-      if (this.selected[id]) {
-        this.lastSelected = null;
-        delete this.selected[id];
-      } else {
-        this.selected[id] = {
-          sourceId,
-          sourceFileId,
-        };
-
-        if (this.isShiftPressed && this.lastSelected !== null) {
-          let start, end;
-
-          const indexOfLastSelected = this.photos.findIndex(photo => photo.id === this.lastSelected);
-          const indexOfSelected = this.photos.findIndex(photo => photo.id === id);
-
-          if (indexOfSelected > indexOfLastSelected) {
-            start = indexOfLastSelected;
-            end = indexOfSelected;
-          } else {
-            start = indexOfSelected;
-            end = indexOfLastSelected;
-          }
-
-          for (let i = start; i <= end; i++) {
-            const { id, sourceId, sourceFileId } = this.photos[i];
-            this.selected[id] = {
-              sourceId,
-              sourceFileId,
-            };
-          }
-        }
-
-        this.lastSelected = id;
-      }
     },
 
     async showAlbumSelection() {
@@ -703,17 +448,11 @@ export default {
     onSortSelect(e) {
       const item = e.detail.item;
       this.sort = item.value;
-      if (this.sort === 'dateAdded') {
-        this.clearLastViewed();
-      }
-      this.updateRenderPhotos();
-    },
-
-    formatPhotoDate(date) {
-      return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : 'Unknown Date';
+      this.clearLastViewed();
     },
 
     viewNewPhotos() {
+      if (!this.viewTracking) return;
       this.viewMode = 'newOnly';
       this.clearLastViewed();
     },
@@ -722,15 +461,18 @@ export default {
     },
 
     updateLastViewed() {
+      if (!this.viewTracking) return;
       if (!getLastViewed(this.id) || localStorage.getItem(`canClearLastViewed-${this.id}`)) {
         localStorage.setItem(`lastViewed-${this.id}`, new Date().getTime());
         localStorage.removeItem(`canClearLastViewed-${this.id}`);
       }
     },
     clearLastViewed() {
+      if (!this.viewTracking) return;
       localStorage.setItem(`canClearLastViewed-${this.id}`, true);
     },
     isPhotoNew(photo) {
+      if (!this.viewTracking) return false;
       return photo.createdAt && getLastViewed(this.id) < photo.createdAt;
     },
 
@@ -738,22 +480,19 @@ export default {
       const item = e.detail.item;
       if (item.value === 'viewDates') {
         this.showDates = item.checked;
-        this.updateRenderPhotos();
       }
       if (item.value === 'viewUnknownDateItems') {
         this.viewMode = item.checked ? 'showUnknownDateItems' : null;
-        this.updateRenderPhotos();
       }
     },
     
     onGalleryLayoutSelect(e) {
       const item = e.detail.item;
       this.galleryLayout = item.value;
-      this.updateRenderPhotos();
     },
 
-    getGalleryPhotoSize(galleryLayout = GALLERY_LAYOUTS.JUSTIFIED) {
-      if (galleryLayout === GALLERY_LAYOUTS.TILE) {
+    getLightboxPreviewSize(galleryLayout = LAYOUT_TYPES.JUSTIFIED) {
+      if (galleryLayout === LAYOUT_TYPES.TILE) {
         return PHOTO_SIZES.THUMB;
       }
       return PHOTO_SIZES.SMALL;
@@ -765,14 +504,3 @@ function getLastViewed(id) {
   return parseInt(localStorage.getItem(`lastViewed-${id}`));
 }
 </script>
-
-<style scoped>
-  .overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    pointer-events: none;
-  }
-</style>

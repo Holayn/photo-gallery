@@ -9,6 +9,7 @@ import TwoFA from './views/TwoFA.vue';
 import Sources from './views/Sources.vue';
 import Source from './views/Source.vue';
 import SourceDirectories from './views/SourceDirectories.vue';
+import Memories from './views/Memories.vue';
 import store from './store'
 
 import { authVerify, error } from './services/api';
@@ -32,6 +33,10 @@ const routes = [
   { name: 'login', path: '/login', component: Login, props: route => route.query },
   { name: '2fa', path: '/2fa', component: TwoFA, props: route => route.query },
   { name: 'sources', path: '/sources', component: Sources },
+  { name: 'memories', path: '/memories', component: Memories, props: route => ({
+    ...route.params,
+    showLightbox: route.query.showLightbox === 'true',
+  })},
   { name: 'source', path: '/source/:sourceId/:directory?', component: Source, props: route => ({
     ...route.params,
     showLightbox: route.query.showLightbox === 'true',
