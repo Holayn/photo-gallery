@@ -41,7 +41,7 @@
                     <Loading class="w-8 h-8 my-4"></Loading>
                   </div>
                 </div>
-                <div class="break-all">{{ getYearsAgo(memory.year) }} {{ getYearsAgo(memory.year) === 1 ? 'year' : 'years' }} ago</div>
+                <div class="break-word">{{ getYearsAgo(memory.year) }} {{ getYearsAgo(memory.year) === 1 ? 'year' : 'years' }} ago</div>
               </button>
             </div>
           </div>

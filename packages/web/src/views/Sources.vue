@@ -28,7 +28,7 @@
                 </div>
               </div>
               <div class="flex items-center">
-                <div class="flex-auto text-left break-all px-2">{{ source.alias }}</div>
+                <div class="flex-auto text-left break-word px-2">{{ source.alias }}</div>
                 <div class="flex justify-center" @click.stop>
                   <sl-dropdown>
                     <sl-icon-button slot="trigger" name="three-dots" label="Options"></sl-icon-button>

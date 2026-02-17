@@ -26,7 +26,7 @@
                 <Loading class="w-8 h-8 my-4"></Loading>
               </div>
             </div>
-            <div class="break-all">{{ album.name }}</div>
+            <div class="break-word">{{ album.name }}</div>
           </button>
         </div>
       </div>
