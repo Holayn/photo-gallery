@@ -265,8 +265,8 @@ export async function addSourceUser(sourceId, userId) {
 }
 
 export async function removeSourceUser(sourceId, userId) {
-  const res = await fetcher.fetch(`${BASE}/source/users`, {
-    method: 'DELETE',
+  const res = await fetcher.fetch(`${BASE}/source/users/delete`, {
+    method: 'post',
     headers: {
       'Content-Type': 'application/json',
     },

@@ -97,8 +97,8 @@ router.post(
   }
 );
 
-router.delete(
-  '/source/users',
+router.post(
+  '/source/users/delete',
   requiredBody(['sourceId', 'userId']),
   AuthController.authAdmin,
   (req, res) => {
