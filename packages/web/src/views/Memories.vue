@@ -18,10 +18,10 @@
         <Loading v-if="loading" class="w-16 h-16"></Loading>
         <div v-else-if="error" class="text-red-500">Failed to load memories</div>
         <template v-else>
-          <div class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-            <div v-for="memory in memories.years" :key="memory.year" class="w-full md:w-auto">
+          <div class="flex flex-wrap gap-2">
+            <div v-for="memory in memories.years" :key="memory.year" class="min-w-32 max-w-60" style="width: calc(50% - 0.5rem);">
               <button class="p-1 bg-slate-100 rounded-md w-full" @click="openMemory(memory)">
-                <div class="md:w-60 md:h-60">
+                <div>
                   <div v-if="memoryCovers[memory.year]" class="grid grid-cols-2 grid-rows-2 gap-1 h-full">
                     <div v-for="photo in memoryCovers[memory.year]" :key="photo" class="relative">
                       <div v-if="errorImages[photo]" class="flex justify-center items-center w-full h-full py-4">

@@ -4,11 +4,11 @@
     <div class="mt-4">
       <Loading v-if="loading" class="w-16 h-16"></Loading>
       <div v-else-if="error" class="text-red-500">Failed to load sources</div>
-      <div v-else class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-        <div v-for="source in sources" :key="source.id" class="w-full md:w-auto">
+      <div v-else class="flex flex-wrap gap-2">
+        <div v-for="source in sources" :key="source.id" class="min-w-32 max-w-60" style="width: calc(50% - 0.5rem);">
           <div class="p-1 bg-slate-100 rounded-md w-full">
             <button class="w-full" @click="openSource(source)">
-              <div class="md:w-60 md:h-60">
+              <div>
                 <div v-if="sourceCovers[source.id]" class="grid grid-cols-2 grid-rows-2 gap-1 h-full">
                   <div v-for="photo in sourceCovers[source.id]" :key="photo" class="relative">
                     <div v-if="errorImages[photo]" class="flex justify-center items-center w-full h-full py-4">
@@ -21,7 +21,7 @@
                   </div>
                 </div>
                 <div v-else-if="errorSources[source.id]" class="flex h-full items-center justify-center">
-                  <div class="text-red-500">Failed to load cover</div>
+                  <div class="px-2 text-red-500">Failed to load cover</div>
                 </div>
                 <div v-else class="flex h-full items-center justify-center">
                   <Loading class="w-8 h-8 my-4"></Loading>
