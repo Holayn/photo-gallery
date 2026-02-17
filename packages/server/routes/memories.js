@@ -11,19 +11,27 @@ router.get(
   '/memories',
   AuthController.authAdmin,
   (req, res) => {
-    const { username } = req.session;
+    const { username } = req.session.user;
     const user = UserDAO.getByUsername(username);
+
+    if (!user) {
+      res.statusMessage('Failed to find user from session').sendStatus(400)
+    }
 
     try {
       const memoriesIndex = getMemoriesIndex();
 
-      res.send({
-        years: memoriesIndex.years.map(year => ({
+      let years = memoriesIndex.years.map(year => ({
           ...year,
           files: year.files
             .filter(file => UserSourceDAO.hasAccess(user.id, file.sourceId))
             .map(file => SourceService.getFile(file.sourceId, file.id)),
-        })),
+        }));
+
+      years = years.filter(year => year.files.length > 0);
+
+      res.send({
+        years,
       });
     } catch (error) {
       res.sendStatus(400);
