@@ -31,7 +31,6 @@ app.use(
       defaultSrc: [
         '\'self\'',
         '\'unsafe-inline\'',
-        'https://cdn.plyr.io/3.7.8/plyr.svg',
         'https://www.google.com/maps',
         'https://cdn.jsdelivr.net',
       ],
@@ -70,6 +69,7 @@ app.use(
         '\'self\'',
         'data:',
         'https://cdn.jsdelivr.net',
+        'https://cdn.plyr.io',
       ],
       upgradeInsecureRequests: null,
     },
