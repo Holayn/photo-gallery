@@ -12,8 +12,8 @@
     </div>
 
     <template v-if="!error">
-      <div v-if="!photo.metadata.video" class="flex justify-center w-full h-full">
-        <img :ref="imgRef" :src="photoSrc" class="max-w-full max-h-full object-contain" @load="onImgLoad" @error="onImgLoadError">
+      <div v-if="!photo.metadata.video" class="swiper-zoom-container">
+        <img :ref="imgRef" :src="photoSrc" class="object-contain" @load="onImgLoad" @error="onImgLoadError">
       </div>
       <div v-else class="flex items-center justify-center h-full">
         <!-- h-full flex is needed to size and position the video responsively. -->
