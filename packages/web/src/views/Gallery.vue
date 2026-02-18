@@ -110,7 +110,7 @@
     <PhotoGrid
       ref="photos"
       class="mt-4"
-      :photos="photos"
+      :photos="displayedPhotos"
       :layout-type="galleryLayout"
       :show-dates="showDates"
       :is-selection-mode="isSelectionMode"
@@ -127,7 +127,7 @@
     
     <Lightbox 
       v-if="isShowLightbox" 
-      :photos="photos" 
+      :photos="displayedPhotos" 
       :index="lightboxIndex" 
       :is-selection-mode="isSelectionMode" 
       :selected="selected" 
@@ -197,6 +197,10 @@ export default {
     viewTracking: {
       type: Boolean,
       default: true,
+    },
+    photos: {
+      type: Array,
+      default: () => [],
     }
   },
   data() {
@@ -226,20 +230,20 @@ export default {
   },
   computed: {
     isNoPhotos() {
-      return this.photos.length === 0;
+      return this.displayedPhotos.length === 0;
     },
     token() {
       return this.$store.state.token;
     },
-    photos() {
+    displayedPhotos() {
       if (this.isViewModeNewOnly) {
-        return this.$store.state.photos.filter(photo => this.isPhotoNew(photo));
+        return this.photos.filter(photo => this.isPhotoNew(photo));
       }
       if (this.isViewModeShowUnknownDateItems) {
-        return this.$store.state.photos.filter(photo => !photo.date);
+        return this.photos.filter(photo => !photo.date);
       }
 
-      return this.$store.state.photos
+      return this.photos
       .filter(photo => photo.date)
       .sort((a, b) => {
         if (this.sort === SORT_TYPES.DATE_DESC) {
@@ -256,10 +260,10 @@ export default {
       if (!getLastViewed(this.id)) {
         return false;
       }
-      return this.photos.some(photo => this.isPhotoNew(photo));
+      return this.displayedPhotos.some(photo => this.isPhotoNew(photo));
     },
     newPhotos() {
-      return this.$store.state.photos.filter(photo => this.isPhotoNew(photo));
+      return this.photos.filter(photo => this.isPhotoNew(photo));
     },
     isViewModeNewOnly() {
       return this.viewMode === 'newOnly';
@@ -271,7 +275,7 @@ export default {
       return this.photos.some(photo => photo.createdAt);
     },
     unknownDateCount() {
-      return this.$store.state.photos.filter(photo => !photo.date).length;
+      return this.photos.filter(photo => !photo.date).length;
     },
   },
   watch: {
@@ -328,7 +332,7 @@ export default {
         this.isShowLightbox = true;
 
         if (photo) {
-          this.lightboxIndex = this.photos.findIndex(p => p === photo);
+          this.lightboxIndex = this.displayedPhotos.findIndex(p => p === photo);
           if (this.isPhotoNew(photo)) {
             this.clearLastViewed();
           }
@@ -393,7 +397,7 @@ export default {
 
       await addToAlbum(id, Object.values(this.selected));
       Object.keys(this.selected).forEach(selected => {
-        const file = this.photos.find(photo => photo.id === selected);
+        const file = this.displayedPhotos.find(photo => photo.id === selected);
         file.albums.push({
           name,
           idAlias: id,
@@ -415,7 +419,7 @@ export default {
         const { id, name } = (await createAlbum(albumName, Object.values(this.selected))).data;
         alert(`Album "${name}" created.`);
         Object.keys(this.selected).forEach(selected => {
-          const file = this.photos.find(photo => photo.id === selected);
+          const file = this.displayedPhotos.find(photo => photo.id === selected);
           file.albums.push({
             name,
             idAlias: id,
@@ -448,7 +452,7 @@ export default {
     },
 
     reset() {
-      this.$store.dispatch('clearPhotos');
+      this.$emit('reset');
     },
 
     onSortSelect(e) {

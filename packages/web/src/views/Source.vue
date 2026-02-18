@@ -3,7 +3,7 @@
     <router-link to="/sources" class="underline">Sources</router-link>
   </div>
 
-  <Gallery :id="sourceId" :show-date-selection="true" :show-lightbox="showLightbox" @date="onDateUpdate($event)">
+  <Gallery :id="sourceId" :show-date-selection="true" :show-lightbox="showLightbox" :photos="photos" @date="onDateUpdate($event)" @reset="photos = []">
     <template #heading>
       <h1 class="text-3xl md:text-5xl">
         <div v-if="showLoadingSourceInfo" class="flex justify-center">
@@ -52,6 +52,7 @@ export default {
 
       date: null,
       source: null,
+      photos: [],
     };
   },
   computed: {
@@ -77,9 +78,6 @@ export default {
       this.loadingSourceInfo = false;
     }
   },
-  beforeUnmount() {
-    this.$store.dispatch('clearPhotos');
-  },
   methods: {
     async loadPhotoInfo() {
       try {
@@ -91,7 +89,7 @@ export default {
         );
         this.loadingPhotoInfo = false;
 
-        this.$store.dispatch('setPhotos', { photos, sourceId: this.sourceId });
+        this.photos = photos;
       } catch(e) {
         alert('An error occurred.');
         throw e;

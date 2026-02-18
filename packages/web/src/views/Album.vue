@@ -3,7 +3,7 @@
     <router-link to="/albums" class="underline">Albums</router-link>
   </div>
 
-  <Gallery :id="albumId" :show-lightbox="showLightbox" :album="true" :album-id="albumId" default-sort="dateAsc">
+  <Gallery :id="albumId" :show-lightbox="showLightbox" :album="true" :album-id="albumId" default-sort="dateAsc" :photos="photos.filter(photo => !photo.isBrokenAlbumFile())">
     <template #heading>
       <h1 class="text-3xl md:text-5xl">
         <div v-if="showLoadingAlbumInfo" class="flex justify-center">
@@ -121,17 +121,12 @@ export default {
 
     setDocumentTitle(this.album.name);
   },
-  beforeUnmount() {
-    this.$store.dispatch('clearPhotos');
-  },
   methods: {
     async loadPhotoInfo() {
       this.loadingPhotoInfo = true;
       const { photos } = await getPhotosFromAlbum(this.albumId, this.albumToken);
       this.photos = photos;
       this.loadingPhotoInfo = false;
-
-      this.$store.dispatch('setPhotos', { photos: photos.filter(photo => !photo.isBrokenAlbumFile()) });
     },
 
     showModalAlbumLink() {

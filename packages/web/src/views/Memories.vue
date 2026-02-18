@@ -3,7 +3,7 @@
     <div class="px-8 mb-2">
       <router-link to="/memories" class="underline">Memories</router-link>
     </div>
-    <Gallery :id="'memory' + memory.year" :show-lightbox="showLightbox" :sortable="false" :default-sort="SORT_TYPES.DATE_ASC">
+    <Gallery :id="'memory' + memory.year" :show-lightbox="showLightbox" :sortable="false" :default-sort="SORT_TYPES.DATE_ASC" :photos="photos">
       <template #heading>
         <h1 class="text-3xl md:text-5xl">
           {{ getYearsAgo(memory.year) }} {{ getYearsAgo(memory.year) === 1 ? 'year' : 'years' }} ago
@@ -77,6 +77,7 @@ export default {
     return {
       memories: null,
       memory: null,
+      photos: [],
       memoryCovers: {},
       loading: true,
       loadedImages: {},
@@ -130,9 +131,11 @@ export default {
       this.memory = selected || null;
 
       if (this.memory) {
-        this.$store.dispatch('setPhotos', { photos: this.getMemoryPhotos(this.memory) });
+        this.photos = this.getMemoryPhotos(this.memory);
 
         setDocumentTitle(`${this.getYearsAgo(this.memory.year)} ${this.getYearsAgo(this.memory.year) === 1 ? 'year' : 'years'} ago`);
+      } else {
+        this.photos = [];
       }
     },
     getMemoryPhotos({ files }) {
