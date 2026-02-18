@@ -1,20 +1,44 @@
 # photo-gallery
 
+A self-hosted photo gallery. Yarn monorepo with an Express server (`packages/server`) and a Vue 3 web app (`packages/web`).
+
+## Requirements
+
+- Node.js, Yarn
+- Photos pre-processed by [webimg](https://github.com/Holayn/webimg)
+
 ## Setup
 
-### Photos
-1. Process photos with [photo-web-processor](https://github.com/Holayn/photo-web-processor).
-2. Add a new source to the server via `add-source`.
-    - e.g. `node packages/server/bin/photo-gallery.js add-source --alias SOURCE_NAME --source PATH`
+### 1. Install dependencies
 
-### Server Setup
-- Define `SESSION_SECRET` in `.env`
-- Start the server, then add a user with a SHA256-hashed password to the `photo-gallery.db`
+```sh
+yarn
+```
 
-### Startup
+### 2. Configure the server
 
-#### Development
+Copy `packages/server/sample.env` to `packages/server/.env` and fill in the values (see [server README](packages/server/README.md)).
 
-`yarn --cwd packages/server dev`
+### 3. Add a source
 
-`yarn --cwd packages/web dev`
+```sh
+node packages/server/bin/photo-gallery.js add-source --alias <name> --source <path>
+```
+
+### 4. Add a user
+
+Start the server, then insert a user directly into `photo-gallery.db` with a SHA-256-hashed password.
+
+## Development
+
+```sh
+yarn --cwd packages/server dev   # API server on :8000
+yarn --cwd packages/web dev      # Vite dev server (proxies /api → :8000)
+```
+
+## Production
+
+```sh
+yarn --cwd packages/web build    # Output to packages/web/dist
+yarn --cwd packages/server start # Serves API; nginx (or similar) serves dist/
+```

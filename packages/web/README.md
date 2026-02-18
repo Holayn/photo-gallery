@@ -1,11 +1,14 @@
 # photo-gallery-web
 
-## Startup
+Vue 3 + Vite frontend. Uses Pinia for state, Vue Router for navigation, and Tailwind CSS for styling.
 
-### Development
-`yarn dev`
+## Scripts
 
-### Production
-`yarn build`
+```sh
+yarn dev      # Dev server with HMR (proxies /api → :8000)
+yarn build    # Production build → dist/
+```
 
-Run the server to host the app files.
+## Production
+
+Serve the `dist/` output with nginx or another static file server. Point API requests at the running `photo-gallery-server` instance.
