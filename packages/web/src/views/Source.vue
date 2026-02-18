@@ -64,21 +64,32 @@ export default {
     },
   },
   async mounted() {
-    try {
-      this.loadingSourceInfo = true;
-      this.loadPhotoInfo();
-      this.source = await getSource(this.sourceId);
-      this.loadingSourceInfo = false;
-      
-      setDocumentTitle(this.directory ? `${this.source.alias} (${this.directory})` : this.source.alias);
-    } catch(e) {
-      alert('An error occurred.');
-      throw e;
-    } finally {
-      this.loadingSourceInfo = false;
-    }
+    await this.loadSourceInfo();
+  },
+  watch: {
+    sourceId() {
+      this.photos = [];
+      this.source = null;
+      this.date = null;
+      this.loadSourceInfo();
+    },
   },
   methods: {
+    async loadSourceInfo() {
+      try {
+        this.loadingSourceInfo = true;
+        this.loadPhotoInfo();
+        this.source = await getSource(this.sourceId);
+        this.loadingSourceInfo = false;
+
+        setDocumentTitle(this.directory ? `${this.source.alias} (${this.directory})` : this.source.alias);
+      } catch(e) {
+        alert('An error occurred.');
+        throw e;
+      } finally {
+        this.loadingSourceInfo = false;
+      }
+    },
     async loadPhotoInfo() {
       try {
         this.loadingPhotoInfo = true;
