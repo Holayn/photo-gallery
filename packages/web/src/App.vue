@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="$store.state.isLoggedIn">
+    <div v-if="authStore.isLoggedIn">
       <header class="sticky top-0 bg-white z-40 shadow-md flex gap-4 px-4 md:px-8 py-4">
         <div class="flex flex-auto">
           <button @click="showLeftDrawer = true">
@@ -51,11 +51,16 @@
 <script>
 import Toast from './components/Toast.vue';
 import { logout } from './services/api';
+import { useAuthStore } from './store';
 
 export default {
   name: 'App',
   components: {
     Toast,
+  },
+  setup() {
+    const authStore = useAuthStore();
+    return { authStore };
   },
   data() {
     return {
@@ -67,7 +72,7 @@ export default {
     async logout() {
       await logout();
       this.showRightDrawer = false;
-      this.$store.dispatch('setIsLoggedIn', false);
+      this.authStore.setIsLoggedIn(false);
     }
   }
 }

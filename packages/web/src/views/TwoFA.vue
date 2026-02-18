@@ -19,6 +19,7 @@
 import Loading from '../components/Loading.vue';
 
 import { auth2FA } from '../services/api';
+import { useAuthStore } from '../store';
 
 export default {
   name: '2FA',
@@ -30,6 +31,10 @@ export default {
       type: String,
       default: null,
     },
+  },
+  setup() {
+    const authStore = useAuthStore();
+    return { authStore };
   },
   data() {
     return {
@@ -49,7 +54,7 @@ export default {
         } else if (error) {
           this.error = 'Error';
         } else {
-          this.$store.dispatch('setIsLoggedIn', true);
+          this.authStore.setIsLoggedIn(true);
 
           if (this.next !== null) {
             this.$router.push({ path: this.next });

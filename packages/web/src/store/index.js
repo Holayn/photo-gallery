@@ -1,16 +1,16 @@
-import { createStore } from 'vuex'
+import { defineStore } from 'pinia'
 
-export default createStore({
-  state: {
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
     authToken: '',
     isLoggedIn: false,
-  },
+  }),
   actions: {
-    setAuthToken({ state }, authToken) {
-      state.authToken = authToken;
+    setAuthToken(authToken) {
+      this.authToken = authToken;
     },
-    setIsLoggedIn({ state }, isLoggedIn) {
-      state.isLoggedIn = isLoggedIn;
+    setIsLoggedIn(isLoggedIn) {
+      this.isLoggedIn = isLoggedIn;
     },
   },
 })

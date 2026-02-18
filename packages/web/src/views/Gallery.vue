@@ -55,7 +55,7 @@
         </sl-dropdown>
       </div>
       <Teleport to="#headerAdditionalControls">
-        <div v-if="$store.state.isLoggedIn" class="flex gap-4 justify-end">
+        <div v-if="authStore.isLoggedIn" class="flex gap-4 justify-end">
           <div v-if="isSelectionMode" class="flex flex-col md:flex-row items-end md:items-center gap-2">
             <div>Selected: {{ Object.keys(selected).length }}</div>
             <div class="relative">
@@ -156,6 +156,7 @@
 
 <script>
 import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum, PHOTO_SIZES } from '../services/api';
+import { useAuthStore } from '../store';
 
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
@@ -176,6 +177,10 @@ export default {
     Loading,
     Modal,
     PhotoGrid,
+  },
+  setup() {
+    const authStore = useAuthStore();
+    return { authStore };
   },
   props: {
     id: {
@@ -233,7 +238,7 @@ export default {
       return this.displayedPhotos.length === 0;
     },
     token() {
-      return this.$store.state.token;
+      return this.authStore.authToken;
     },
     displayedPhotos() {
       if (this.isViewModeNewOnly) {

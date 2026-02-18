@@ -510,10 +510,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/devtools-api@npm:^6.0.0-beta.11, @vue/devtools-api@npm:^6.6.4":
+"@vue/devtools-api@npm:^6.6.4":
   version: 6.6.4
   resolution: "@vue/devtools-api@npm:6.6.4"
   checksum: beccd79c7c7794ea511e35581fbbe5411d3c5d63b2418bc3771efc66959966df4cbfc391ff5954028e2728eb0f0e37b41722e1c39fde61295f2814a143d2ef0e
+  languageName: node
+  linkType: hard
+
+"@vue/devtools-api@npm:^7.7.7":
+  version: 7.7.9
+  resolution: "@vue/devtools-api@npm:7.7.9"
+  dependencies:
+    "@vue/devtools-kit": ^7.7.9
+  checksum: a4dbc911c4a99d401591972c766b56b323f6f01dddfaf1bddc00c5c78aeda7dd7afc6330b5b8245a13ef72f8eceededf0a40416311e229c19014d151ebacd416
+  languageName: node
+  linkType: hard
+
+"@vue/devtools-kit@npm:^7.7.9":
+  version: 7.7.9
+  resolution: "@vue/devtools-kit@npm:7.7.9"
+  dependencies:
+    "@vue/devtools-shared": ^7.7.9
+    birpc: ^2.3.0
+    hookable: ^5.5.3
+    mitt: ^3.0.1
+    perfect-debounce: ^1.0.0
+    speakingurl: ^14.0.1
+    superjson: ^2.2.2
+  checksum: 7241630643abaf2fd22f1db2ff47ec594418b6a4c55822c8dc4809754bf22f8f9c095872f8774c2f0a07c77f4663ef5f0bdc88578b42be282c0b4ed184b5fda1
+  languageName: node
+  linkType: hard
+
+"@vue/devtools-shared@npm:^7.7.9":
+  version: 7.7.9
+  resolution: "@vue/devtools-shared@npm:7.7.9"
+  dependencies:
+    rfdc: ^1.4.1
+  checksum: 02ea89651174d3763f2b0ea63f1ef7bb8ef8e22479dfc2b6b19cdbe2aab76911b7c2891de149ba985d218f58a06f2de4f4fb4e01d2fa8296e2d7b80d8539eceb
   languageName: node
   linkType: hard
 
@@ -935,6 +968,13 @@ __metadata:
   dependencies:
     file-uri-to-path: 1.0.0
   checksum: 65b6b48095717c2e6105a021a7da4ea435aa8d3d3cd085cb9e85bcb6e5773cf318c4745c3f7c504412855940b585bdf9b918236612a1c7a7942491de176f1ae7
+  languageName: node
+  linkType: hard
+
+"birpc@npm:^2.3.0":
+  version: 2.9.0
+  resolution: "birpc@npm:2.9.0"
+  checksum: 499cba9d33ae6749c199b4dc1fc30faeb72aabd41d5c75d73d1d415691f65f0b613d787f21aa2369607a555a5e09c55e437e02b14bc6bad67bb657f8ae58f3dd
   languageName: node
   linkType: hard
 
@@ -1376,6 +1416,15 @@ __metadata:
   version: 0.7.2
   resolution: "cookie@npm:0.7.2"
   checksum: 9bf8555e33530affd571ea37b615ccad9b9a34febbf2c950c86787088eb00a8973690833b0f8ebd6b69b753c62669ea60cec89178c1fb007bf0749abed74f93e
+  languageName: node
+  linkType: hard
+
+"copy-anything@npm:^4":
+  version: 4.0.5
+  resolution: "copy-anything@npm:4.0.5"
+  dependencies:
+    is-what: ^5.2.0
+  checksum: e2ccac1a26a119c4a8fd68503c1ba1b2065d75793ef63eb492092d71afaf5ac492802a57572e3d88d9e219a92f8b68acb121b344e3560e9f0f3a99ef973133fe
   languageName: node
   linkType: hard
 
@@ -2742,6 +2791,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hookable@npm:^5.5.3":
+  version: 5.5.3
+  resolution: "hookable@npm:5.5.3"
+  checksum: df659977888398649b6ef8c4470719e7e8384a1d939a6587e332e86fd55b3881806e2f8aaebaabdb4f218f74b83b98f2110e143df225e16d62a39dc271e7e288
+  languageName: node
+  linkType: hard
+
 "http-cache-semantics@npm:^4.1.0, http-cache-semantics@npm:^4.1.1":
   version: 4.2.0
   resolution: "http-cache-semantics@npm:4.2.0"
@@ -3198,6 +3254,13 @@ __metadata:
     call-bound: ^1.0.3
     get-intrinsic: ^1.2.6
   checksum: 5c6c8415a06065d78bdd5e3a771483aa1cd928df19138aa73c4c51333226f203f22117b4325df55cc8b3085a6716870a320c2d757efee92d7a7091a039082041
+  languageName: node
+  linkType: hard
+
+"is-what@npm:^5.2.0":
+  version: 5.5.0
+  resolution: "is-what@npm:5.5.0"
+  checksum: 8416464cf65a2b57512b18437f672e035e24fcda3af7de47a0f5183c2c46f30ce6e57b6ca35d07a81a04d829357a97ef5e5aa45bf963a5c2d7bf869f9ceebc56
   languageName: node
   linkType: hard
 
@@ -3694,6 +3757,13 @@ __metadata:
   dependencies:
     minipass: ^7.1.2
   checksum: a15e6f0128f514b7d41a1c68ce531155447f4669e32d279bba1c1c071ef6c2abd7e4d4579bb59ccc2ed1531346749665968fdd7be8d83eb6b6ae2fe1f3d370a7
+  languageName: node
+  linkType: hard
+
+"mitt@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "mitt@npm:3.0.1"
+  checksum: b55a489ac9c2949ab166b7f060601d3b6d893a852515ae9eca4e11df01c013876df777ea109317622b5c1c60e8aae252558e33c8c94e14124db38f64a39614b1
   languageName: node
   linkType: hard
 
@@ -4203,6 +4273,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"perfect-debounce@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "perfect-debounce@npm:1.0.0"
+  checksum: 220343acf52976947958fef3599849471605316e924fe19c633ae2772576298e9d38f02cefa8db46f06607505ce7b232cbb35c9bfd477bd0329bd0a2ce37c594
+  languageName: node
+  linkType: hard
+
 "photo-gallery-server@workspace:packages/server":
   version: 0.0.0-use.local
   resolution: "photo-gallery-server@workspace:packages/server"
@@ -4245,6 +4322,7 @@ __metadata:
     eslint-plugin-vue: ^9.9.0
     js-cookie: ^3.0.1
     justified-layout: ^4.1.0
+    pinia: ^3.0.4
     plyr: ^3.7.8
     postcss: ^8.4.23
     swiper: ^12.1.1
@@ -4252,7 +4330,6 @@ __metadata:
     vite: ^4.3.3
     vue: ^3.2.45
     vue-router: ^4.1.6
-    vuex: ^4.0.0-0
   languageName: unknown
   linkType: soft
 
@@ -4281,6 +4358,21 @@ __metadata:
   version: 2.3.0
   resolution: "pify@npm:2.3.0"
   checksum: 9503aaeaf4577acc58642ad1d25c45c6d90288596238fb68f82811c08104c800e5a7870398e9f015d82b44ecbcbef3dc3d4251a1cbb582f6e5959fe09884b2ba
+  languageName: node
+  linkType: hard
+
+"pinia@npm:^3.0.4":
+  version: 3.0.4
+  resolution: "pinia@npm:3.0.4"
+  dependencies:
+    "@vue/devtools-api": ^7.7.7
+  peerDependencies:
+    typescript: ">=4.5.0"
+    vue: ^3.5.11
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: f556836913af99bb95ee2faf9a97ea613558b30e6eee47320a3ba205cce732c93ec0ab867cf052538371c7d4b779275a74306695d658f0f1e31ff8edc1a665e2
   languageName: node
   linkType: hard
 
@@ -4676,6 +4768,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"rfdc@npm:^1.4.1":
+  version: 1.4.1
+  resolution: "rfdc@npm:1.4.1"
+  checksum: 3b05bd55062c1d78aaabfcea43840cdf7e12099968f368e9a4c3936beb744adb41cbdb315eac6d4d8c6623005d6f87fdf16d8a10e1ff3722e84afea7281c8d13
+  languageName: node
+  linkType: hard
+
 "rimraf@npm:^3.0.2":
   version: 3.0.2
   resolution: "rimraf@npm:3.0.2"
@@ -5061,6 +5160,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"speakingurl@npm:^14.0.1":
+  version: 14.0.1
+  resolution: "speakingurl@npm:14.0.1"
+  checksum: 5c7fb81d9b4cbda31f462f424cc2d59d9d07ca07e86f9f4e7b1c6325307646f9b82297891ce7f9e75b4bccf20ac436758e721506461b5cd6e5561e89186aa67b
+  languageName: node
+  linkType: hard
+
 "sqlite3@npm:^5.0.2":
   version: 5.1.7
   resolution: "sqlite3@npm:5.1.7"
@@ -5227,6 +5333,15 @@ __metadata:
     sucrase: bin/sucrase
     sucrase-node: bin/sucrase-node
   checksum: 9a3ae3900f85ede60468bdaebc07a32691d5e44c80bb008734088dcde49cd0e05ead854786d90fbb6e63ed1c50592146cb50536321212773f6d72d1c85b2a51b
+  languageName: node
+  linkType: hard
+
+"superjson@npm:^2.2.2":
+  version: 2.2.6
+  resolution: "superjson@npm:2.2.6"
+  dependencies:
+    copy-anything: ^4
+  checksum: d860577809502d058144d1e5fcd383571b4cf0466cab7d7b6fa1675fff598af53148bacd7b3b0075fba0997ed1f05393bde95b3a3727f7708513396b1d88a8b6
   languageName: node
   linkType: hard
 
@@ -5740,17 +5855,6 @@ __metadata:
     typescript:
       optional: true
   checksum: df176f8980007ecfa5225e4895298e5cb199aa8dcfd88311a91a5c66eb3ad3d80b2235e835373ec361c7e773db94bc8e104d3028e9b2d7ac2140c5477bab2b64
-  languageName: node
-  linkType: hard
-
-"vuex@npm:^4.0.0-0":
-  version: 4.1.0
-  resolution: "vuex@npm:4.1.0"
-  dependencies:
-    "@vue/devtools-api": ^6.0.0-beta.11
-  peerDependencies:
-    vue: ^3.2.0
-  checksum: f5e375a9c19ea3bbf4b9bc4c2adc033c37d2583e59b2d79da42bde2ab0771a086c419d62323fb354b6d421a8ddb4fd4e14f3abe5d49e9862311bc4847732b608
   languageName: node
   linkType: hard
 

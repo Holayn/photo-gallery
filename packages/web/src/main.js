@@ -10,16 +10,20 @@ import Sources from './views/Sources.vue';
 import Source from './views/Source.vue';
 import SourceDirectories from './views/SourceDirectories.vue';
 import Memories from './views/Memories.vue';
-import store from './store'
+import { createPinia } from 'pinia'
+import { useAuthStore } from './store'
 
 import { authVerify, error } from './services/api';
 import { setDocumentTitle } from './utils';
 
 import './style.css';
 
+const pinia = createPinia();
+
 const routes = [
   { name: 'home', path: '/', redirect: () => {
-    if (store.state.isLoggedIn === null) {
+    const authStore = useAuthStore();
+    if (authStore.isLoggedIn === null) {
       return { name: 'login' };
     }
     return { name: 'albums' };
@@ -62,10 +66,11 @@ router.beforeEach(async (to) => {
     return true;
   }
 
-  if (!store.state.isLoggedIn) {
-      // Verify token
+  const authStore = useAuthStore();
+  if (!authStore.isLoggedIn) {
+    // Verify token
     if (await authVerify()) {
-      store.dispatch('setIsLoggedIn', true);
+      authStore.setIsLoggedIn(true);
     } else {
       router.push({ 
         name: 'login', 
@@ -92,7 +97,7 @@ app.config.errorHandler = (err, instance, info) => {
 }
 
 app
-  .use(store)
+  .use(pinia)
   .use(router)
   .mount('#app');
 

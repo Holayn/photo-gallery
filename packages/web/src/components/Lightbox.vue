@@ -20,7 +20,7 @@
           </div>
         </div>
         <div class="flex justify-end h-9">
-          <template v-if="$store.state.isLoggedIn">
+          <template v-if="authStore.isLoggedIn">
             <button v-if="isSelectionMode" class="mr-4" @click="select()">
               <svg v-if="isCurrentPhotoSelected" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
@@ -150,6 +150,7 @@ import LightboxSlide from './LightboxSlide.vue';
 import Toast from './Toast.vue';
 
 import { PHOTO_SIZES } from '../services/api';
+import { useAuthStore } from '../store';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(customParseFormat);
@@ -181,7 +182,9 @@ export default {
     },
   },
   setup() {
+    const authStore = useAuthStore();
     return {
+      authStore,
       modules: [
         Keyboard,
         Virtual,

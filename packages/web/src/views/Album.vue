@@ -1,5 +1,5 @@
 <template>
-  <div v-if="$store.state.isLoggedIn" class="px-8 mb-2">
+  <div v-if="authStore.isLoggedIn" class="px-8 mb-2">
     <router-link to="/albums" class="underline">Albums</router-link>
   </div>
 
@@ -53,6 +53,7 @@ import Gallery from './Gallery.vue';
 
 import { getPhotosFromAlbum, getAlbum, shareAlbum } from '../services/api';
 import { setDocumentTitle } from '../utils';
+import { useAuthStore } from '../store';
 
 export default {
   name: 'Album',
@@ -60,6 +61,10 @@ export default {
     Gallery,
     Loading,
     Modal,
+  },
+  setup() {
+    const authStore = useAuthStore();
+    return { authStore };
   },
   props: {
     albumId: String,
