@@ -300,12 +300,12 @@ export default {
     left: 0;
     width: 100%;
     height: var(--lightbox-height);
+
+    /* Prevents the browser from hijacking pinch gestures for native page zoom. Without this, the browser can take over mid-pinch, and Swiper never receives the pointerup events, leaving its zoom state stuck. */
+    touch-action: none;
   }
 
   .lightbox_menu {
-    /* display: flex;
-    justify-content: flex-end;
-    align-items: center; */
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     position: absolute;

@@ -1,8 +1,8 @@
 <template>
   <div class="h-full w-full">
-    <div v-if="loading || error" class="relative flex items-center justify-center h-full w-full">
+    <div v-if="loading || error" class="relative flex items-center justify-center h-full w-full pointer-events-none">
       <img class="w-full h-full object-contain blur-sm" :src="preview">
-      <div class="absolute flex flex-col items-center justify-center">
+      <div class="absolute flex flex-col items-center justify-center pointer-events-auto">
         <Loading v-if="loading" class="w-16 h-16"></Loading>
         <div v-else-if="error" class="text-white">Failed to load</div>
         <button v-if="error" class="text-white mt-1" @click="retryLoad">
