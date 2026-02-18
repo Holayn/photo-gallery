@@ -310,6 +310,12 @@ export default {
     onSelectionChange({ selected }) {
       this.selected = selected;
     },
+
+    select(photo) {
+      if (this.$refs.photos && this.$refs.photos.select) {
+        this.$refs.photos.select(photo);
+      }
+    },
     
     async scrollImageIntoView() {
       if (this.$refs.photos && this.$refs.photos.scrollImageIntoView) {
