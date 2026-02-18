@@ -15,7 +15,7 @@ router.get(
     const user = UserDAO.getByUsername(username);
 
     if (!user) {
-      res.statusMessage('Failed to find user from session').sendStatus(400)
+      res.status(400).send('Failed to find user from session');
     }
 
     try {

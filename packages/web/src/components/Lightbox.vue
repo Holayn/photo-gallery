@@ -9,6 +9,7 @@
           <button class="ml-4" @click.stop="download()">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"/></svg>
           </button>
+          
         </div>
         <div class="h-9 flex items-center">
           <div v-if="currentPhoto.date" class="text-white text-center">
@@ -19,13 +20,14 @@
             <div class="text-sm text-white text-center">Unknown Date</div>
           </div>
         </div>
-        <div class="flex justify-end h-9">
+        <div class="flex justify-end gap-4 h-9 items-center">
+          <slot name="additionalHeaderControls"></slot>
           <template v-if="authStore.isLoggedIn">
-            <button v-if="isSelectionMode" class="mr-4" @click="select()">
+            <button v-if="isSelectionMode" @click="select()">
               <svg v-if="isCurrentPhotoSelected" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
             </button>
-            <button v-else class="mr-4" @click="enableSelectionMode()">
+            <button v-else @click="enableSelectionMode()">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
             </button>
           </template>
@@ -86,6 +88,9 @@
                     </div>
                     <div>
                       <a class="text-sm underline" :href="currentPhotoOriginalUrl" target="_blank">View Original</a>
+                    </div>
+                    <div v-if="currentPhoto.source" class="text-xs text-slate-600">
+                      <router-link class="text-sm underline" :to="{ name: 'source', params: { sourceId: currentPhoto.source.id } }" @click="close()">{{ currentPhoto.source.alias }}</router-link>
                     </div>
                   </div>
                 </div>

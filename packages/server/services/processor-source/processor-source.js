@@ -31,6 +31,10 @@ const toModel = toModelFactory(ProcessorSourceFile);
  * photo-web-processor DB schema
  */
 class ProcessorSource {
+  static getFullDbPath(sourcePath) {
+    return path.join(sourcePath, SOURCE_INDEX_DB_FILENAME);
+  }
+
   constructor({ path: sourcePath }) {
     this.path = sourcePath;
 
@@ -38,7 +42,7 @@ class ProcessorSource {
       if (!connections[sourcePath]) {
         logger.info(`Opening photo-web-processor source: ${sourcePath}`);
         const sourceIndexDb = new Database(
-          path.join(sourcePath, SOURCE_INDEX_DB_FILENAME),
+          ProcessorSource.getFullDbPath(sourcePath),
           { readonly: true }
         );
         this.db = sourceIndexDb;
@@ -86,9 +90,9 @@ class ProcessorSource {
   findFilesMatching(file) {
     return this.db
       .prepare(
-        `SELECT * FROM ${FILES_TABLE_NAME} WHERE file_name = ${file.fileName} AND file_date = ${file.fileDate}`
+        `SELECT * FROM ${FILES_TABLE_NAME} WHERE file_name = ? AND file_date = ?`
       )
-      .all()
+      .all(file.fileName, file.fileDate)
       .map((f) => toModel(f));
   }
 
@@ -122,6 +126,10 @@ class ProcessorSource {
       )
       .all(startDate, endDate)
       .map((f) => toModel(f));
+  }
+
+  count() {
+    return this.db.prepare(`SELECT COUNT(*) AS count FROM ${FILES_TABLE_NAME} WHERE processed != 0`).get().count;
   }
 
   async getFileData(id, sizeParam) {

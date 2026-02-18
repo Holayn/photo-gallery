@@ -8,7 +8,9 @@ export default class Photo {
   urls = {};
   createdAt;
 
-  constructor({ date, sourceId, sourceFileId, galleryFileId, metadata = {}, albums = [], urls = {}, createdAt }) {
+  source;
+
+  constructor({ date, sourceId, sourceFileId, galleryFileId, metadata = {}, albums = [], urls = {}, createdAt, source }) {
     this.date = date;
     this.sourceId = sourceId;
     this.sourceFileId = sourceFileId;
@@ -17,6 +19,7 @@ export default class Photo {
     this.albums = albums;
     this.urls = urls;
     this.createdAt = createdAt;
+    this.source = source;
   }
 
   get id() {

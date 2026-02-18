@@ -29,6 +29,9 @@
           <div class="mt-4">
             <router-link :to="{ name: 'memories' }" @click="showLeftDrawer = false">Memories</router-link>
           </div>
+          <div class="mt-4">
+            <button @click="startExplore">Explore</button>
+          </div>
         </div>
       </nav>
       <nav v-if="showRightDrawer" class="fixed z-50 top-0 w-full h-full bg-black/25" @click="showRightDrawer = false">
@@ -44,6 +47,8 @@
       <router-view></router-view>
     </div>
 
+    <Explore v-if="showExplore" @close="showExplore = false" @restart="onExploreRestart"></Explore>
+
     <Toast></Toast>
   </div>
 </template>
@@ -52,11 +57,13 @@
 import Toast from './components/Toast.vue';
 import { logout } from './services/api';
 import { useAuthStore } from './store';
+import Explore from './views/Explore.vue';
 
 export default {
   name: 'App',
   components: {
     Toast,
+    Explore,
   },
   setup() {
     const authStore = useAuthStore();
@@ -66,6 +73,8 @@ export default {
     return {
       showLeftDrawer: false,
       showRightDrawer: false,
+
+      showExplore: false,
     }
   },
   methods: {
@@ -73,7 +82,16 @@ export default {
       await logout();
       this.showRightDrawer = false;
       this.authStore.setIsLoggedIn(false);
-    }
+    },
+    startExplore() {
+      this.showExplore = true;
+      this.showLeftDrawer = false;
+    },
+    async onExploreRestart() {
+      this.showExplore = false;
+      await this.$nextTick();
+      this.showExplore = true;
+    },
   }
 }
 </script>

@@ -231,7 +231,6 @@ export async function getMemories() {
   return (await fetcher.fetch(`${BASE}/memories`)).data;
 }
 
-// User-Source management
 export async function getUsers() {
   const res = await fetcher.fetch(`${BASE}/users`);
   if (res.data) {
@@ -272,5 +271,21 @@ export async function removeSourceUser(sourceId, userId) {
     },
     body: JSON.stringify({ sourceId, userId }),
   });
+  return res.data;
+}
+
+export async function getExploreNext() {
+  const res = await fetcher.fetch(`${BASE}/explore/next`);
+  if (res.error) {
+    throw new ApiError(res.error.status);
+  }
+  return res.data;
+}
+
+export async function clearExploreHistory() {
+  const res = await fetcher.fetch(`${BASE}/explore/history/clear`, { method: 'POST' });
+  if (res.error) {
+    throw new ApiError(res.error.status);
+  }
   return res.data;
 }

@@ -9,6 +9,7 @@ const GalleryFile = require('../model/gallery-file');
 const Source = require('../model/source');
 const User = require('../model/user');
 const { generateRandomString } = require('../util/random');
+const UserExploreHistory = require('../model/user-explore-history');
 
 const DB_FILENAME = 'photo-gallery.db';
 const DB_PATH = path.resolve(__dirname, `../${DB_FILENAME}`);
@@ -211,7 +212,6 @@ const UserDAO = {
 DB.exec(
   'CREATE TABLE IF NOT EXISTS user_source (id INTEGER PRIMARY KEY, user_id INTEGER, source_id INTEGER, FOREIGN KEY(user_id) REFERENCES user(id), FOREIGN KEY(source_id) REFERENCES source(id))'
 );
-// Create unique index to prevent duplicate associations
 try {
   DB.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_user_source_unique ON user_source(user_id, source_id)');
 } catch (e) {}
@@ -247,6 +247,78 @@ const UserSourceDAO = {
   },
 };
 
+DB.exec(
+  'CREATE TABLE IF NOT EXISTS user_explore_history (id INTEGER PRIMARY KEY, user_id INTEGER, source_id INTEGER, source_file_id INTEGER, FOREIGN KEY(user_id) REFERENCES user(id), FOREIGN KEY(source_id) REFERENCES source(id))'
+);
+try {
+  DB.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_user_explore_history_unique ON user_explore_history(user_id, source_id, source_file_id)');
+} catch (e) {}
+
+const toUserExploreHistoryModel = toModelFactory(UserExploreHistory);
+const UserExploreHistoryDAO = {
+  insert({ userId, sourceId, sourceFileId }) {
+    return DB.prepare(
+      'INSERT INTO user_explore_history (user_id, source_id, source_file_id) VALUES (@userId, @sourceId, @sourceFileId)'
+    ).run({ userId, sourceId, sourceFileId }).lastInsertRowid;
+  },
+  getByUserIdSourceIdFileId(userId, sourceId, sourceFileId) {
+    return toUserExploreHistoryModel(DB.prepare(
+      'SELECT * FROM user_explore_history WHERE user_id = ? AND source_id = ? AND source_file_id = ?'
+    ).get(userId, sourceId, sourceFileId));
+  },
+  getMostRecent(userId) {
+    return toUserExploreHistoryModel(DB.prepare(
+      'SELECT * FROM user_explore_history WHERE user_id = ? ORDER BY id DESC LIMIT 1'
+    ).get(userId));
+  },
+  getByUserId(userId) {
+    return DB.prepare(
+      'SELECT * FROM user_explore_history WHERE user_id = ?'
+    ).all(userId).map((u) => toUserExploreHistoryModel(u));
+  },
+  deleteByUserId(userId) {
+    return DB.prepare(
+      'DELETE FROM user_explore_history WHERE user_id = ?'
+    ).run(userId);
+  },
+}
+
+function attachDB(dbPath) {
+  DB.prepare('ATTACH DATABASE ? AS attached_db').run(dbPath);
+  return 'attached_db';
+}
+
+function detachDB() {
+  DB.prepare('DETACH DATABASE attached_db').run();
+}
+
+function findUnexploredFile(dbPath, userId) {
+  const attachedDbName = attachDB(dbPath);
+
+  try {
+    // Compute count and pick a random offset in SQL so it's always in sync
+    // with the live user_explore_history table, even under parallel requests.
+    const { count } = DB.prepare(`
+      SELECT COUNT(*) AS count FROM ${attachedDbName}.files attached_processor_source_files
+      LEFT JOIN user_explore_history ueh ON attached_processor_source_files.id = ueh.source_file_id AND ueh.user_id = ?
+      WHERE ueh.id IS NULL AND attached_processor_source_files.processed != 0
+    `).get(userId);
+
+    if (!count) return null;
+
+    const offset = Math.floor(Math.random() * count);
+
+    return DB.prepare(`
+      SELECT attached_processor_source_files.* FROM ${attachedDbName}.files attached_processor_source_files
+      LEFT JOIN user_explore_history ueh ON attached_processor_source_files.id = ueh.source_file_id AND ueh.user_id = ?
+      WHERE ueh.id IS NULL AND attached_processor_source_files.processed != 0
+      LIMIT 1 OFFSET ?
+    `).get(userId, offset);
+  } finally {
+    detachDB(attachedDbName);
+  }
+}
+
 module.exports = {
   AlbumFileDAO,
   AlbumDAO,
@@ -254,6 +326,10 @@ module.exports = {
   SourceDAO,
   UserDAO,
   UserSourceDAO,
+  UserExploreHistoryDAO,
+  attachDB,
+  detachDB,
+  findUnexploredFile,
   transaction: (fn) => {
     return DB.transaction(() => {
       return fn();

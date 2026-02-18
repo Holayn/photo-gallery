@@ -56,7 +56,7 @@ import Loading from '../components/Loading.vue';
 import PhotoGrid from '../components/PhotoGrid.vue';
 import Gallery, { SORT_TYPES } from './Gallery.vue';
 import Photo from '../model/photo';
-import { getMemories, PHOTO_SIZES } from '../services/api';
+import { getMemories, PHOTO_SIZES, getSources } from '../services/api';
 import dayjs from 'dayjs';
 import { setDocumentTitle } from '../utils';
 
@@ -84,6 +84,7 @@ export default {
       error: false,
       errorImages: {},
       errorMemories: {},
+      sources: [],
       SORT_TYPES,
     };
   },
@@ -97,7 +98,12 @@ export default {
   },
   async mounted() {
     try {
-      this.memories = await getMemories();
+      const [memories, sources] = await Promise.all([
+         getMemories(),
+         getSources(),
+      ]);
+      this.sources = sources;
+      this.memories = memories;
       
       await Promise.all(this.memories.years.map(async (memory) => {
         try {
@@ -139,7 +145,7 @@ export default {
       }
     },
     getMemoryPhotos({ files }) {
-      return files.map(file => new Photo(file));
+      return files.map(file => new Photo({ ...file, source: this.sources.find(s => s.id === file.sourceId) }));
     },
     getYearsAgo(year) {
       return dayjs().year() - year;
