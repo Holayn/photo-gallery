@@ -39,7 +39,7 @@ export default {
     Modal,
     Lightbox,
   },
-  emits: ['close'],
+  emits: ['close', 'restart'],
   data() {
     return {
       loading: false,
