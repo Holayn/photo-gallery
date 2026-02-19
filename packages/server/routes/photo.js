@@ -2,16 +2,11 @@ const express = require('express');
 const path = require('path');
 const send = require('send');
 
+const config = require('../services/config');
 const SourceService = require('../services/source');
 const AuthController = require('../controllers/auth');
 const logger = require('../services/logger');
 const { asyncHandler, requiredParams } = require('../util/route-utils');
-
-require('dotenv').config();
-
-if (process.env.ENV !== 'development' && !process.env.FILES_PATH) {
-  throw new Error('FILES_PATH needs to be configured in the .env file.');
-}
 
 const router = express.Router();
 
@@ -49,9 +44,10 @@ router.get(
     const p = await SourceService.getFilePath(sourceId, sourceFileId);
 
     if (p) {
+      const safeName = path.basename(p).replace(/[^\w.\-]/g, '_');
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename=${path.basename(p)}`
+        `attachment; filename=${safeName}`
       );
       sendFile(p, req, res);
     } else {
@@ -61,14 +57,16 @@ router.get(
 );
 
 function sendFile(filePath, req, res) {
-  if (process.env.ENV !== 'development' && !process.env.DISABLE_NGINX_REDIRECT) {
-    if (filePath.startsWith(process.env.FILES_PATH)) {
-      filePath = filePath.substring(`${process.env.FILES_PATH}/`.length);
-      logger.info(`X-Accel-Redirect: /files/${filePath} (${req.url})`);
-      res.setHeader('X-Accel-Redirect', `/files/${filePath}`);
+  if (!config.isDevelopment && !config.disableNginxRedirect) {
+    const resolvedPath = path.resolve(filePath);
+    const resolvedBase = path.resolve(config.filesPath);
+    if (resolvedPath.startsWith(resolvedBase + path.sep) || resolvedPath === resolvedBase) {
+      const relative = resolvedPath.substring(resolvedBase.length + 1);
+      logger.info(`X-Accel-Redirect: /files/${relative} (${req.url})`);
+      res.setHeader('X-Accel-Redirect', `/files/${relative}`);
       res.end();
     } else {
-      throw new Error(`File path (${filePath}) is not under FILES_PATH (${process.env.FILES_PATH}).`);
+      throw new Error(`File path (${resolvedPath}) is not under FILES_PATH (${resolvedBase}).`);
     }
   } else {
     send(req, filePath)

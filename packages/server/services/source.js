@@ -1,6 +1,6 @@
 const ProcessorSource = require('./processor-source/processor-source');
 const logger = require('./logger');
-require('dotenv').config();
+const { baseUrl } = require('./config');
 
 const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = require('./db');
 const Source = require('../model/source');
@@ -125,10 +125,6 @@ module.exports = {
   getFilePath(sourceId, id) {
     return new ProcessorSource(SourceDAO.getById(sourceId)).getFilePath(id);
   },
-
-  getDirectories(sourceId) {
-    return new ProcessorSource(SourceDAO.getById(sourceId)).getDirectories();
-  },
 };
 
 function setFileAlbums(sourceId, sourceFiles) {
@@ -181,12 +177,12 @@ function generateSourceFileUrls(sourceId, sourceFileId) {
   return {
     view: PHOTO_SIZES.reduce((acc, size) => {
       if (sourceId && sourceFileId) {
-        acc[size] = `${process.env.BASE_URL || ''}/api/photo?sourceId=${sourceId}&sourceFileId=${sourceFileId}&size=${size}`;
+        acc[size] = `${baseUrl}/api/photo?sourceId=${sourceId}&sourceFileId=${sourceFileId}&size=${size}`;
       } else {
         acc[size] = null;
       }
       return acc;
     }, {}),
-    download: (sourceId && sourceFileId) ? `${process.env.BASE_URL || ''}/api/photo/download?sourceId=${sourceId}&sourceFileId=${sourceFileId}` : null,
+    download: (sourceId && sourceFileId) ? `${baseUrl}/api/photo/download?sourceId=${sourceId}&sourceFileId=${sourceFileId}` : null,
   }
 }

@@ -27,7 +27,11 @@ node packages/server/bin/photo-gallery.js add-source --alias <name> --source <pa
 
 ### 4. Add a user
 
-Start the server, then insert a user directly into `photo-gallery.db` with a SHA-256-hashed password.
+```sh
+node packages/server/bin/photo-gallery.js add-user --username <name> --password <password>
+```
+
+This inserts the user into both the auth database (managed by `kaiauth`) and the server's own user table. If the user already exists, it is overwritten.
 
 ## Development
 

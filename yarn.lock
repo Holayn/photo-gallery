@@ -944,7 +944,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"better-sqlite3@npm:^12.6.2":
+"bcryptjs@npm:^2.4.3":
+  version: 2.4.3
+  resolution: "bcryptjs@npm:2.4.3"
+  checksum: 0e80ed852a41f5dfb1853f53ee14a7390b0ef263ce05dba6e2ef3cd919dfad025a7c21ebcfe5bc7fa04b100990edf90c7a877ff7fe623d3e479753253131b629
+  languageName: node
+  linkType: hard
+
+"better-sqlite3@npm:>=9, better-sqlite3@npm:^12.6.2":
   version: 12.6.2
   resolution: "better-sqlite3@npm:12.6.2"
   dependencies:
@@ -3364,6 +3371,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"kaiauth@1.0.0, kaiauth@workspace:packages/auth":
+  version: 0.0.0-use.local
+  resolution: "kaiauth@workspace:packages/auth"
+  dependencies:
+    bcryptjs: ^2.4.3
+    better-sqlite3: ">=9"
+    connect-sqlite3: ^0.9.13
+    express-session: ^1.17.3
+  peerDependencies:
+    express: ^4.17.0
+  languageName: unknown
+  linkType: soft
+
 "keyv@npm:^4.5.3":
   version: 4.5.4
   resolution: "keyv@npm:4.5.4"
@@ -4287,7 +4307,6 @@ __metadata:
     axios: ^1.2.2
     better-sqlite3: ^12.6.2
     compression: ^1.7.4
-    connect-sqlite3: ^0.9.13
     cookie-parser: ^1.4.6
     cors: ^2.8.5
     dayjs: ^1.11.5
@@ -4297,9 +4316,9 @@ __metadata:
     eslint-config-prettier: ^8.8.0
     eslint-plugin-import: ^2.27.5
     express: ^4.17.1
-    express-session: ^1.17.3
     fs-extra: ^10.1.0
     helmet: ^4.5.0
+    kaiauth: 1.0.0
     morgan: ^1.10.0
     node-cron: ^4.2.1
     nodemon: ^2.0.19

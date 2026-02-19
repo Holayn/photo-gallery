@@ -130,9 +130,9 @@ const GalleryFileDAO = {
   },
   findByIds(fileIds) {
     return DB.prepare(
-      `SELECT * FROM file WHERE id IN (${fileIds.join(', ')}) ORDER BY date`
+      `SELECT * FROM file WHERE id IN (${fileIds.map(() => '?').join(', ')}) ORDER BY date`
     )
-      .all()
+      .all(fileIds)
       .map((f) => toGalleryFileModel(f));
   },
   findBySourceFileIds(sourceId, sourceFileIds) {
@@ -180,18 +180,13 @@ const SourceDAO = {
 };
 
 DB.exec(
-  'CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, name TEXT, password TEXT, notify_user TEXT)'
+  'CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, name TEXT, notify_user TEXT)'
 );
+try {
+  DB.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_user_name_unique ON user(name)');
+} catch (e) {}
 const toUserModel = toModelFactory(User);
 const UserDAO = {
-  getByUsernamePassword(name, password) {
-    return toUserModel(
-      DB.prepare('SELECT * FROM user WHERE name = ? AND password = ?').get(
-        name,
-        password
-      )
-    );
-  },
   getByUsername(username) {
     return toUserModel(
       DB.prepare('SELECT * FROM user WHERE name = ?').get(username)
@@ -206,6 +201,12 @@ const UserDAO = {
     return DB.prepare('SELECT id, name, notify_user FROM user')
       .all()
       .map((u) => toUserModel(u));
+  },
+  upsert({ name, notifyUser }) {
+    return DB.prepare(
+      `INSERT INTO user (name, notify_user) VALUES (@name, @notifyUser)
+       ON CONFLICT(name) DO UPDATE SET notify_user = @notifyUser`
+    ).run({ name, notifyUser: notifyUser ?? null }).lastInsertRowid;
   },
 };
 

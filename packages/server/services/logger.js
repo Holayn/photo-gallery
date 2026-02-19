@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { createLogger, format, transports } = require('winston');
 require('winston-daily-rotate-file');
-require('dotenv').config();
+const { notifyUrl } = require('./config');
 
 const ERROR_NOTIFICATION_DELAY_MS = 60 * 1000 * 5;
 
@@ -108,7 +108,7 @@ class Logger {
   }
 
   async #sendServerErrorNotification() {
-    if (!process.env.NOTIFY_URL) {
+    if (!notifyUrl) {
       this.logger.error('Notification service not configured.', null, false);
     }
 
@@ -117,7 +117,7 @@ class Logger {
     }
 
     try {
-      await axios(process.env.NOTIFY_URL, {
+      await axios(notifyUrl, {
         method: 'post',
         data: {
           message: 'photo-gallery server error',
@@ -135,7 +135,7 @@ class Logger {
   }
 
   async #sendWebErrorNotification() {
-    if (!process.env.NOTIFY_URL) {
+    if (!notifyUrl) {
       this.logger.error('Notification service not configured.', null, false);
     }
 
@@ -144,7 +144,7 @@ class Logger {
     }
 
     try {
-      await axios(process.env.NOTIFY_URL, {
+      await axios(notifyUrl, {
         method: 'post',
         data: {
           message: 'photo-gallery web error',

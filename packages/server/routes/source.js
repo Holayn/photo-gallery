@@ -44,11 +44,6 @@ router.get(
   }
 );
 
-router.get('/source/directories', requiredParams(['id']), (req, res) => {
-  const { id: sourceId } = req.query;
-  res.send(SourceService.getDirectories(sourceId));
-});
-
 router.get(
   '/source/cover',
   requiredParams(['id']),

@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const cron = require('node-cron');
 
+const config = require('./services/config');
 const logger = require('./services/logger');
 const { indexMemories } = require('./services/memories');
 
@@ -14,12 +15,13 @@ logger.init(true);
 
 const routes = require('./routes');
 
-require('dotenv').config();
-
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: config.baseUrl || false,
+  credentials: true,
+}));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -115,9 +117,8 @@ app.use((err, req, res, next) => {
   next();
 });
 
-const port = process.env.PORT || 8000;
-app.listen(process.env.PORT || 8000, () => {
-  console.info(`Listening on ${port}`);
+app.listen(config.port, () => {
+  console.info(`Listening on ${config.port}`);
 });
 
 // Schedule daily memory indexing at 12 AM
