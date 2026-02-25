@@ -10,9 +10,13 @@ const { router } = createAuthRouter({
     secure: !config.isDevelopment,
     ...extra,
   }),
-  notify: (message, user) => !config.isDevelopment 
-    ? notify(message, user) 
-    : console.log(`[${user || '(no user)'}] -> ${message}`),
+  notify: (message, username) => {
+    if (!config.isDevelopment) {
+      notify(message, username);
+    } else {
+      console.log(`[${username || '(no user)'}] -> ${message}`);
+    }
+  },
 });
 
 module.exports = { router };
