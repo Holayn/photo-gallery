@@ -49,28 +49,11 @@ router.get(
       return;
     }
 
-    const files = AlbumService.getAlbumFiles(album.id);
+    const files = AlbumService.getAlbumFiles(album.id, albumId, req.query.token);
     if (!files) {
       res.sendStatus(400);
     } else {
-      res.send({
-        files: files.map(f => {
-          if (!f.urls) {
-            return f;
-          }
-
-          return {
-            ...f,
-            urls: {
-              view: Object.keys(f.urls.view).reduce((acc, size) => {
-                acc[size] = f.urls.view[size] += `&id=${albumId}${req.query.token ? `&token=${req.query.token}` : ''}`;
-                return acc;
-              }, {}),
-              download: f.urls.download += `&id=${albumId}${req.query.token ? `&token=${req.query.token}` : ''}`,
-            } ,
-          };
-        }),
-      });
+      res.send({ files });
     }
   }
 );

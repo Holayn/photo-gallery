@@ -51,9 +51,10 @@ import Loading from '../components/Loading.vue';
 import Modal from '../components/Modal.vue';
 import Gallery from './Gallery.vue';
 
-import { getPhotosFromAlbum, getAlbum, shareAlbum } from '../services/api';
+import { getPhotosFromAlbum, getAlbum, shareAlbum, getSources } from '../services/api';
 import { setDocumentTitle } from '../utils';
 import { useAuthStore } from '../store';
+import Photo from '../model/photo';
 
 export default {
   name: 'Album',
@@ -129,8 +130,23 @@ export default {
   methods: {
     async loadPhotoInfo() {
       this.loadingPhotoInfo = true;
-      const { photos } = await getPhotosFromAlbum(this.albumId, this.albumToken);
-      this.photos = photos;
+
+      const res = [
+        getPhotosFromAlbum(this.albumId, this.albumToken),
+      ];
+
+      if (this.authStore.isLoggedIn) {
+        res.push(getSources());
+      }
+
+      const [ { photos }, sources ] = await Promise.all(res);
+
+      this.photos = photos.map(photo => {
+        if (sources) {
+          return new Photo({ ...photo, source: sources.find(s => s.id === photo.sourceId) });
+        }
+        return photo;
+      });
       this.loadingPhotoInfo = false;
     },
 

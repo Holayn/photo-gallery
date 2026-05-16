@@ -1,7 +1,7 @@
 const SourceService = require('./source');
 const { generateUniqueRandomNumbers, generateRandomString } = require('../util/random');
 
-const { AlbumDAO, AlbumFileDAO, GalleryFileDAO, transaction } = require('./db');
+const { AlbumDAO, AlbumFileDAO, GalleryFileDAO, SourceDAO, transaction } = require('./db');
 const Album = require('../model/album');
 const AlbumFile = require('../model/album-file');
 const GalleryFile = require('../model/gallery-file');
@@ -71,16 +71,35 @@ module.exports = {
     });
   },
 
-  getAlbumFiles(id) {
+  getAlbumFiles(id, albumIdAlias, token) {
     const albumFiles = AlbumFileDAO.findByAlbumId(id);
     const fileIds = albumFiles.map((f) => f.fileId);
     return GalleryFileDAO.findByIds(fileIds)
-      .map(({ id, sourceId, sourceFileId = null }) => ({
-        ...SourceService.getFile(sourceId, sourceFileId),
-        galleryFileId: id,
-        sourceId,
-        createdAt: albumFiles.find(f => f.fileId === id).createdAt,
-      }));
+      .map(({ id, sourceId, sourceFileId }) => {
+        const file = {
+          ...SourceService.getFile(sourceId, sourceFileId),
+          galleryFileId: id,
+          sourceId,
+          sourceAlias: SourceDAO.getById(sourceId).alias,
+          createdAt: albumFiles.find(f => f.fileId === id).createdAt,
+        };
+
+        if (!file.urls) {
+          return file;
+        }
+
+        const albumParams = `&id=${albumIdAlias}${token ? `&token=${token}` : ''}`;
+        return {
+          ...file,
+          urls: {
+            view: Object.keys(file.urls.view).reduce((acc, size) => {
+              acc[size] = file.urls.view[size] + albumParams;
+              return acc;
+            }, {}),
+            download: file.urls.download + albumParams,
+          },
+        };
+      });
   },
 
   findCoverFiles(albumId) {
