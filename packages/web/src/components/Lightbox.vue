@@ -87,7 +87,7 @@
                       <p>{{ currentPhotoMetadata.device }}</p>
                     </div>
                     <div>
-                      <a class="text-sm underline" :href="currentPhotoOriginalUrl" target="_blank">View Original</a>
+                      <a class="text-xs underline" :href="currentPhotoFullSizeUrl" target="_blank">View full size</a>
                     </div>
                     <div v-if="currentPhoto.source" class="text-xs text-slate-600">
                       <router-link class="text-sm underline" :to="{ name: 'source', params: { sourceId: currentPhoto.source.id } }" @click="close()">{{ currentPhoto.source.alias }}</router-link>
@@ -238,8 +238,8 @@ export default {
         device,
       };
     },
-    currentPhotoOriginalUrl() {
-      return this.currentPhoto.urls.view[PHOTO_SIZES.ORIGINAL];
+    currentPhotoFullSizeUrl() {
+      return this.currentPhoto.urls.view[PHOTO_SIZES.FULL];
     },
     location() {
       if (this.currentPhotoMetadata.location?.unknown) {

@@ -17,10 +17,10 @@ router.get(
   asyncHandler(async (req, res) => {
     const { sourceFileId, sourceId, size } = req.query;
 
-    const fileData = await SourceService.getFileData(
+    const fileData = await SourceService.getProcessedFilePath(
       sourceId,
       sourceFileId,
-      size
+      size.toLowerCase(),
     );
 
     if (fileData) {
@@ -41,7 +41,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const { sourceFileId, sourceId } = req.query;
 
-    const p = await SourceService.getFilePath(sourceId, sourceFileId);
+    const p = await SourceService.getOriginalPath(sourceId, sourceFileId);
 
     if (p) {
       const safeName = path.basename(p).replace(/[^\w.\-]/g, '_');

@@ -1,11 +1,9 @@
 const ProcessorSource = require('./processor-source/processor-source');
 const logger = require('./logger');
 const { baseUrl } = require('./config');
-
+const { PHOTO_SIZES } = require('../constants/photo');
 const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = require('./db');
 const Source = require('../model/source');
-
-const PHOTO_SIZES = ['large', 'small', 'thumb', 'original'];
 
 module.exports = {
   addSource(sourcePath, alias) {
@@ -115,15 +113,15 @@ module.exports = {
     return null;
   },
 
-  getFileData(sourceId, id, size) {
-    return new ProcessorSource(SourceDAO.getById(sourceId)).getFileData(
+  getProcessedFilePath(sourceId, id, size) {
+    return new ProcessorSource(SourceDAO.getById(sourceId)).getProcessedFilePath(
       id,
       size
     );
   },
 
-  getFilePath(sourceId, id) {
-    return new ProcessorSource(SourceDAO.getById(sourceId)).getFilePath(id);
+  getOriginalPath(sourceId, id) {
+    return new ProcessorSource(SourceDAO.getById(sourceId)).getOriginalPath(id);
   },
 };
 
@@ -175,7 +173,7 @@ function setFileAlbums(sourceId, sourceFiles) {
 
 function generateSourceFileUrls(sourceId, sourceFileId) {
   return {
-    view: PHOTO_SIZES.reduce((acc, size) => {
+    view: Object.values(PHOTO_SIZES).reduce((acc, size) => {
       if (sourceId && sourceFileId) {
         acc[size] = `${baseUrl}/api/photo?sourceId=${sourceId}&sourceFileId=${sourceFileId}&size=${size}`;
       } else {

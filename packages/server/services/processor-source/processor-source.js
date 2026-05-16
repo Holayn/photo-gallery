@@ -5,15 +5,12 @@ const path = require('path');
 const logger = require('../logger');
 const ProcessorSourceFile = require('./processor-source-file');
 const { toModelFactory } = require('../../util/db-utils');
+const { PHOTO_SIZES } = require('../../constants/photo');
 
 const SOURCE_INDEX_DB_FILENAME = 'index.db';
 const FILES_TABLE_NAME = 'files';
 const SOURCE_FILE_PATH_PREFIX = 'media';
-const SIZE_LARGE = 'large';
-const SIZE_SMALL = 'small';
-const SIZE_THUMB = 'thumb';
-const SIZE_ORIGINAL = 'original';
-const VALID_SIZES = [SIZE_LARGE, SIZE_SMALL, SIZE_THUMB, SIZE_ORIGINAL];
+const ORIGINAL_DIR = 'original';
 const IMG_EXTS_NEED_CONVERSION = ['.heic'];
 const VIDEO_EXTS_NEED_CONVERSION = ['.mov'];
 const CONVERTED_DIR = 'converted';
@@ -21,7 +18,7 @@ const CONVERTED_IMG_SUFFIX = '__.jpg';
 const CONVERTED_VIDEO_SUFFIX = '__.mp4';
 const HDR_VIDEO_PREVIEW_SUFFIX = '__.png';
 const SDR_VIDEO_PREVIEW_SUFFIX = '__.jpg';
-const VIDEO_PREVIEW_SIZES = [SIZE_SMALL, SIZE_THUMB];
+const VIDEO_PREVIEW_SIZES = [PHOTO_SIZES.SMALL, PHOTO_SIZES.THUMB];
 
 const connections = {};
 
@@ -119,7 +116,7 @@ class ProcessorSource {
     return this.db.prepare(`SELECT COUNT(*) AS count FROM ${FILES_TABLE_NAME} WHERE processed != 0`).get().count;
   }
 
-  async getFileData(id, sizeParam) {
+  async getProcessedFilePath(id, size) {
     const fileRecord = this.db
       .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE id = ?`)
       .get(id);
@@ -128,26 +125,12 @@ class ProcessorSource {
       throw new Error(`ID:${id} does not exist in processor ${this.path}.`);
     }
 
-    const size = sizeParam.toLowerCase();
-
-    if (!VALID_SIZES.includes(size)) {
+    if (!Object.values(PHOTO_SIZES).includes(size)) {
       throw new Error('Invalid size');
     }
 
-    // Attempt to return the original file's web-converted copy.
-    if (size === SIZE_ORIGINAL) {
-      const photoPath = path.join(this.path, SOURCE_FILE_PATH_PREFIX, CONVERTED_DIR, fileRecord.path);
-      const exists = await fs.pathExists(photoPath);
-      if (exists) {
-        return {
-          path: photoPath,
-          fileType: path.extname(photoPath),
-        };
-      }
-    }
-
     const get = async sourcePath => {
-      let photoPath = path.join(this.path, sourcePath);
+      let photoPath = path.join(this.path, SOURCE_FILE_PATH_PREFIX, sourcePath);
 
       const ext = path.extname(sourcePath);
       if (IMG_EXTS_NEED_CONVERSION.includes(ext.toLowerCase())) {
@@ -168,6 +151,15 @@ class ProcessorSource {
       return null;
     };
 
+    // Attempt to return the file's web-converted copy.
+    if (size === PHOTO_SIZES.FULL) {
+      const result = await get(path.join(CONVERTED_DIR, fileRecord.path));
+      if (result) {
+        return result;
+      }
+      return get(path.join(ORIGINAL_DIR, fileRecord.path));
+    }
+
     const metadata = fileRecord.metadata ? JSON.parse(fileRecord.metadata) : {};
     const video = metadata.File.MIMEType?.includes('video') ?? false;
 
@@ -175,26 +167,26 @@ class ProcessorSource {
       if (VIDEO_PREVIEW_SIZES.includes(size)) {
         const hdr = metadata.WebImg?.HDR ?? false;
         if (hdr) {
-          const result = await get(path.join(SOURCE_FILE_PATH_PREFIX, size, fileRecord.path + HDR_VIDEO_PREVIEW_SUFFIX));
+          const result = await get(path.join(size, fileRecord.path + HDR_VIDEO_PREVIEW_SUFFIX));
           if (result) {
             return result;
           } else {
             // Fallback to SDR preview if HDR preview does not exist.
-            return get(path.join(SOURCE_FILE_PATH_PREFIX, size, fileRecord.path + SDR_VIDEO_PREVIEW_SUFFIX));
+            return get(path.join(size, fileRecord.path + SDR_VIDEO_PREVIEW_SUFFIX));
           }
         } else {
-          return get(path.join(SOURCE_FILE_PATH_PREFIX, size, fileRecord.path + SDR_VIDEO_PREVIEW_SUFFIX));
+          return get(path.join(size, fileRecord.path + SDR_VIDEO_PREVIEW_SUFFIX));
         }
       } else {
-        return get(path.join(SOURCE_FILE_PATH_PREFIX, size, fileRecord.path));
+        return get(path.join(size, fileRecord.path));
       }
       
     } else {
-      return get(path.join(SOURCE_FILE_PATH_PREFIX, size, fileRecord.path));
+      return get(path.join(size, fileRecord.path));
     }
   }
 
-  async getFilePath(id) {
+  async getOriginalPath(id) {
     const fileRecord = this.db
       .prepare(`SELECT * FROM ${FILES_TABLE_NAME} WHERE id = ?`)
       .get(id);
@@ -203,7 +195,7 @@ class ProcessorSource {
       throw new Error(`ID:${id} does not exist in processor ${this.path}.`);
     }
 
-    return path.join(this.path, SOURCE_FILE_PATH_PREFIX, SIZE_ORIGINAL, fileRecord.path);
+    return path.join(this.path, SOURCE_FILE_PATH_PREFIX, ORIGINAL_DIR, fileRecord.path);
   }
 }
 

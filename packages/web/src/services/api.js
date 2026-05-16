@@ -6,8 +6,8 @@ export const BASE = import.meta.env.DEV ? '/api' : `${import.meta.env.BASE_URL}a
 export const PHOTO_SIZES = {
   LARGE: 'large',
   SMALL: 'small',
-  ORIGINAL: 'original',
   THUMB: 'thumb',
+  FULL: 'full',
 }
 
 class ApiError extends Error {
