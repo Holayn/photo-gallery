@@ -281,12 +281,29 @@ export default {
       window.location.href = this.currentPhoto.urls.download;
     },
 
-    _swiperOnAfterInit() {
+    _swiperOnAfterInit(swiper) {
       setTimeout(() => {
         const appHeight = () => document.documentElement.style.setProperty('--lightbox-height', `${window.innerHeight}px`);
         window.addEventListener('resize', appHeight);
         appHeight();
       });
+
+      // Prevent slides from changing while pinch-zooming, which looks janky.
+      const activePointers = new Set();
+      const setSlideEnabled = (enabled) => {
+        swiper.allowSlideNext = enabled;
+        swiper.allowSlidePrev = enabled;
+      };
+      swiper.el.addEventListener('pointerdown', (e) => {
+        activePointers.add(e.pointerId);
+        if (activePointers.size >= 2) setSlideEnabled(false);
+      });
+      const onPointerUp = (e) => {
+        activePointers.delete(e.pointerId);
+        if (activePointers.size < 2) setSlideEnabled(true);
+      };
+      swiper.el.addEventListener('pointerup', onPointerUp);
+      swiper.el.addEventListener('pointercancel', onPointerUp);
     },
     _swiperOnActiveIndexChange({ activeIndex }) {
       this.$emit('index-update', activeIndex);
