@@ -13,8 +13,8 @@
         </div>
         <div class="h-9 flex items-center">
           <div v-if="currentPhoto.date" class="text-white text-center">
-            <div class="text-sm">{{ currentPhotoMetadata.date.day }} {{ currentPhotoMetadata.date.date }}</div>
-            <div class="text-xs">{{ currentPhotoMetadata.date.time }}</div>
+            <div class="text-sm">{{ dateDisplay.day }} {{ dateDisplay.date }}</div>
+            <div class="text-xs">{{ dateDisplay.time }}</div>
           </div>
           <div v-else>
             <div class="text-sm text-white text-center">Unknown Date</div>
@@ -24,7 +24,7 @@
           <slot name="additionalHeaderControls"></slot>
           <template v-if="authStore.isLoggedIn">
             <button v-if="isSelectionMode" @click="select()">
-              <svg v-if="isCurrentPhotoSelected" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <svg v-if="isSelected" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
             </button>
             <button v-else @click="enableSelectionMode()">
@@ -79,44 +79,17 @@
             <div class="overflow-auto p-4 pt-0">
               <div class="flex flex-col md:flex-row gap-y-4 gap-x-8">
                 <div>
-                  <h2 class="text-sm text-slate-600">Details</h2>
                   <div>
-                    <div>{{ currentPhotoMetadata.fileName }}</div>
+                    <div>{{ currentPhoto.metadata.fileName }}</div>
                     <div class="text-sm text-slate-600">
-                      <p>{{ currentPhotoMetadata.width }} x {{ currentPhotoMetadata.height }}, {{ currentPhotoMetadata.fileSize }}</p>
-                      <p>{{ currentPhotoMetadata.device }}</p>
+                      <p>{{ currentPhoto.metadata.width }} x {{ currentPhoto.metadata.height }}, {{ currentPhoto.metadata.fileSize }}</p>
+                      <p>{{ currentPhoto.metadata.device }}</p>
                     </div>
-                    <div>
-                      <a class="text-xs underline" :href="currentPhotoFullSizeUrl" target="_blank">View full size</a>
+                    <div class="leading-none">
+                      <a class="text-xs underline" :href="fullSizeUrl" target="_blank">View full size</a>
                     </div>
-                    <div v-if="currentPhoto.source" class="text-xs text-slate-600">
+                    <div v-if="currentPhoto.source" class="text-xs text-slate-600 leading-none">
                       <router-link class="text-sm underline" :to="{ name: 'source', params: { sourceId: currentPhoto.source.id } }" @click="close()">{{ currentPhoto.source.alias }}</router-link>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div class="flex flex-col md:flex-row gap-2">
-                    <div v-if="location && location.lat != null && location.long != null">
-                      <iframe
-                        class="max-w-full"
-                        width="360"
-                        height="120"
-                        style="border:0"
-                        loading="lazy"
-                        allowfullscreen
-                        referrerpolicy="no-referrer-when-downgrade"
-                        :src="`https://www.google.com/maps?q=${location.lat},${location.long}&z=14&output=embed`"
-                      ></iframe>
-                    </div>
-                    <div>
-                      <div v-if="location && location.lat != null && location.long != null">
-                        <div class="text-sm text-slate-600">
-                          <a class="text-black underline" :href="location.link" target="_blank">lat:{{ location.lat }}, long:{{ location.long }}</a>
-                          <div>alt:{{ location.altitude ?? '--' }}</div>
-                        </div>
-                      </div>
-                      <div v-else>Unknown Location</div>
                     </div>
                   </div>
                 </div>
@@ -125,6 +98,35 @@
                   <h2 class="text-sm text-slate-600">Albums</h2>
                   <div v-for="album in currentPhoto.albums" :key="album.idAlias"> 
                     <router-link class="text-blue-600 underline" :to="{ name: 'album', params: { albumId: album.idAlias } }">{{ album.name }}</router-link>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex flex-col md:flex-row gap-2">
+                    <div>
+                      <div class="text-sm text-slate-600">Location</div>
+                      <div v-if="location && location.lat != null && location.long != null" class="flex flex-col gap-1">
+                        <iframe
+                          class="max-w-full"
+                          width="360"
+                          height="120"
+                          style="border:0"
+                          loading="lazy"
+                          allowfullscreen
+                          referrerpolicy="no-referrer-when-downgrade"
+                          :src="`https://www.google.com/maps?q=${location.lat},${location.long}&z=14&output=embed`"
+                        ></iframe>
+                        <div>
+                          <a class="text-black underline" :href="location.link" target="_blank">lat:{{ location.lat }}, long:{{ location.long }}, alt:{{ location.altitude ?? '--' }}</a>
+                        </div>
+                      </div>
+                      <div v-else>Unknown Location</div>
+                    </div>
+
+                    <div v-if="currentPhoto.metadata.timezone">
+                      <div class="text-sm text-slate-600">Timezone</div>
+                      <div>{{ currentPhoto.metadata.timezone }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -208,16 +210,21 @@ export default {
     currentPhoto() {
       return this.photos[this.index];
     },
-    currentPhotoMetadata() {
-      const { fileName, fileSize, width, height, location, device } = this.currentPhoto.metadata;
+    dateDisplay() {
       const date = this.currentPhoto.date;
+      const { timezone } = this.currentPhoto.metadata;
+
+      if (!date) {
+        return null;
+      }
+
       let parsedDate = dayjs(date);
 
-      if (this.currentPhoto.metadata.timezone) {
-        if (this.currentPhoto.metadata.timezone === 'UTC') {
+      if (timezone) {
+        if (timezone === 'UTC') {
           parsedDate = parsedDate.utc();
         } else {
-          const offsetValue = parseInt(this.currentPhoto.metadata.timezone.replace('UTC', ''), 10);
+          const offsetValue = parseInt(timezone.replace('UTC', ''), 10);
           if (offsetValue) {
             parsedDate = parsedDate.utc().utcOffset(offsetValue);
           }
@@ -225,37 +232,32 @@ export default {
       }
 
       return {
-        date: {
-          date: parsedDate.format('LL'),
-          time: parsedDate.format('LTS'),
-          day: parsedDate.format('dddd'),
-        },
-        fileName,
-        fileSize,
-        width,
-        height,
-        location,
-        device,
+        date: parsedDate.format('LL'),
+        time: parsedDate.format('LTS'),
+        day: parsedDate.format('dddd'),
       };
     },
-    currentPhotoFullSizeUrl() {
+    fullSizeUrl() {
       return this.currentPhoto.urls.view[PHOTO_SIZES.FULL];
     },
     location() {
-      if (this.currentPhotoMetadata.location?.unknown) {
+      const { location } = this.currentPhoto.metadata;
+      if (location?.unknown) {
         return null;
-      } else if (this.currentPhotoMetadata.location) {
-        if (this.currentPhotoMetadata.location.lat == null && this.currentPhotoMetadata.location.long == null) {
+      } else if (location) {
+        if (location.lat == null && location.long == null) {
           return null;
         } else {
           return {
-            ...this.currentPhotoMetadata.location,
-            link: `https://www.google.com/maps/place/${this.currentPhotoMetadata.location.lat},${this.currentPhotoMetadata.location.long}`,
+            ...location,
+            link: `https://www.google.com/maps/place/${location.lat},${location.long}`,
           };
         }
       }
+
+      return null;
     },
-    isCurrentPhotoSelected() {
+    isSelected() {
       return this.selected[this.currentPhoto.id];
     }
   },
