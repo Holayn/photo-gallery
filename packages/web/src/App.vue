@@ -44,7 +44,9 @@
     </div>
     <div v-else style="--header-height: 0">
       <div id="headerAdditionalControls" hidden></div>
-      <router-view></router-view>
+      <div class="py-12">
+        <router-view></router-view>  
+      </div>
     </div>
 
     <Explore v-if="showExplore" @close="showExplore = false" @restart="onExploreRestart"></Explore>
