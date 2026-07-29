@@ -5,7 +5,7 @@ A self-hosted photo gallery. Yarn monorepo with an Express server (`packages/ser
 ## Requirements
 
 - Node.js, Yarn
-- Photos pre-processed by [webimg](https://github.com/Holayn/webimg)
+- A local checkout of [webimg](https://github.com/Holayn/webimg), pointed to by `WEB_IMG_TOOL_PATH` (see [server README](packages/server/README.md)) — the server uses it to process photo/video sources
 
 ## Setup
 
@@ -21,9 +21,13 @@ Copy `packages/server/sample.env` to `packages/server/.env` and fill in the valu
 
 ### 3. Add a source
 
+For photos already processed by webimg:
+
 ```sh
 node packages/server/bin/photo-gallery.js add-source --alias <name> --source <path>
 ```
+
+Or use the "Create" button on the Sources page in the web app to point at a raw (unprocessed) photo directory — the server will run webimg for you and the source becomes available once processing finishes.
 
 ### 4. Add a user
 

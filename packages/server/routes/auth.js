@@ -3,6 +3,7 @@ const { createAuthRouter } = require('kaiauth');
 const notify = require('../services/notify');
 
 const { router } = createAuthRouter({
+  authDataDir: config.authDataDir,
   sessionSecret: config.sessionSecret,
   buildCookieOptions: (extra) => ({
     httpOnly: true,

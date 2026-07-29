@@ -8,8 +8,11 @@ if (!['development', 'production'].includes(env)) {
 if (!process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET not defined in .env!');
 }
-if (env !== 'development' && !process.env.FILES_PATH) {
+if (!process.env.FILES_PATH) {
   throw new Error('FILES_PATH not defined in .env!');
+}
+if (!process.env.WEB_IMG_TOOL_PATH) {
+  throw new Error('WEB_IMG_TOOL_PATH not defined in .env!');
 }
 
 module.exports = Object.freeze({
@@ -21,4 +24,6 @@ module.exports = Object.freeze({
   notifyUrl: process.env.NOTIFY_URL,
   filesPath: process.env.FILES_PATH,
   disableNginxRedirect: process.env.DISABLE_NGINX_REDIRECT === 'true',
+  webImgToolPath: process.env.WEB_IMG_TOOL_PATH,
+  authDataDir: process.env.AUTH_DATA_DIR,
 });

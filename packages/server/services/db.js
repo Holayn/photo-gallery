@@ -147,12 +147,20 @@ const GalleryFileDAO = {
 DB.exec(
   'CREATE TABLE IF NOT EXISTS source (id INTEGER PRIMARY KEY, path STRING, alias STRING)'
 );
+try {
+  DB.exec('ALTER TABLE source ADD COLUMN processed INTEGER NOT NULL DEFAULT 1');
+} catch (e) {}
 const toSourceModel = toModelFactory(Source);
 const SourceDAO = {
-  insert({ path: sourcePath, alias }) {
+  insert({ path: sourcePath, alias, processed = true }) {
     return DB.prepare(
-      'INSERT INTO source (path, alias) VALUES (@path, @alias)'
-    ).run({ path: sourcePath, alias }).lastInsertRowid;
+      'INSERT INTO source (path, alias, processed) VALUES (@path, @alias, @processed)'
+    ).run({ path: sourcePath, alias, processed: processed ? 1 : 0 }).lastInsertRowid;
+  },
+  update(source) {
+    DB.prepare(
+      'UPDATE source SET path = @path, alias = @alias, processed = @processed WHERE id = @id'
+    ).run({ ...source, processed: source.processed ? 1 : 0 });
   },
   getById(id) {
     return toSourceModel(

@@ -14,9 +14,10 @@ Copy `sample.env` to `.env`:
 | `PORT`                 | Port to listen on (default: `8000`)                      |
 | `SESSION_SECRET`       | **Required.** Secret for signing session cookies         |
 | `BASE_URL`             | Public base URL of the server                            |
-| `FILES_PATH`           | Root path where processed photo/video files are stored   |
+| `FILES_PATH`           | **Required.** Root path where processed photo/video files are stored |
 | `NOTIFY_URL`           | Optional webhook URL for notifications                   |
 | `DISABLE_NGINX_REDIRECT` | Set to `true` if not behind nginx                      |
+| `WEB_IMG_TOOL_PATH`    | **Required.** Path to a local [webimg](https://github.com/Holayn/webimg) checkout. Used to process raw photo directories into sources created via the web app's "Create" button, by running `npm run start -- --config <path>` in this directory |
 
 ## Scripts
 

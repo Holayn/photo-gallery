@@ -83,10 +83,28 @@ export async function getSource(sourceId) {
       id: res.data.id,
       alias: res.data.alias,
       path: res.data.path,
+      processed: res.data.processed,
     }
   } else if (res.error) {
     throw new ApiError(res.error.status);
   }
+}
+export async function createSource(sourceFilesPath, alias, exclude) {
+  const res = await fetcher.fetch(`${BASE}/source/create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sourceFilesPath, alias, exclude }),
+  });
+  if (res.data) {
+    return res.data;
+  } else if (res.error) {
+    throw new ApiError(res.error.status, res.error.message);
+  }
+}
+export function subscribeToSourceCreation(sourceId) {
+  return new EventSource(`${BASE}/source/create/stream?id=${sourceId}`);
 }
 export async function getSourceCover(sourceId) {
   const res = await fetcher.fetch(`${BASE}/source/cover?id=${sourceId}`);

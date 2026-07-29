@@ -46,8 +46,8 @@
                 {{ user.name }}
               </option>
             </select>
-            <button 
-              class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
+            <button
+              class="btn disabled:opacity-50"
               :disabled="!selectedUserId || adding"
               @click="addUser"
             >

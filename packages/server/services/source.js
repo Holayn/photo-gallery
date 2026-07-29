@@ -1,25 +1,26 @@
+const path = require('path');
+const fs = require('fs');
 const ProcessorSource = require('./processor-source/processor-source');
 const logger = require('./logger');
-const { baseUrl } = require('./config');
+const { baseUrl, filesPath, webImgToolPath } = require('./config');
 const { PHOTO_SIZES } = require('../constants/photo');
 const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = require('./db');
 const Source = require('../model/source');
 
 module.exports = {
-  addSource(sourcePath, alias) {
-    transaction(() => {
+  addSource(sourcePath, alias, { processed = true } = {}) {
+    return transaction(() => {
       const existingSource = SourceDAO.getSourceByPathOrAlias(
         sourcePath,
         alias
       );
 
       if (!existingSource) {
-        SourceDAO.insert(new Source({ alias, path: sourcePath }));
+        const id = SourceDAO.insert(new Source({ alias, path: sourcePath, processed }));
         logger.info(`${alias} added with source path: ${sourcePath}.`);
+        return id;
       } else {
-        logger.error(
-          `Path (${sourcePath}) or alias (${alias}) already exists.`
-        );
+        throw new Error(`Path (${sourcePath}) or alias (${alias}) already exists.`);
       }
     });
   },
@@ -64,6 +65,40 @@ module.exports = {
         logger.error(`Source with alias ${alias} does not exist.`);
       }
     });
+  },
+
+  createSource({
+    sourceFilesPath,
+    alias,
+    exclude,
+  }) {
+    if (!fs.existsSync(sourceFilesPath)) {
+      throw new Error(`Files with path ${sourceFilesPath} do not exist.`);
+    }
+    const sourceDirPath = path.join(filesPath, alias);
+    fs.mkdirSync(sourceDirPath, { recursive: true });
+    const webImgConfigPath = path.join(sourceDirPath, 'config.json');
+    const webImgConfig = {
+      input: sourceFilesPath,
+      output: sourceDirPath,
+      exclude,
+    };
+    fs.writeFileSync(webImgConfigPath, JSON.stringify(webImgConfig, null, 2));
+    const id = this.addSource(sourceDirPath, alias, { processed: false });
+
+    const promise = (async () => {
+      const { execa } = await import('execa');
+      await execa('npm', ['run', 'start', '--', '--config', webImgConfigPath], {
+        cwd: webImgToolPath,
+        stdio: 'inherit',
+      });
+
+      const source = SourceDAO.getById(id);
+      source.processed = true;
+      SourceDAO.update(source);
+    })();
+
+    return { id, promise };
   },
 
   findFiles(sourceId, startDateRange, directory) {

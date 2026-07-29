@@ -31,9 +31,16 @@ const fetcher = {
           if (res.status === 401 && options.redirectOn401 !== false) {
             window.dispatchEvent(new CustomEvent('unauthorized'));
           }
+          let message = getError(res.status);
+          if (res.headers.get('Content-Type')?.includes('json')) {
+            const body = await res.json().catch(() => null);
+            if (body?.message) {
+              message = body.message;
+            }
+          }
           return {
             error: {
-              message: getError(res.status),
+              message,
               status: res.status,
             }
           }

@@ -1,6 +1,9 @@
 <template>
   <div class="px-8">
-    <h1 class="text-5xl">Sources</h1>
+    <div class="flex items-center justify-between">
+      <h1 class="text-5xl">Sources</h1>
+      <button class="btn px-3 py-1" @click="showCreateSource = true">Create</button>
+    </div>
     <div class="mt-4">
       <Loading v-if="loading" class="w-16 h-16"></Loading>
       <div v-else-if="error" class="text-red-500">Failed to load sources</div>
@@ -47,10 +50,16 @@
       </div>
     </div>
 
-    <SourceUsersModal 
-      v-if="selectedSource" 
-      :source="selectedSource" 
+    <SourceUsersModal
+      v-if="selectedSource"
+      :source="selectedSource"
       @close="selectedSource = null"
+    />
+
+    <CreateSourceModal
+      v-if="showCreateSource"
+      @close="showCreateSource = false"
+      @created="onSourceCreated"
     />
   </div>
 </template>
@@ -58,6 +67,7 @@
 <script>
 import Loading from '../components/Loading.vue';
 import SourceUsersModal from '../components/SourceUsersModal.vue';
+import CreateSourceModal from '../components/CreateSourceModal.vue';
 
 import { getSources, getSourceCover, PHOTO_SIZES } from '../services/api';
 
@@ -66,6 +76,7 @@ export default {
   components: {
     Loading,
     SourceUsersModal,
+    CreateSourceModal,
   },
   data() {
     return {
@@ -77,6 +88,7 @@ export default {
       errorImages: {},
       errorSources: {},
       selectedSource: null,
+      showCreateSource: false,
     };
   },
   async mounted() {
@@ -109,6 +121,10 @@ export default {
     },
     openUsersModal(source) {
       this.selectedSource = source;
+    },
+    onSourceCreated({ id }) {
+      this.showCreateSource = false;
+      this.$router.push({ name: 'source', params: { sourceId: id } });
     },
     onMenuSelect(event, source) {
       const value = event.detail.item.value;
