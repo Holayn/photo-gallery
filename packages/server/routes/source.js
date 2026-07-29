@@ -18,7 +18,8 @@ router.get(
   AuthController.authAdmin,
   (req, res) => {
     const { id: sourceId } = req.query;
-    res.send(SourceDAO.getById(sourceId));
+    const { id, alias, processed } = SourceDAO.getById(sourceId);
+    res.send({ id, alias, processed });
   }
 );
 
