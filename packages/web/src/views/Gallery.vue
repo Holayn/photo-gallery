@@ -62,13 +62,7 @@
                 <Loading v-if="loadingRemoveFromAlbum" class="h-8 w-8"></Loading>
               </div>
             </div>
-            <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Existing Album</button>
-            <div class="relative">
-              <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="createAlbumFromSelected()">Create Album</button>
-              <div class="absolute top-0 left-0 flex justify-center w-full">
-                <Loading v-if="loadingCreateAlbum" class="h-8 w-8"></Loading>
-              </div>
-            </div>
+            <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Album</button>
             <button @click="toggleSelectionMode(false)">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
@@ -137,7 +131,7 @@
       @index-update="lightboxIndex = $event"
     ></Lightbox>
 
-    <Modal v-if="showAddToExistingAlbum" @close="showAddToExistingAlbum = false">
+    <Modal v-if="showAddToAlbum" @close="showAddToAlbum = false">
       <div class="w-[500px] max-w-full">
         <div v-if="loadingAlbums" class="flex justify-center">
           <Loading class="w-16 h-16"></Loading>
@@ -147,6 +141,11 @@
             <div class="flex-auto">{{ album.name }}</div>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <button class="btn px-2 py-1" :disabled="loadingCreateAlbum || !Object.keys(selected).length" @click="createAlbumFromSelected()">Create Album</button>
+          <Loading v-if="loadingCreateAlbum" class="h-8 w-8"></Loading>
         </div>
       </div>
     </Modal>
@@ -218,7 +217,7 @@ export default {
       loadingCreateAlbum: false,
       loadingAlbums: false,
       loadingRemoveFromAlbum: false,
-      showAddToExistingAlbum: false,
+      showAddToAlbum: false,
 
       isSelectionMode: false,
       selected: {},
@@ -392,7 +391,7 @@ export default {
     },
 
     async showAlbumSelection() {
-      this.showAddToExistingAlbum = true;
+      this.showAddToAlbum = true;
       this.loadingAlbums = true;
       this.albums = await getAlbums();
       this.loadingAlbums = false;
@@ -411,7 +410,7 @@ export default {
       alert(`Album updated.`);
       this.selected = {};
       this.isSelectionMode = false;
-      this.showAddToExistingAlbum = false;
+      this.showAddToAlbum = false;
       
       this.loadingAlbums = false;
     },
@@ -432,6 +431,7 @@ export default {
         });
         this.selected = {};
         this.isSelectionMode = false;
+        this.showAddToAlbum = false;
       }
 
       this.loadingCreateAlbum = false;
