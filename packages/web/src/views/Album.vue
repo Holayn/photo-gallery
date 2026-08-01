@@ -6,7 +6,6 @@
   <Gallery 
     :id="albumId"
     :show-lightbox="showLightbox"
-    :album="true"
     :album-id="albumId"
     default-sort="dateAsc"
     :photos="photos.filter(photo => !photo.isBrokenAlbumFile())"

@@ -57,7 +57,7 @@
           <div v-if="isSelectionMode" class="flex flex-col md:flex-row items-end md:items-center gap-2">
             <div>Selected: {{ Object.keys(selected).length }}</div>
             <div class="relative">
-              <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="removeSelectedFromAlbum()">Delete From Album</button>
+              <button v-if="albumId" class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="removeSelectedFromAlbum()">Remove From Album</button>
               <div class="absolute top-0 left-0 flex justify-center w-full">
                 <Loading v-if="loadingRemoveFromAlbum" class="h-8 w-8"></Loading>
               </div>
@@ -186,7 +186,6 @@ export default {
       type: String,
       required: true,
     },
-    album: Boolean,
     albumId: String,
     showDateSelection: Boolean,
     showLightbox: Boolean,
