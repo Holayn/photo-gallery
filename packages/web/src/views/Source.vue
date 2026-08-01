@@ -1,13 +1,13 @@
 <template>
-  <div class="px-8 mb-2">
+  <div class="px-4 md:px-8">
     <router-link to="/sources" class="underline">Sources</router-link>
   </div>
 
   <div v-if="loadingSourceInfo" class="flex justify-center px-8">
     <Loading class="w-16 h-16"></Loading>
   </div>
-  <div v-else-if="source && !source.processed" class="px-8">
-    <h1 class="text-3xl md:text-5xl mb-4">{{ title }}</h1>
+  <div v-else-if="source && !source.processed" class="py-2 px-8">
+    <h1 class="text-xl md:text-3xl">{{ title }}</h1>
     <div v-if="processing" class="flex flex-col items-center gap-2 py-8">
       <Loading class="w-16 h-16"></Loading>
       <div>Source is processing...</div>
@@ -16,9 +16,9 @@
       Source is processing, come back later.
     </div>
   </div>
-  <Gallery v-else :id="sourceId" :show-date-selection="true" :show-lightbox="showLightbox" :photos="photos" @date="onDateUpdate($event)" @reset="photos = []">
+  <Gallery v-else :id="sourceId" :show-lightbox="showLightbox" :photos="photos" @date="onDateUpdate($event)" @reset="photos = []">
     <template #heading>
-      <h1 class="text-3xl md:text-5xl">
+      <h1 class="text-xl md:text-3xl">
         <div>{{ title }}</div>
         <div v-if="directory" class="text-xl mt-1">({{ directory }})</div>
       </h1>

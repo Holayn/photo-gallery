@@ -1,5 +1,5 @@
 <template>
-  <div class="px-8">
+  <div class="px-4 md:px-8">
     <h1 class="text-5xl">Albums</h1>
     <div class="mt-4">
       <Loading v-if="loading" class="w-16 h-16"></Loading>

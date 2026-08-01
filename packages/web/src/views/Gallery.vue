@@ -1,83 +1,97 @@
 <template>
   <div ref="gallery">
-    <div class="px-4 md:px-8 flex gap-4">
+    <div class="sticky top-0 z-40 bg-white py-2 flex gap-4">
       <div class="flex-auto break-word">
-        <slot name="heading"></slot>
-        <div v-if="photos.length" class="mt-1 text-gray-600">
-          {{ photos.length }} photos 
-          <span v-if="photos.filter(p => !p.date).length">&bull; {{ photos.filter(p => !p.date).length }} unknown date
-            <span class="text-sm text-gray-500">
-              <span v-if="isViewModeShowUnknownDateItems">(shown)</span>
-              <span v-else>(hidden)</span>
-            </span>
-          </span>
-        </div>
-      </div>
-      <div class="flex items-center">
-        <sl-dropdown v-if="sortable">
-          <sl-icon-button slot="trigger" class="text-xl" name="arrow-down-up"></sl-icon-button>
-          <sl-menu @sl-select="onSortSelect">
-            <sl-menu-label>Sort by...</sl-menu-label>
-            <sl-menu-item :value="SORT_TYPES.DATE_ASC">
-              <sl-icon v-if="sort === SORT_TYPES.DATE_ASC" slot="prefix" name="check-lg"></sl-icon>
-              Date (Earliest)
-            </sl-menu-item>
-            <sl-menu-item :value="SORT_TYPES.DATE_DESC">
-              <sl-icon v-if="sort === SORT_TYPES.DATE_DESC" slot="prefix" name="check-lg"></sl-icon>
-              Date (Latest)
-            </sl-menu-item>
-            <sl-menu-item v-if="canSortByDateAdded" :value="SORT_TYPES.DATE_ADDED">
-              <sl-icon v-if="sort === SORT_TYPES.DATE_ADDED" slot="prefix" name="check-lg"></sl-icon>
-              Date Added
-            </sl-menu-item>
-          </sl-menu>
-        </sl-dropdown>
-        <sl-dropdown>
-          <sl-icon-button slot="trigger" class="text-xl" name="three-dots-vertical"></sl-icon-button>
-          <sl-menu @sl-select="onOptionsSelect">
-            <sl-menu-item value="viewDates" type="checkbox" :checked="showDates">
-              Show dates
-            </sl-menu-item>
-            <sl-menu-item value="viewUnknownDateItems" type="checkbox" :checked="isViewModeShowUnknownDateItems">
-              Show photos with unknown dates
-            </sl-menu-item>
-            <sl-menu-item>
-              Gallery Layout
-              <sl-menu slot="submenu" @sl-select="onGalleryLayoutSelect">
-                <sl-menu-item :value="LAYOUT_TYPES.AUTO" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.AUTO">Auto</sl-menu-item>
-                <sl-menu-item :value="LAYOUT_TYPES.JUSTIFIED" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.JUSTIFIED">Justified</sl-menu-item>
-                <sl-menu-item :value="LAYOUT_TYPES.TILE" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.TILE">Tile</sl-menu-item>
-              </sl-menu>
-            </sl-menu-item>
-          </sl-menu>
-        </sl-dropdown>
-      </div>
-      <Teleport to="#headerAdditionalControls">
-        <div v-if="authStore.isLoggedIn" class="flex gap-4 justify-end">
-          <div v-if="isSelectionMode" class="flex flex-col md:flex-row items-end md:items-center gap-2">
-            <div>Selected: {{ Object.keys(selected).length }}</div>
-            <div class="relative">
-              <button v-if="albumId" class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="removeSelectedFromAlbum()">Remove From Album</button>
-              <div class="absolute top-0 left-0 flex justify-center w-full">
-                <Loading v-if="loadingRemoveFromAlbum" class="h-8 w-8"></Loading>
+        <div class="flex gap-4">
+          <div class="flex-auto px-4 md:px-8">
+            <div class="break-word">
+              <slot name="heading"></slot>
+            </div>
+            <div v-if="photos.length" class="mt-1 text-gray-600 text-sm md:text-base">
+              <div class="">
+                {{ photos.length }} photos
+                <span v-if="photos.filter(p => !p.date).length">&bull; {{ photos.filter(p => !p.date).length }} unknown dates
+                  <span class="text-xs md:text-sm text-gray-500">
+                    <span v-if="isViewModeShowUnknownDateItems">
+                      <svg class="inline w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </span>
+                    <span v-else>
+                      <svg class="inline w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    </span>
+                  </span>
+                </span>
               </div>
             </div>
-            <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Album</button>
-            <button @click="toggleSelectionMode(false)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
           </div>
-          <div v-else class="flex items-center"> 
-            <div v-if="showDateSelection" class="mr-8"> 
-              <input v-model="date" type="date" @blur="onDateBlur">
+          <div class="md:pr-8">
+            <div class="flex items-center">
+              <div v-if="authStore.isLoggedIn" class="flex justify-end">
+                <div v-if="isSelectionMode" class="flex items-center justify-end gap-2">
+                  <div>Selected: {{ Object.keys(selected).length }}</div>
+                  <div class="relative">
+                    <button v-if="albumId" class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="removeSelectedFromAlbum()">Remove From Album</button>
+                    <div class="absolute top-0 left-0 flex justify-center w-full">
+                      <Loading v-if="loadingRemoveFromAlbum" class="h-8 w-8"></Loading>
+                    </div>
+                  </div>
+                  <button class="btn px-2 py-1" :disabled="!Object.keys(selected).length" @click="showAlbumSelection()">Add to Album</button>
+                  <button @click="toggleSelectionMode(false)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+                <div v-else class="flex items-center"> 
+                  <button class="p-2 text-gray-700" @click="toggleSelectionMode(true)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                  </button>
+                </div>
+                <slot name="controls"></slot>
+              </div>
+              <template v-if="!isSelectionMode">
+                <sl-dropdown v-if="sortable">
+                  <sl-icon-button slot="trigger" class="text-xl" name="arrow-down-up"></sl-icon-button>
+                  <sl-menu @sl-select="onSortSelect">
+                    <sl-menu-label>Sort by...</sl-menu-label>
+                    <sl-menu-item :value="SORT_TYPES.DATE_ASC">
+                      <sl-icon v-if="sort === SORT_TYPES.DATE_ASC" slot="prefix" name="check-lg"></sl-icon>
+                      Date (Earliest)
+                    </sl-menu-item>
+                    <sl-menu-item :value="SORT_TYPES.DATE_DESC">
+                      <sl-icon v-if="sort === SORT_TYPES.DATE_DESC" slot="prefix" name="check-lg"></sl-icon>
+                      Date (Latest)
+                    </sl-menu-item>
+                    <sl-menu-item v-if="canSortByDateAdded" :value="SORT_TYPES.DATE_ADDED">
+                      <sl-icon v-if="sort === SORT_TYPES.DATE_ADDED" slot="prefix" name="check-lg"></sl-icon>
+                      Date Added
+                    </sl-menu-item>
+                  </sl-menu>
+                </sl-dropdown>
+                <sl-dropdown>
+                  <sl-icon-button slot="trigger" class="text-xl" name="three-dots-vertical"></sl-icon-button>
+                  <sl-menu @sl-select="onOptionsSelect">
+                    <sl-menu-item value="viewDates" type="checkbox" :checked="showDates">
+                      Show dates
+                    </sl-menu-item>
+                    <sl-menu-item value="viewUnknownDateItems" type="checkbox" :checked="isViewModeShowUnknownDateItems">
+                      Show photos with unknown dates
+                    </sl-menu-item>
+                    <sl-menu-item value="viewDateSelection">
+                      Show photos before...
+                    </sl-menu-item>
+                    <sl-menu-item>
+                      Gallery layout
+                      <sl-menu slot="submenu" @sl-select="onGalleryLayoutSelect">
+                        <sl-menu-item :value="LAYOUT_TYPES.AUTO" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.AUTO">Auto</sl-menu-item>
+                        <sl-menu-item :value="LAYOUT_TYPES.JUSTIFIED" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.JUSTIFIED">Justified</sl-menu-item>
+                        <sl-menu-item :value="LAYOUT_TYPES.TILE" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.TILE">Tile</sl-menu-item>
+                      </sl-menu>
+                    </sl-menu-item>
+                  </sl-menu>
+                </sl-dropdown>
+              </template>
             </div>
-            <button @click="toggleSelectionMode(true)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-            </button>
           </div>
-          <slot name="controls"></slot>
         </div>
-      </Teleport>
+      </div>
     </div>
 
     <div v-if="$slots.notices || hasNewPhotos" class="px-4 md:px-8 mt-2 flex flex-col gap-1">
@@ -149,6 +163,13 @@
         </div>
       </div>
     </Modal>
+
+    <Modal v-if="showDateSelection" @close="showDateSelection = false">
+      <div class="w-[500px] max-w-full flex flex-col items-center justify-center py-4">
+        <input v-model="date" type="date">
+        <button class="btn mt-4" @click="onDateSelection()">Update</button>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -186,7 +207,6 @@ export default {
       required: true,
     },
     albumId: String,
-    showDateSelection: Boolean,
     showLightbox: Boolean,
     defaultSort: {
       type: String,
@@ -229,6 +249,8 @@ export default {
       viewMode: null,
       showDates: false,
       galleryLayout: LAYOUT_TYPES.JUSTIFIED,
+
+      showDateSelection: false,
 
       SORT_TYPES,
       LAYOUT_TYPES,
@@ -295,6 +317,11 @@ export default {
     sort() {
       localStorage.setItem(`sort-${this.id}`, this.sort);
     },
+    photos(val, old) {
+      if (!old.length && val.length && val.every(photo => !photo.date)) {
+        this.viewMode = 'showUnknownDateItems';
+      }
+    },
   },
   created() {
     // Ensure the page isn't loaded with this query parameter set.
@@ -310,7 +337,7 @@ export default {
       }
     }
 
-    if (this.defaultShowUnknownDates || this.photos.every(photo => !photo.date)) {
+    if (this.defaultShowUnknownDates) {
       this.viewMode = 'showUnknownDateItems';
     }
   },
@@ -451,7 +478,8 @@ export default {
       }
     },
 
-    onDateBlur() {
+    onDateSelection() {
+      this.showDateSelection = false;
       this.$emit('date', this.date);
       this.reset();
     },
@@ -498,6 +526,9 @@ export default {
       }
       if (item.value === 'viewUnknownDateItems') {
         this.viewMode = item.checked ? 'showUnknownDateItems' : null;
+      }
+      if (item.value === 'viewDateSelection') {
+        this.showDateSelection = true;
       }
     },
     

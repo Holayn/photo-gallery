@@ -22,8 +22,11 @@
       <div v-else-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full">
         <Loading class="w-8 h-8"></Loading>
       </div>
-      <div v-if="showDates" class="absolute -bottom-8 h-8 px-1">
-        <div class="text-xs">{{ formatPhotoDate(photo.date) }}</div>
+      <div v-if="showDates" class="absolute -bottom-8 h-8 w-full px-1 flex justify-center">
+        <div class="text-xs text-center">
+          <div>{{ photo.dateFormatted }}</div>
+          <div>{{ photo.timeFormatted }}</div>
+        </div>
       </div>
       <button @click="openLightbox(photo)">
         <img
@@ -75,7 +78,6 @@
 
 <script>
 import justifiedLayout from 'justified-layout';
-import dayjs from 'dayjs';
 import { debounce, isElementFullyInView } from '../utils';
 import Loading from './Loading.vue';
 
@@ -252,7 +254,7 @@ export default {
         targetRowHeight: getLayoutItemHeight(this.layoutType),
         boxSpacing: {
           horizontal: PHOTO_GRID_GAP,
-          vertical: this.showDates ? 32 : PHOTO_GRID_GAP,
+          vertical: this.showDates ? 36 : PHOTO_GRID_GAP,
         }
       });
     },
@@ -308,10 +310,6 @@ export default {
       }
 
       return photo.urls.view[size];
-    },
-    
-    formatPhotoDate(date) {
-      return date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : 'Unknown Date';
     },
     
     imgLoad(photo) {

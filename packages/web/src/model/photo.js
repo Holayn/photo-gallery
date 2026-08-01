@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 export default class Photo {
   date;
   sourceId;
@@ -24,6 +26,20 @@ export default class Photo {
 
   get id() {
     return `${this.sourceId}_${this.sourceFileId}`;
+  }
+
+  get dateFormatted() {
+    if (this.date) {
+      return dayjs(this.date).format('YYYY-MM-DD');
+    }
+    return null;
+  }
+
+  get timeFormatted() {
+    if (this.date) {
+      return dayjs(this.date).format('HH:mm:ss');
+    }
+    return null;
   }
 
   isBrokenAlbumFile() {

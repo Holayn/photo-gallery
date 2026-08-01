@@ -1,5 +1,5 @@
 <template>
-  <div v-if="authStore.isLoggedIn" class="px-8 mb-2">
+  <div v-if="authStore.isLoggedIn" class="px-4 md:px-8">
     <router-link to="/albums" class="underline">Albums</router-link>
   </div>
 
@@ -12,7 +12,7 @@
     default-show-unknown-dates
    >
     <template #heading>
-      <h1 class="text-3xl md:text-5xl">
+      <h1 class="text-xl md:text-3xl">
         <div v-if="showLoadingAlbumInfo" class="flex justify-center">
           <Loading class="w-16 h-16"></Loading>
         </div>
@@ -20,8 +20,8 @@
       </h1>
     </template>
     <template #controls> 
-      <button @click="showModalAlbumLink()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+      <button class="p-2 text-gray-700" @click="showModalAlbumLink()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
       </button>
     </template>
     <template v-if="brokenAlbumPhotos.length" #notices>
