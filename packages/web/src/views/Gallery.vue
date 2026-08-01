@@ -3,19 +3,17 @@
     <div class="px-4 md:px-8 flex gap-4">
       <div class="flex-auto break-word">
         <slot name="heading"></slot>
+        <div v-if="photos.length" class="mt-1 text-gray-600">
+          {{ photos.length }} photos 
+          <span v-if="photos.filter(p => !p.date).length">&bull; {{ photos.filter(p => !p.date).length }} unknown date
+            <span class="text-sm text-gray-500">
+              <span v-if="isViewModeShowUnknownDateItems">(shown)</span>
+              <span v-else>(hidden)</span>
+            </span>
+          </span>
+        </div>
       </div>
       <div class="flex items-center">
-        <sl-tooltip
-          v-if="unknownDateCount"
-          :content="`${unknownDateCount} items with unknown date`"
-          placement="bottom"
-          trigger="click"
-          hoist
-        >
-          <button class="mr-2 px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-xs font-medium transition-colors">
-            {{ unknownDateCount }}
-          </button>
-        </sl-tooltip>
         <sl-dropdown v-if="sortable">
           <sl-icon-button slot="trigger" class="text-xl" name="arrow-down-up"></sl-icon-button>
           <sl-menu @sl-select="onSortSelect">
@@ -37,10 +35,10 @@
         <sl-dropdown>
           <sl-icon-button slot="trigger" class="text-xl" name="three-dots-vertical"></sl-icon-button>
           <sl-menu @sl-select="onOptionsSelect">
-            <sl-menu-item value="viewDates" type="checkbox">
+            <sl-menu-item value="viewDates" type="checkbox" :checked="showDates">
               Show dates
             </sl-menu-item>
-            <sl-menu-item value="viewUnknownDateItems" type="checkbox">
+            <sl-menu-item value="viewUnknownDateItems" type="checkbox" :checked="isViewModeShowUnknownDateItems">
               Show photos with unknown dates
             </sl-menu-item>
             <sl-menu-item>
@@ -122,7 +120,8 @@
 
     <div v-if="$slots.loading" class="mt-8"></div>
     <slot name="loading">
-      <div v-if="isNoPhotos" class="text-center">No photos found.</div>
+      <div v-if="!photos.length" class="text-center">No photos available.</div>
+      <div v-else-if="isNoDisplayPhotos" class="text-center">No photos to display.</div>
     </slot>
     
     <Lightbox 
@@ -195,6 +194,10 @@ export default {
       type: String,
       default: SORT_TYPES.DATE_DESC,
     },
+    defaultShowUnknownDates: {
+      type: Boolean,
+      default: false,
+    },
     sortable: { 
       type: Boolean,
       default: true,
@@ -234,7 +237,7 @@ export default {
     };
   },
   computed: {
-    isNoPhotos() {
+    isNoDisplayPhotos() {
       return this.displayedPhotos.length === 0;
     },
     token() {
@@ -244,12 +247,9 @@ export default {
       if (this.isViewModeNewOnly) {
         return this.photos.filter(photo => this.isPhotoNew(photo));
       }
-      if (this.isViewModeShowUnknownDateItems) {
-        return this.photos.filter(photo => !photo.date);
-      }
 
       return this.photos
-      .filter(photo => photo.date)
+      .filter(photo => this.isViewModeShowUnknownDateItems || photo.date)
       .sort((a, b) => {
         if (this.sort === SORT_TYPES.DATE_DESC) {
           return b.date - a.date;
@@ -278,9 +278,6 @@ export default {
     },
     canSortByDateAdded() {
       return this.photos.some(photo => photo.createdAt);
-    },
-    unknownDateCount() {
-      return this.photos.filter(photo => !photo.date).length;
     },
   },
   watch: {
@@ -313,6 +310,10 @@ export default {
       if (localStorage.getItem(`sort-${this.id}`)) {
         this.sort = localStorage.getItem(`sort-${this.id}`);
       }
+    }
+
+    if (this.defaultShowUnknownDates || this.photos.every(photo => !photo.date)) {
+      this.viewMode = 'showUnknownDateItems';
     }
   },
   methods: {

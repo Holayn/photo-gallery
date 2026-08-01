@@ -3,7 +3,15 @@
     <router-link to="/albums" class="underline">Albums</router-link>
   </div>
 
-  <Gallery :id="albumId" :show-lightbox="showLightbox" :album="true" :album-id="albumId" default-sort="dateAsc" :photos="photos.filter(photo => !photo.isBrokenAlbumFile())">
+  <Gallery 
+    :id="albumId"
+    :show-lightbox="showLightbox"
+    :album="true"
+    :album-id="albumId"
+    default-sort="dateAsc"
+    :photos="photos.filter(photo => !photo.isBrokenAlbumFile())"
+    default-show-unknown-dates
+   >
     <template #heading>
       <h1 class="text-3xl md:text-5xl">
         <div v-if="showLoadingAlbumInfo" class="flex justify-center">
