@@ -102,6 +102,27 @@ module.exports = {
       });
   },
 
+  getFileCount(albumId) {
+    return AlbumFileDAO.findByAlbumId(albumId).length;
+  },
+
+  getCoverFile(albumId) {
+    const albumFiles = AlbumFileDAO.findByAlbumId(albumId);
+    if (!albumFiles.length) {
+      return null;
+    }
+
+    // Deterministic pick (earliest added) so the preview image stays stable across re-fetches,
+    // unlike findCoverFiles() below which is intentionally randomized for in-app display.
+    const [{ fileId }] = albumFiles.sort((a, b) => a.createdAt - b.createdAt);
+    const file = GalleryFileDAO.findByIds([fileId])[0];
+    if (!file) {
+      return null;
+    }
+
+    return SourceService.getFile(file.sourceId, file.sourceFileId);
+  },
+
   findCoverFiles(albumId) {
     const albumFiles = AlbumFileDAO.findByAlbumId(albumId);
 

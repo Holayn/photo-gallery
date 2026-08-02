@@ -47,12 +47,16 @@ const AuthController = {
 
     if (albumToken) {
       const album = AlbumDAO.getByIdAlias(albumId);
-      if (album && timingSafeCompare(album.token, albumToken)) {
+      if (album && AuthController.isValidAlbumToken(album, albumToken)) {
         return next();
       }
     }
 
     return res.sendStatus(401);
+  },
+
+  isValidAlbumToken(album, token) {
+    return !!(album && album.token && token && timingSafeCompare(album.token, token));
   },
 };
 

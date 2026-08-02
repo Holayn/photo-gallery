@@ -14,6 +14,7 @@ const { indexMemories } = require('./services/memories');
 logger.init(true);
 
 const routes = require('./routes');
+const AlbumPreviewController = require('./controllers/album-preview');
 
 const app = express();
 
@@ -106,6 +107,8 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+app.get('/album/:albumId', AlbumPreviewController.render);
 
 app.use('/', express.static(path.join(__dirname, '../web/dist')));
 app.use('/api', routes);
