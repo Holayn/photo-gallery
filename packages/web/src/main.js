@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import App from './App.vue'
 import Gallery from './views/Gallery.vue';
 import Albums from './views/Albums.vue';
@@ -17,6 +17,12 @@ import { authVerify, error } from './services/api';
 import { setDocumentTitle } from './utils';
 
 import './style.css';
+
+// Rewrite old hash-style links (e.g. /#/album/xyz?token=abc) from the pre-history-mode
+// router into real paths, since the server can't see the hash fragment to redirect itself.
+if (window.location.hash.startsWith('#/')) {
+  window.history.replaceState(null, '', window.location.hash.slice(1));
+}
 
 const pinia = createPinia();
 
@@ -49,7 +55,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes,
 });
 
