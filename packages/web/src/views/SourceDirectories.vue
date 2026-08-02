@@ -1,15 +1,15 @@
 <template>
   <div class="px-8">
-    <div v-if="loadingSourceInfo">
-      <Loading class="w-16 h-16"></Loading>
+    <div v-if="loadingSourceInfo" class="mt-4 md:mt-0">
+      <Loading class="w-24 h-24"></Loading>
     </div>
     <div v-else>
-      <h1 class="flex flex-col">
+      <h1 class="mt-4 md:mt-0 flex flex-col">
         <div class="text-5xl">Directories</div>
         <div class=text-xl>({{ source?.alias }})</div>
       </h1>
       <div class="mt-4 pb-4">
-        <Loading v-if="loadingDirectories" class="w-16 h-16"></Loading>
+        <Loading v-if="loadingDirectories" class="w-24 h-24"></Loading>
         <div v-else class="grid gap-2">
           <div v-if="loadingDirectoriesFailed">Failed to load directories.</div>
           <button v-for="directory in directories" :key="directory.id" class="flex items-center py-2 px-4 bg-slate-50 w-full text-left" @click="openSourceDirectory(directory)">

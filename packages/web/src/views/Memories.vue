@@ -1,8 +1,5 @@
 <template>
   <template v-if="memory">
-    <div class="px-8 mb-2">
-      <router-link to="/memories" class="underline">Memories</router-link>
-    </div>
     <Gallery :id="'memory' + memory.year" :show-lightbox="showLightbox" :sortable="false" :default-sort="SORT_TYPES.DATE_ASC" :photos="photos">
       <template #heading>
         <h1 class="text-3xl md:text-5xl">
@@ -12,10 +9,10 @@
     </Gallery>
   </template>
   <template v-else>
-    <div class="px-8">
-      <h1 class="text-5xl">Memories</h1>
-      <div class="mt-4">
-        <Loading v-if="loading" class="w-16 h-16"></Loading>
+    <div>
+      <h1 class="mt-4 md:mt-0 mb-4 text-3xl">Memories</h1>
+      <div>
+        <Loading v-if="loading" class="w-24 h-24"></Loading>
         <div v-else-if="error" class="text-red-500">Failed to load memories</div>
         <template v-else>
           <div v-if="!memories.years.length">No memories found</div>

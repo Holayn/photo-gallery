@@ -1,7 +1,7 @@
 <template>
   <Modal v-if="loading" size="md" @close="onExploreLoadClose">
     <div class="flex flex-col items-center gap-4 py-4">
-      <Loading class="w-16 h-16"></Loading>
+      <Loading class="w-24 h-24"></Loading>
       <div>Loading Explore...</div>
     </div>
   </Modal>

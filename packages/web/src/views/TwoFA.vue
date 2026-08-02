@@ -11,7 +11,7 @@
         <button class="btn w-full" type="submit">Verify</button>
       </div>
     </form>
-    <Loading v-if="loading" class="w-16 h-16"></Loading>
+    <Loading v-if="loading" class="w-24 h-24"></Loading>
     <p v-if="error" class="mt-2">{{ error }}</p>
   </div>
 </template>

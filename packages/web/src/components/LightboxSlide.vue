@@ -3,7 +3,7 @@
     <div v-if="loading || error" class="relative flex items-center justify-center h-full w-full pointer-events-none">
       <img class="w-full h-full object-contain blur-sm" :src="preview">
       <div class="absolute flex flex-col items-center justify-center pointer-events-auto">
-        <Loading v-if="loading" class="w-16 h-16"></Loading>
+        <Loading v-if="loading" class="w-24 h-24"></Loading>
         <div v-else-if="error" class="text-white">Failed to load</div>
         <button v-if="error" class="text-white mt-1" @click="retryLoad">
           <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>

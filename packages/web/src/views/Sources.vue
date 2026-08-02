@@ -1,11 +1,11 @@
 <template>
-  <div class="px-4 md:px-8">
-    <div class="flex items-center justify-between">
-      <h1 class="text-5xl">Sources</h1>
+  <div>
+    <div class="mt-4 md:mt-0 mb-4 flex items-center justify-between">
+      <h1 class="text-2xl">Sources</h1>
       <button class="btn px-3 py-1" @click="showCreateSource = true">Create</button>
     </div>
-    <div class="mt-4">
-      <Loading v-if="loading" class="w-16 h-16"></Loading>
+    <div>
+      <Loading v-if="loading" class="m-auto w-24 h-24"></Loading>
       <div v-else-if="error" class="text-red-500">Failed to load sources</div>
       <div v-else class="flex flex-wrap gap-2">
         <div v-for="source in sources" :key="source.id" class="min-w-32 max-w-60" style="width: calc(50% - 0.5rem);">

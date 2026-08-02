@@ -1,8 +1,8 @@
 <template>
-  <div class="px-4 md:px-8">
-    <h1 class="text-5xl">Albums</h1>
-    <div class="mt-4">
-      <Loading v-if="loading" class="w-16 h-16"></Loading>
+  <div>
+    <h1 class="mt-4 md:mt-0 mb-4 text-2xl">Albums</h1>
+    <div>
+      <Loading v-if="loading" class="m-auto w-24 h-24"></Loading>
       <div v-else-if="error" class="text-red-500">Failed to load albums</div>
       <div v-else class="flex flex-wrap gap-2">
         <div v-for="album in albums" :key="album.id" class="min-w-32 max-w-60" style="width: calc(50% - 0.5rem);">

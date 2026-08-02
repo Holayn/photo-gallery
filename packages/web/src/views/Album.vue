@@ -1,8 +1,4 @@
 <template>
-  <div v-if="authStore.isLoggedIn" class="px-4 md:px-8">
-    <router-link to="/albums" class="underline">Albums</router-link>
-  </div>
-
   <Gallery 
     :id="albumId"
     :show-lightbox="showLightbox"
@@ -12,9 +8,9 @@
     default-show-unknown-dates
    >
     <template #heading>
-      <h1 class="text-xl md:text-3xl">
+      <h1 class="text-xl md:text-2xl">
         <div v-if="showLoadingAlbumInfo" class="flex justify-center">
-          <Loading class="w-16 h-16"></Loading>
+          <Loading class="w-24 h-24"></Loading>
         </div>
         <span v-else>{{ title }}</span>
       </h1>
@@ -31,7 +27,7 @@
     </template>
     <template v-if="loadingPhotoInfo" #loading>
       <div class="flex flex-col items-center justify-center pb-4">
-        <Loading class="w-16 h-16"></Loading>
+        <Loading class="w-24 h-24"></Loading>
         <p>Retrieving photo info</p>
       </div>
     </template>
