@@ -1,5 +1,9 @@
 <template>
-  <Gallery 
+  <div v-if="error">
+    Failed to load album.
+  </div>
+  <Gallery
+    v-else
     :id="albumId"
     :show-lightbox="showLightbox"
     :album-id="albumId"
@@ -85,6 +89,7 @@ export default {
 
       loadingPhotoInfo: false,
       loadingAlbumInfo: false,
+      error: false,
 
       album: null,
       photos: [],
@@ -124,11 +129,20 @@ export default {
   },
   async mounted() {
     this.loadingAlbumInfo = true;
-    this.loadPhotoInfo();
-    this.album = await getAlbum(this.albumId, this.albumToken);
-    this.loadingAlbumInfo = false;
-
-    setDocumentTitle(this.album.name);
+    try {
+      const [photoInfo, album] = await Promise.all([
+        this.loadPhotoInfo(),
+        getAlbum(this.albumId, this.albumToken),
+      ]);
+      
+      this.album = album;
+      setDocumentTitle(this.album.name);
+    } catch (e) {
+      console.error(e);
+      this.error = true;
+    } finally {
+      this.loadingAlbumInfo = false;
+    }
   },
   methods: {
     async loadPhotoInfo() {
