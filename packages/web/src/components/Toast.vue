@@ -27,11 +27,16 @@ export default {
         {
           transform: 'translateY(0)',
         }
-      ], { duration: 100, easing: 'ease-in' })
-    });
-    window.addEventListener('hide-toast', () => {
-      this.toastMessage = '';
-      this.showToast = false;
+      ], { duration: 100, easing: 'ease-in' });
+
+      if (this.timeout) {
+        clearTimeout(this.timeout);
+      }
+      
+      this.timeout = setTimeout(() => {
+        this.showToast = false;
+        this.toastMessage = '';
+      }, 3000);
     });
   },
 }

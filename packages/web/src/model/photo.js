@@ -9,10 +9,11 @@ export default class Photo {
   albums = [];
   urls = {};
   createdAt;
+  shareUrl;
 
   source;
 
-  constructor({ date, sourceId, sourceFileId, galleryFileId, metadata = {}, albums = [], urls = {}, createdAt, source }) {
+  constructor({ date, sourceId, sourceFileId, galleryFileId, metadata = {}, albums = [], urls = {}, createdAt, shareUrl, source }) {
     this.date = date;
     this.sourceId = sourceId;
     this.sourceFileId = sourceFileId;
@@ -21,6 +22,7 @@ export default class Photo {
     this.albums = albums;
     this.urls = urls;
     this.createdAt = createdAt;
+    this.shareUrl = shareUrl;
     this.source = source;
   }
 

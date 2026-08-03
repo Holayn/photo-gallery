@@ -81,14 +81,6 @@ const AlbumDAO = {
       DB.prepare('SELECT * FROM album WHERE id_alias = ?').get(idAlias)
     );
   },
-  getByIdToken(idAlias, token) {
-    return toAlbumModel(
-      DB.prepare('SELECT * FROM album WHERE id_alias = ? AND token = ?').get(
-        idAlias,
-        token
-      )
-    );
-  },
   update({ id, name, token }) {
     DB.prepare(
       'UPDATE album SET name = @name, token = @token WHERE id = @id'
@@ -99,22 +91,23 @@ const AlbumDAO = {
 DB.exec(
   'CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, timestamp_added INTEGER, date INTEGER, source_id INTEGER, source_file_id INTEGER, FOREIGN KEY(source_id) REFERENCES source(id))'
 );
+try {
+  DB.exec('ALTER TABLE file ADD COLUMN token TEXT;');
+} catch (e) {}
 const toGalleryFileModel = toModelFactory(GalleryFile);
 const GalleryFileDAO = {
-  insert({ date, sourceId, sourceFileId }) {
+  insert(file) {
     return DB.prepare(
-      'INSERT INTO file (timestamp_added, date, source_id, source_file_id) VALUES (@timestampAdded, @date, @sourceId, @sourceFileId)'
+      'INSERT INTO file (timestamp_added, date, source_id, source_file_id, token) VALUES (@timestampAdded, @date, @sourceId, @sourceFileId, @token)'
     ).run({
-      date,
-      sourceId,
-      sourceFileId,
+      ...file,
       timestampAdded: new Date().getTime(),
     }).lastInsertRowid;
   },
   update(file) {
     DB.prepare(
-      'UPDATE file SET date = @date, source_id = @sourceId, source_file_id = @sourceFileId WHERE id = @id'
-    ).run(file);
+      'UPDATE file SET date = @date, source_id = @sourceId, source_file_id = @sourceFileId, token = @token WHERE id = @id'
+    ).run({ ...file });
   },
   findBySourceId(sourceId) {
     return DB.prepare('SELECT * FROM file WHERE source_id = ?')

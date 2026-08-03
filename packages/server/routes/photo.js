@@ -4,9 +4,10 @@ const send = require('send');
 
 const config = require('../services/config');
 const SourceService = require('../services/source');
+const PhotoService = require('../services/photo');
 const AuthController = require('../controllers/auth');
 const logger = require('../services/logger');
-const { asyncHandler, requiredParams } = require('../util/route-utils');
+const { asyncHandler, requiredParams, requiredBody } = require('../util/route-utils');
 
 const router = express.Router();
 
@@ -55,6 +56,21 @@ router.get(
     }
   })
 );
+
+router.post(
+  '/photo/share',
+  requiredBody(['sourceFileId', 'sourceId']),
+  AuthController.authAdmin,
+  asyncHandler(async (req, res) => {
+    const { sourceFileId, sourceId } = req.body;
+
+    const token = PhotoService.share(sourceId, sourceFileId);
+
+    res.json({
+      shareUrl: `/api/photo?sourceId=${sourceId}&sourceFileId=${sourceFileId}&size=full&token=${token}`,
+    });
+  })
+)
 
 function sendFile(filePath, req, res) {
   if (!config.isDevelopment && !config.disableNginxRedirect) {

@@ -30,6 +30,9 @@
             <button v-else @click="enableSelectionMode()">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
             </button>
+            <button @click="sharePhoto()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            </button>
           </template>
           <button @click="close()">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -156,7 +159,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import LightboxSlide from './LightboxSlide.vue';
 import Toast from './Toast.vue';
 
-import { PHOTO_SIZES } from '../services/api';
+import { PHOTO_SIZES, sharePhoto } from '../services/api';
 import { useAuthStore } from '../store';
 
 dayjs.extend(localizedFormat);
@@ -314,7 +317,24 @@ export default {
     },
     select() {
       this.$emit('select', this.currentPhoto);
-    }
+    },
+
+    async sharePhoto() {
+      if (!this.currentPhoto.shareUrl) {
+        if (!confirm('Are you sure you want to share this photo? This link will be publicly accessible.')) {
+          return;
+        }
+
+        this.currentPhoto.shareUrl = await sharePhoto(this.currentPhoto);
+      }
+
+      window.navigator.clipboard.writeText(`${window.location.origin}${this.currentPhoto.shareUrl}`);
+      window.dispatchEvent(new CustomEvent('show-toast', {
+        detail: {
+          message: 'Copied link to clipboard',
+        }
+      }))
+    },
   },
 }
 </script>

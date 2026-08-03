@@ -11,6 +11,9 @@ function isLoggedIn(req) {
 }
 
 function timingSafeCompare(a, b) {
+  if (!a || !b) {
+    return;
+  }
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);
   return bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);
@@ -22,15 +25,19 @@ const AuthController = {
   },
 
   authPhoto(req, res, next) {
-    const { sourceFileId, sourceId, id: albumId, token: albumToken } = req.query;
+    const { sourceFileId, sourceId, id: albumId, token } = req.query;
 
     if (isLoggedIn(req)) return next();
 
-    if (albumToken) {
+    if (token) {
       const file = GalleryFileDAO.getBySource(sourceId, sourceFileId);
       if (file) {
-        const album = AlbumDAO.getByIdToken(albumId, albumToken);
-        if (album) {
+        if (timingSafeCompare(file.token, token)) {
+          return next();
+        }
+
+        const album = AlbumDAO.getByIdAlias(albumId);
+        if (album && AuthController.isValidAlbumToken(album, token)) {
           const albumFile = AlbumFileDAO.getByAlbumIdFileId(album.id, file.id);
           if (albumFile) return next();
         }

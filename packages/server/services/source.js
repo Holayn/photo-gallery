@@ -106,7 +106,7 @@ module.exports = {
     if (source) {
       const processorSource = new ProcessorSource(source);
       const sourceFiles = processorSource.findFiles(startDateRange, directory);
-      return setFileAlbums(sourceId, sourceFiles.map(({ id, date, metadata, createdAt }) => ({
+      return setFileProperties(sourceId, sourceFiles.map(({ id, date, metadata, createdAt }) => ({
         date,
         metadata,
         sourceFileId: id,
@@ -136,12 +136,16 @@ module.exports = {
 
     if (sourceFile) {
       const { date, metadata } = sourceFile;
+
+      const galleryFile = GalleryFileDAO.getBySource(sourceId, sourceFileId);
+
       return {
         date,
         metadata,
         sourceId,
         sourceFileId,
         urls: generateSourceFileUrls(sourceId, sourceFileId),
+        shareUrl: galleryFile ? galleryFile.token ? `${baseUrl}/api/photo?sourceId=${sourceId}&sourceFileId=${sourceFileId}&size=full&token=${galleryFile.token}` : null : null,
       };
     }
 
@@ -160,11 +164,10 @@ module.exports = {
   },
 };
 
-function setFileAlbums(sourceId, sourceFiles) {
+function setFileProperties(sourceId, sourceFiles) {
   const galleryFiles = GalleryFileDAO.findBySourceFileIds(sourceId, sourceFiles.map(f => f.sourceFileId));
   const albumFiles = AlbumFileDAO.findByFileIds(galleryFiles.map(f => f.id));
 
-  // Get album info
   const albums = {};
   const albumIds = new Set();
   albumFiles.forEach(af => {
@@ -178,7 +181,6 @@ function setFileAlbums(sourceId, sourceFiles) {
     };
   });
 
-  // Map fileId to albumId for better lookup.
   const fileIdToAlbum = {};
   albumFiles.forEach(af => {
     if (!fileIdToAlbum[af.fileId]) {
@@ -187,8 +189,8 @@ function setFileAlbums(sourceId, sourceFiles) {
     fileIdToAlbum[af.fileId].push(albums[af.albumId]);
   });
 
-  // Map source file ids to albums
   const sourceFileIdToAlbums = {};
+  const sourceFileIdToTokens = {};
   galleryFiles.forEach(gf => {
     if (fileIdToAlbum[gf.id]) {
       sourceFileIdToAlbums[gf.sourceFileId] = {
@@ -198,11 +200,16 @@ function setFileAlbums(sourceId, sourceFiles) {
       }
       albumIds.add(...fileIdToAlbum[gf.id]);
     }
+
+    if (gf.token) {
+      sourceFileIdToTokens[gf.sourceFileId] = gf.token;
+    }
   });
 
   return sourceFiles.map(sf => ({
     ...sf,
     albums: sourceFileIdToAlbums[sf.sourceFileId]?.albums ?? [],
+    shareUrl: sourceFileIdToTokens[sf.sourceFileId] ? `${baseUrl}/api/photo?sourceId=${sourceId}&sourceFileId=${sf.sourceFileId}&size=full&token=${sourceFileIdToTokens[sf.sourceFileId]}` : null,
   }));
 }
 

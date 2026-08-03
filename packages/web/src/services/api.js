@@ -245,6 +245,21 @@ export async function shareAlbum(album) {
   return res.data.token;
 }
 
+export async function sharePhoto(photo) {
+  const res = await fetcher.fetch(`${BASE}/photo/share`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      sourceId: photo.sourceId,
+      sourceFileId: photo.sourceFileId,
+    }),
+  });
+
+  return res.data.shareUrl;
+}
+
 export async function getMemories() {
   return (await fetcher.fetch(`${BASE}/memories`)).data;
 }
