@@ -34,6 +34,9 @@ function indexMemories() {
   sources.forEach(source => {
     const processorSource = new ProcessorSource(source);
     const earliest = processorSource.findEarliest();
+    if (!earliest) {
+      return;
+    }
     const earliestYear = dayjs(earliest.date).year();
 
     const start = dayjs().startOf('day');
