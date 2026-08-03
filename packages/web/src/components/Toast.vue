@@ -20,7 +20,7 @@ export default {
       this.toastMessage = e.detail.message;
       this.showToast = true;
       await this.$nextTick();
-      this.$refs.toast.animate([
+      this.$refs.toast?.animate([
         {
           transform: 'translateY(100%)',
         },
