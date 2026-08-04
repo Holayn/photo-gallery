@@ -9,7 +9,7 @@
     </Gallery>
   </template>
   <template v-else>
-    <div>
+    <div class="px-6 py-4">
       <h1 class="mt-4 md:mt-0 mb-4 text-3xl">Memories</h1>
       <div>
         <Loading v-if="loading" class="w-24 h-24"></Loading>

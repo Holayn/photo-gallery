@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full -mx-6 md:mx-0">
+  <div class="md:px-6">
     <PhotoGrid
       ref="photos"
       :photos="displayedPhotos"
@@ -12,7 +12,7 @@
       @selection-change="onSelectionChange"
     >
       <template #header>
-        <div class="sticky top-0 z-40 bg-white pb-1 md:pb-2 px-4 md:px-0 flex gap-4">
+        <div class="sticky top-0 z-20 bg-white py-2 md:pb-2 px-4 md:px-0 flex gap-4 md:top-[var(--header-height)]">
           <div class="flex-auto break-word">
             <div class="flex gap-4">
               <div class="flex-auto">

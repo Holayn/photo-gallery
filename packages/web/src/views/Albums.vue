@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="px-6 py-4">
     <h1 class="mt-4 md:mt-0 mb-4 text-2xl">Albums</h1>
     <div>
       <Loading v-if="loading" class="m-auto w-24 h-24"></Loading>

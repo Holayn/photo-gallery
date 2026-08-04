@@ -1,5 +1,5 @@
 <template>
-  <div ref="scrollContainer" class="h-full overflow-auto">
+  <div>
     <slot name="header"></slot>
     <div ref="photos" class="relative" :style="{ height: `${layout?.containerHeight}px` }">
       <div
@@ -116,6 +116,41 @@ function getLayoutItemHeight(layoutType = LAYOUT_TYPES.JUSTIFIED) {
   return JUSTIFIED_MODE_IMAGE_HEIGHT;
 }
 
+// boxes must already be sorted so that getValue(boxes[i]) increases (or stays the same) as i increases.
+function findFirstIndexWhereValueIsGreaterThan(boxes, targetValue, getValue) {
+  let low = 0;
+  let high = boxes.length;
+
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+
+    if (getValue(boxes[middle]) > targetValue) {
+      high = middle;
+    } else {
+      low = middle + 1;
+    }
+  }
+
+  return low;
+}
+
+function findFirstIndexWhereValueIsAtLeast(boxes, targetValue, getValue) {
+  let low = 0;
+  let high = boxes.length;
+
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+
+    if (getValue(boxes[middle]) >= targetValue) {
+      high = middle;
+    } else {
+      low = middle + 1;
+    }
+  }
+
+  return low;
+}
+
 export default {
   name: 'PhotoGrid',
   components: {
@@ -218,7 +253,7 @@ export default {
     this._updateRenderPhotosDebounce = debounce(() => this.updateRenderPhotos(false));
     this._updateRenderPhotosUpdateLayoutDebounce = debounce(() => this.updateRenderPhotos(), 50);
 
-    this.$refs.scrollContainer.addEventListener('scroll', this._updateRenderPhotosDebounce);
+    window.addEventListener('scroll', this._updateRenderPhotosDebounce);
     window.addEventListener('resize', this._updateRenderPhotosUpdateLayoutDebounce);
 
     // Handle keyboard events for shift key
@@ -240,7 +275,7 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('resize', this._updateRenderPhotosUpdateLayoutDebounce);
-    this.$refs.scrollContainer.removeEventListener('scroll', this._updateRenderPhotosDebounce);
+    window.removeEventListener('scroll', this._updateRenderPhotosDebounce);
     window.removeEventListener('keydown', this.keydown);
     window.removeEventListener('keyup', this.keyup);
   },
@@ -267,41 +302,33 @@ export default {
         this.updateLayout();
       }
 
-      const scrollContainer = this.$refs.scrollContainer;
+      const scrollContainer = window.document.documentElement;
 
-      if (!this.layout || !scrollContainer) return;
+      if (!this.layout || !this.$refs.photos) return;
 
-      let start = null;
-      let end = null;
-      
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const photosRect = this.$refs.photos.getBoundingClientRect();
-      // Position of the photos grid within the container's scrollable content, regardless of positioning context.
-      const photosOffset = photosRect.top - containerRect.top + scrollContainer.scrollTop;
+      const photosOffset = this.$refs.photos.offsetTop;
       const scrollTop = scrollContainer.scrollTop;
       const containerHeight = scrollContainer.clientHeight;
 
-      // Add a buffer zone to prevent aggressive unloading, which can cause weird scroll jumping behavior in certain browsers.
+      // Add a buffer zone on both edges to prevent aggressive unloading/reloading,
+      // which can cause weird scroll jumping behavior in certain browsers.
       const buffer = containerHeight / 2;
+      const lowerBound = scrollTop - buffer;
+      const upperBound = scrollTop + containerHeight + buffer;
 
-      for (let i = 0; i < this.layout.boxes.length; i++) {
-        const box = this.layout.boxes[i];
-        if ((box.top + box.height + photosOffset > scrollTop - buffer) && (box.top + photosOffset < scrollTop + containerHeight)) {
-          if (start === null) {
-            start = i;
-          }
-        } else {
-          if (start !== null) {
-            end = i;
-            break;
-          }
-        }
+      const boxes = this.layout.boxes;
+      const getBoxBottom = box => box.top + box.height + photosOffset;
+      const getBoxTop = box => box.top + photosOffset;
+      const rangeStart = findFirstIndexWhereValueIsGreaterThan(boxes, lowerBound, getBoxBottom);
+      const rangeEnd = findFirstIndexWhereValueIsAtLeast(boxes, upperBound, getBoxTop);
+
+      const start = rangeStart < rangeEnd ? rangeStart : null;
+      const end = rangeStart < rangeEnd ? rangeEnd : null;
+
+      if (start !== this.renderPhotosStart || end !== this.renderPhotosEnd) {
+        this.renderPhotosStart = start;
+        this.renderPhotosEnd = end;
       }
-      if (end === null) {
-        end = this.layout.boxes.length;
-      }
-      this.renderPhotosStart = start;
-      this.renderPhotosEnd = end;
 
       if (updateLayout) {
         // Scrollbar may show now, so re-update layout to accommodate for that.

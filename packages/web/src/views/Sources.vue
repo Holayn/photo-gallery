@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="px-6 py-4">
     <div class="mt-4 md:mt-0 mb-4 flex items-center justify-between">
       <h1 class="text-2xl">Sources</h1>
       <button class="btn px-3 py-1" @click="showCreateSource = true">Create</button>

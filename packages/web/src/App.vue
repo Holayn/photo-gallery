@@ -1,15 +1,15 @@
 <template>
-  <div class="h-screen flex flex-col">
+  <div class="min-h-screen flex flex-col">
     <template v-if="authStore.isLoggedIn">
-      <header class="sticky top-0 bg-white z-40 shadow-md flex gap-4 px-4 md:px-8 py-4">
+      <header class="md:sticky md:top-0 z-40 h-14 border-b bg-white flex gap-4 px-4 md:px-8 py-4">
         <div class="flex-auto"></div>
         <button @click="showRightDrawer = true">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
       </header>
 
-      <div class="flex-auto min-h-0 flex">
-        <nav class="hidden md:block shrink-0 h-full w-[var(--sidebar-nav-width)] border-r p-8">
+      <div class="flex-auto flex">
+        <nav class="sticky top-0 hidden md:block shrink-0 w-[var(--sidebar-nav-width)] border-r p-8" style="top: var(--header-height); height: calc(100vh - var(--header-height));">
           <div class="grid grid-cols-1 gap-6 text-sm">
             <div>
               <router-link class="flex items-center gap-4" :class="{ 'text-orange-500 font-bold': isAlbumsActive }" :to="{ name: 'albums' }">
@@ -38,12 +38,12 @@
           </div>
         </nav>
 
-        <div class="flex-auto pt-2 pb-[var(--mobile-nav-footer-height)] px-6 md:pt-6 md:pb-6">
+        <div class="flex-auto">
           <router-view></router-view>
         </div>
       </div>
 
-      <div class="md:hidden fixed bottom-0 z-40 w-full border-t py-1 px-1 bg-white" style="height: var(--mobile-nav-footer-height);">
+      <div class="sticky bottom-0 z-20 md:hidden w-full border-t py-1 px-1 bg-white" style="height: var(--mobile-nav-footer-height);">
         <div class="grid grid-cols-4 gap-1">
           <button class="rounded p-2 flex flex-col items-center gap-1" :class="{ 'text-orange-500 font-bold': isAlbumsActive }" @click="$router.push({ name: 'albums' })">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
