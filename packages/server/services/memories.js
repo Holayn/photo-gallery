@@ -3,8 +3,9 @@ const path = require('path');
 const dayjs = require('dayjs');
 const { SourceDAO } = require('./db');
 const ProcessorSource = require('./processor-source/processor-source');
+const { dataDir } = require('./config');
 
-const MEMORIES_INDEX_PATH = path.join(__dirname, '../memories.json');
+const MEMORIES_INDEX_PATH = path.join(dataDir, 'memories.json');
 
 let memoriesIndex = {};
 

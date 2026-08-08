@@ -10,11 +10,11 @@ const Source = require('../model/source');
 const User = require('../model/user');
 const { generateRandomString } = require('../util/random');
 const UserExploreHistory = require('../model/user-explore-history');
+const { dataDir } = require('../services/config');
 
-const DB_FILENAME = 'photo-gallery.db';
-const DB_PATH = path.resolve(__dirname, `../${DB_FILENAME}`);
+const DB_PATH = path.join(dataDir, 'photo-gallery.db');
 
-fs.mkdirpSync(path.dirname(DB_PATH));
+fs.mkdirpSync(dataDir);
 
 const DB = new Database(DB_PATH);
 

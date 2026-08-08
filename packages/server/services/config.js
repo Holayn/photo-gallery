@@ -8,6 +8,9 @@ if (!['development', 'production'].includes(env)) {
 if (!process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET not defined in .env!');
 }
+if (!process.env.DATA_DIR) {
+  throw new Error('DATA_DIR not defined in .env!');
+}
 if (!process.env.FILES_PATH) {
   throw new Error('FILES_PATH not defined in .env!');
 }
@@ -22,8 +25,8 @@ module.exports = Object.freeze({
   baseUrl: process.env.BASE_URL || '',
   sessionSecret: process.env.SESSION_SECRET,
   notifyUrl: process.env.NOTIFY_URL,
+  dataDir: process.env.DATA_DIR,
   filesPath: process.env.FILES_PATH,
   disableNginxRedirect: process.env.DISABLE_NGINX_REDIRECT === 'true',
   webImgToolPath: process.env.WEB_IMG_TOOL_PATH,
-  authDataDir: process.env.AUTH_DATA_DIR,
 });
