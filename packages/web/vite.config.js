@@ -22,6 +22,15 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:8000',
           changeOrigin: true,
         },
+        '/login': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          rewrite: (path) => `/api${path}`,
+        },
+        '/auth': {
+          target: 'http://localhost:8000/api',
+          changeOrigin: true,
+        },
       },
     }
   }

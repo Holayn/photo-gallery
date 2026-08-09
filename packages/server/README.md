@@ -19,6 +19,7 @@ Copy `sample.env` to `.env`:
 | `BASE_URL`               | Public base URL of the server                                                                                                                                                                                                                    |
 | `NOTIFY_URL`             | Optional webhook URL for notifications                                                                                                                                                                                                           |
 | `DISABLE_NGINX_REDIRECT` | Set to `true` if not behind nginx                                                                                                                                                                                                                |
+| `DISCORD_BOT_TOKEN`      | **Required in production.** Bot token used by `kaiauth` for Discord-based notifications                                                                                                                                                          |
 
 ## Scripts
 
@@ -41,4 +42,4 @@ node bin/photo-gallery.js <command> [options]
 | `remove-source`  | `--alias <name>`                                              | Remove a source and its associated data                |
 | `files-moved`    | `--from <alias> --to <alias>`                                 | Update file references when files move between sources |
 | `index-memories` |                                                               | Rebuild the memories index                             |
-| `add-user`       | `--username <name> --password <pw> [--notify-user <contact>]` | Add a user (overwrites if already exists)              |
+| `add-user`       | `--username <name> --password <pw>`                           | Add a user (overwrites if already exists)              |

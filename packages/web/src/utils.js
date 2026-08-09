@@ -2,6 +2,10 @@ export function setDocumentTitle(title) {
   document.title = `${title}`;
 }
 
+export function redirectToLogin() {
+  window.location.href = '/login';
+}
+
 export function debounce(func, delay, { leading } = {}) {
   let timerId
 

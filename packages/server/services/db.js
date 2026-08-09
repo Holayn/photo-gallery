@@ -181,7 +181,7 @@ const SourceDAO = {
 };
 
 DB.exec(
-  'CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, name TEXT, notify_user TEXT)'
+  'CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, name TEXT)'
 );
 try {
   DB.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_user_name_unique ON user(name)');
@@ -199,15 +199,14 @@ const UserDAO = {
     );
   },
   findAll() {
-    return DB.prepare('SELECT id, name, notify_user FROM user')
+    return DB.prepare('SELECT id, name FROM user')
       .all()
       .map((u) => toUserModel(u));
   },
-  upsert({ name, notifyUser }) {
+  upsert({ name }) {
     return DB.prepare(
-      `INSERT INTO user (name, notify_user) VALUES (@name, @notifyUser)
-       ON CONFLICT(name) DO UPDATE SET notify_user = @notifyUser`
-    ).run({ name, notifyUser: notifyUser ?? null }).lastInsertRowid;
+      'INSERT INTO user (name) VALUES (@name) ON CONFLICT(name) DO NOTHING'
+    ).run({ name }).lastInsertRowid;
   },
 };
 
@@ -236,7 +235,7 @@ const UserSourceDAO = {
   },
   findUsersBySourceId(sourceId) {
     return DB.prepare(
-      'SELECT u.id, u.name, u.notify_user FROM user u INNER JOIN user_source us ON u.id = us.user_id WHERE us.source_id = ?'
+      'SELECT u.id, u.name FROM user u INNER JOIN user_source us ON u.id = us.user_id WHERE us.source_id = ?'
     )
       .all(sourceId)
       .map((u) => toUserModel(u));

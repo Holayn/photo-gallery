@@ -111,10 +111,6 @@ yargs(args)
         description: 'Password for the new user',
         type: 'string',
       },
-      'notify-user': {
-        description: 'Notification identifier for notify service',
-        type: 'string',
-      },
     },
     (options) => {
       const { UserDAO } = require('../services/db');
@@ -126,7 +122,7 @@ yargs(args)
       db.close();
 
       // Upsert into the server's own user table
-      UserDAO.upsert({ name: options.username, notifyUser: options.notifyUser });
+      UserDAO.upsert({ name: options.username });
 
       console.log(`User "${options.username}" added successfully.`);
     }

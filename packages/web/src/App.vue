@@ -67,7 +67,7 @@
       <nav v-if="showRightDrawer" class="fixed z-50 top-0 w-full h-full bg-black/25" @click="showRightDrawer = false">
         <div class="bg-white px-8 py-4 h-full absolute right-0 w-[var(--sidebar-nav-width)]" @click.stop>
           <div class="mt-4">
-            <router-link :to="{ name: 'login' }" @click="logout">Logout</router-link>
+            <button @click="logout">Logout</button>
           </div>
         </div>
       </nav>
@@ -90,6 +90,7 @@
 import Toast from './components/Toast.vue';
 import { logout } from './services/api';
 import { useAuthStore } from './store';
+import { redirectToLogin } from './utils.js';
 import Explore from './views/Explore.vue';
 
 export default {
@@ -124,8 +125,7 @@ export default {
   methods: {
     async logout() {
       await logout();
-      this.showRightDrawer = false;
-      this.authStore.setIsLoggedIn(false);
+      redirectToLogin();
     },
     startExplore() {
       this.showExplore = true;

@@ -4,8 +4,6 @@ import App from './App.vue'
 import Gallery from './views/Gallery.vue';
 import Albums from './views/Albums.vue';
 import Album from './views/Album.vue';
-import Login from './views/Login.vue';
-import TwoFA from './views/TwoFA.vue';
 import Sources from './views/Sources.vue';
 import Source from './views/Source.vue';
 import SourceDirectories from './views/SourceDirectories.vue';
@@ -14,7 +12,7 @@ import { createPinia } from 'pinia'
 import { useAuthStore } from './store'
 
 import { authVerify, error } from './services/api';
-import { setDocumentTitle } from './utils';
+import { setDocumentTitle, redirectToLogin } from './utils';
 
 import './style.css';
 
@@ -28,10 +26,6 @@ const pinia = createPinia();
 
 const routes = [
   { name: 'home', path: '/', redirect: () => {
-    const authStore = useAuthStore();
-    if (authStore.isLoggedIn === null) {
-      return { name: 'login' };
-    }
     return { name: 'albums' };
   } },
   { name: 'all', path: '/gallery', component: Gallery },
@@ -40,8 +34,6 @@ const routes = [
     ...route.params,
     showLightbox: route.query.showLightbox === 'true',
   })},
-  { name: 'login', path: '/login', component: Login, props: route => route.query },
-  { name: '2fa', path: '/2fa', component: TwoFA, props: route => route.query },
   { name: 'sources', path: '/sources', component: Sources },
   { name: 'memories', path: '/memories', component: Memories, props: route => ({
     ...route.params,
@@ -61,14 +53,11 @@ const router = createRouter({
 
 window.addEventListener('unauthorized', () => {
   // Force the user to re-authenticate.
-  router.push({ name: 'login' });
+  redirectToLogin();
 });
 
 router.beforeEach(async (to) => {
   if (to.name === 'album' && to.query.token) {
-    return true;
-  }
-  if (to.name === 'login' || to.name === '2fa') {
     return true;
   }
 
@@ -78,12 +67,8 @@ router.beforeEach(async (to) => {
     if (await authVerify()) {
       authStore.setIsLoggedIn(true);
     } else {
-      router.push({ 
-        name: 'login', 
-        query: { 
-          next: to.path,
-        },
-      });
+      redirectToLogin();
+      return false;
     }
   }
 });

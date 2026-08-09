@@ -17,6 +17,9 @@ if (!process.env.FILES_PATH) {
 if (!process.env.WEB_IMG_TOOL_PATH) {
   throw new Error('WEB_IMG_TOOL_PATH not defined in .env!');
 }
+if (env === 'production' && !process.env.DISCORD_BOT_TOKEN) {
+  throw new Error('DISCORD_BOT_TOKEN not defined in .env!');
+}
 
 module.exports = Object.freeze({
   env,
@@ -29,4 +32,5 @@ module.exports = Object.freeze({
   filesPath: process.env.FILES_PATH,
   disableNginxRedirect: process.env.DISABLE_NGINX_REDIRECT === 'true',
   webImgToolPath: process.env.WEB_IMG_TOOL_PATH,
+  discordBotToken: process.env.DISCORD_BOT_TOKEN,
 });

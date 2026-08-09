@@ -41,7 +41,7 @@ This inserts the user into both the auth database (managed by `kaiauth`) and the
 
 ```sh
 yarn --cwd packages/server dev   # API server on :8000
-yarn --cwd packages/web dev      # Vite dev server (proxies /api → :8000)
+yarn --cwd packages/web dev      # Vite dev server (proxies /api, /login, /auth → :8000)
 ```
 
 ## Production

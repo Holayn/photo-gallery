@@ -2,10 +2,9 @@ class User {
   id;
   name;
 
-  constructor({ id, name, notifyUser }) {
+  constructor({ id, name }) {
     this.id = id;
     this.name = name;
-    this.notifyUser = notifyUser;
   }
 }
 

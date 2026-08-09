@@ -11,13 +11,19 @@ const { router } = createAuthRouter({
     secure: !config.isDevelopment,
     ...extra,
   }),
-  notify: (message, username) => {
-    if (!config.isDevelopment) {
-      notify(message, username);
-    } else {
-      console.log(`[${username || '(no user)'}] -> ${message}`);
-    }
+  notify: (message) => {
+    notify(message);
   },
+  serveLoginPage: true,
+  loginPageOptions: {
+    title: 'kaifotos',
+  },
+  development: config.isDevelopment,
+  ...(!config.isDevelopment ? {
+    discord: {
+      botToken: config.discordBotToken,
+    },
+  } : {}),
 });
 
 module.exports = { router };
