@@ -2,7 +2,7 @@ const config = require('../services/config');
 const { createAuthRouter } = require('kaiauth');
 const notify = require('../services/notify');
 
-const { router } = createAuthRouter({
+const { apiRouter, pageRouter } = createAuthRouter({
   authDataDir: config.dataDir,
   sessionSecret: config.sessionSecret,
   buildCookieOptions: (extra) => ({
@@ -17,6 +17,7 @@ const { router } = createAuthRouter({
   serveLoginPage: true,
   loginPageOptions: {
     title: 'kaifotos',
+    apiBasePath: '/api',
   },
   development: config.isDevelopment,
   ...(!config.isDevelopment ? {
@@ -26,4 +27,4 @@ const { router } = createAuthRouter({
   } : {}),
 });
 
-module.exports = { router };
+module.exports = { apiRouter, pageRouter };

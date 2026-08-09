@@ -13,7 +13,7 @@ const { indexMemories } = require('./services/memories');
 
 logger.init(true);
 
-const routes = require('./routes');
+const { apiRouter, pageRouter } = require('./routes');
 const AlbumPreviewController = require('./controllers/album-preview');
 
 const app = express();
@@ -110,8 +110,9 @@ app.use((req, res, next) => {
 
 app.get('/album/:albumId', AlbumPreviewController.render);
 
+app.use(pageRouter);
 app.use('/', express.static(path.join(__dirname, '../web/dist')));
-app.use('/api', routes);
+app.use('/api', apiRouter);
 
 // SPA fallback: serve index.html for any unmatched, non-API route so client-side
 // (history mode) routes work on direct load/refresh, not just client navigation.

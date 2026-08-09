@@ -7,16 +7,19 @@ const photo = require('./photo');
 const memories = require('./memories');
 const explore = require('./explore');
 
-const router = express.Router();
-router.use(auth.router);
-router.use(source);
-router.use(album);
-router.use(photo);
-router.use(memories);
-router.use(explore);
+const apiRouter = express.Router();
+apiRouter.use(auth.apiRouter);
+apiRouter.use(source);
+apiRouter.use(album);
+apiRouter.use(photo);
+apiRouter.use(memories);
+apiRouter.use(explore);
 
-router.get('/test', (req, res) => {
+apiRouter.get('/test', (req, res) => {
   res.sendStatus(200);
 });
 
-module.exports = router;
+module.exports = {
+  apiRouter,
+  pageRouter: auth.pageRouter,
+};

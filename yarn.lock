@@ -3300,9 +3300,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kaiauth@https://github.com/Holayn/kaiauth/archive/refs/tags/2.6.1.tar.gz":
+"kaiauth@https://github.com/Holayn/kaiauth/archive/refs/tags/3.0.1.tar.gz":
   version: 1.0.0
-  resolution: "kaiauth@https://github.com/Holayn/kaiauth/archive/refs/tags/2.6.1.tar.gz"
+  resolution: "kaiauth@https://github.com/Holayn/kaiauth/archive/refs/tags/3.0.1.tar.gz"
   dependencies:
     bcryptjs: ^2.4.3
     better-sqlite3: ">=9"
@@ -3314,7 +3314,7 @@ __metadata:
     yargs: ^18.1.0
   bin:
     kaiauth: dist/bin/kaiauth.js
-  checksum: 24b01cc934262fa2a451c3b4779089ce175f5afce8569285455eaa98beaf1753b08a7c940b2b94cae9be048757f35ae02a95aa45e0f96906b4a9f44070383a4d
+  checksum: 6f1dfa7729869566f085cca1b12a87ff849b0d6d0c220555e73486ca0164dbfc87b3ded6b81a34b69c7ccd786560d754d886c71b48e8ab32566062213887ee17
   languageName: node
   linkType: hard
 
@@ -4034,7 +4034,7 @@ __metadata:
     express: ^4.17.1
     fs-extra: ^10.1.0
     helmet: ^4.5.0
-    kaiauth: "https://github.com/Holayn/kaiauth/archive/refs/tags/2.6.1.tar.gz"
+    kaiauth: "https://github.com/Holayn/kaiauth/archive/refs/tags/3.0.1.tar.gz"
     morgan: ^1.10.0
     node-cron: ^4.2.1
     nodemon: ^2.0.19
