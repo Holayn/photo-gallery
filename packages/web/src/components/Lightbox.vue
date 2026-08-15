@@ -266,6 +266,7 @@ export default {
   },
   mounted() {
     this.$refs.dialog.showModal();
+    document.body.style.overflow = 'hidden';
   },
   beforeUnmount() {
     this.close();
@@ -273,6 +274,7 @@ export default {
   methods: {
     close() {
       this.$refs.dialog.close();
+      document.body.style.overflow = '';
       this.$emit('close');
     },
 
