@@ -26,8 +26,13 @@
         </div>
         <div v-if="showDates" class="absolute -bottom-8 h-8 w-full px-1 flex justify-center">
           <div class="text-xs text-center">
-            <div>{{ photo.dateFormatted }}</div>
-            <div>{{ photo.timeFormatted }}</div>
+            <template v-if="!photo.dateFormatted && !photo.timeFormatted">
+              <div class="text-gray-500">(unknown date)</div>
+            </template>
+            <template v-else>
+              <div>{{ photo.dateFormatted }}</div>
+              <div>{{ photo.timeFormatted }}</div>
+            </template>
           </div>
         </div>
         <button @click="openLightbox(photo)">
