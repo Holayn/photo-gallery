@@ -74,14 +74,10 @@
                           <sl-menu-item value="viewDateSelection">
                             Show photos before...
                           </sl-menu-item>
-                          <sl-menu-item>
-                            Gallery layout
-                            <sl-menu slot="submenu" @sl-select="onGalleryLayoutSelect">
-                              <sl-menu-item :value="LAYOUT_TYPES.AUTO" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.AUTO">Auto</sl-menu-item>
-                              <sl-menu-item :value="LAYOUT_TYPES.JUSTIFIED" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.JUSTIFIED">Justified</sl-menu-item>
-                              <sl-menu-item :value="LAYOUT_TYPES.TILE" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.TILE">Tile</sl-menu-item>
-                            </sl-menu>
-                          </sl-menu-item>
+                          <sl-menu-label>Layout</sl-menu-label>
+                          <sl-menu-item :value="LAYOUT_TYPES.AUTO" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.AUTO" data-layout-option>Auto</sl-menu-item>
+                          <sl-menu-item :value="LAYOUT_TYPES.JUSTIFIED" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.JUSTIFIED" data-layout-option>Justified</sl-menu-item>
+                          <sl-menu-item :value="LAYOUT_TYPES.TILE" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.TILE" data-layout-option>Tile</sl-menu-item>
                         </sl-menu>
                       </sl-dropdown>
                     </template>
@@ -535,6 +531,9 @@ export default {
       }
       if (item.value === 'viewDateSelection') {
         this.showDateSelection = true;
+      }
+      if (item.dataset.layoutOption != null) {
+        this.galleryLayout = item.value;
       }
     },
     
