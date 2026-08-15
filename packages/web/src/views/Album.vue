@@ -10,6 +10,8 @@
     default-sort="dateAsc"
     :photos="photos.filter(photo => !photo.isBrokenAlbumFile())"
     default-show-unknown-dates
+    @date="onDateUpdate($event)"
+    @reset="photos = []"
    >
     <template #heading>
       <h1 class="text-xl md:text-2xl">
@@ -91,6 +93,7 @@ export default {
       loadingAlbumInfo: false,
       error: false,
 
+      date: null,
       album: null,
       photos: [],
     };
@@ -158,13 +161,20 @@ export default {
 
       const [ { photos }, sources ] = await Promise.all(res);
 
-      this.photos = photos.map(photo => {
-        if (sources) {
-          return new Photo({ ...photo, source: sources.find(s => s.id === photo.sourceId) });
-        }
-        return photo;
-      });
+      this.photos = photos
+        .filter(photo => !this.date || !photo.date || photo.date < new Date(this.date).getTime())
+        .map(photo => {
+          if (sources) {
+            return new Photo({ ...photo, source: sources.find(s => s.id === photo.sourceId) });
+          }
+          return photo;
+        });
       this.loadingPhotoInfo = false;
+    },
+
+    onDateUpdate(date) {
+      this.date = date;
+      this.loadPhotoInfo();
     },
 
     showModalAlbumLink() {
