@@ -74,7 +74,7 @@
     </template>
     <template v-else>
       <div class="flex-auto">
-        <div class="h-full pt-2 pb-2 px-6 md:pt-6 md:pb-6" style="--header-height: 0">
+        <div class="h-full pt-8 pb-24 md:pt-6 md:pb-6" style="--header-height: 0">
           <router-view></router-view>  
         </div>
       </div>

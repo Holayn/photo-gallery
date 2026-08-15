@@ -106,21 +106,21 @@
           </div>
         </div>
 
-        <div v-if="$slots.notices || hasNewPhotos" class="px-4 md:px-8 mt-2 flex flex-col gap-1">
+        <div v-if="$slots.notices || hasNewPhotos" class="mb-2 px-4 md:px-0 flex flex-col gap-1">
           <slot name="notices"></slot>
-          <template v-if="hasNewPhotos && !isViewModeNewOnly">
-            <div class="bg-blue-200 border border-blue-300 py-1 px-2 flex items-center gap-2 h-10">
-              <div class="flex items-center gap-1">
-                <sl-icon class="text-white" name="stars"></sl-icon>
-                New photos have been added
-              </div>
-              <sl-button size="small" @click="viewNewPhotos">View</sl-button>
-            </div>
-          </template>
-          <template v-if="hasNewPhotos && isViewModeNewOnly">
-            <div class="bg-blue-200 border border-blue-300 py-1 px-2 flex items-center gap-2 h-10">
-              Viewing new photos
-              <sl-button size="small" @click="viewAllPhotos">View All Photos</sl-button>
+          <template v-if="hasNewPhotos">
+            <div class="py-1 px-2 bg-blue-200 border border-blue-300 flex items-center gap-2">
+              <template v-if="!isViewModeNewOnly">
+                <div class="flex items-center gap-1">
+                  <sl-icon class="text-white" name="stars"></sl-icon>
+                  New photos have been added
+                </div>
+                <sl-button size="small" @click="viewNewPhotos">View</sl-button>
+              </template>
+              <template v-else>
+                Viewing new photos
+                <sl-button size="small" @click="viewAllPhotos">View All Photos</sl-button>
+              </template>
             </div>
           </template>
         </div>
