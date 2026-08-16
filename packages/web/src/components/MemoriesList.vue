@@ -4,7 +4,7 @@
   <div v-else-if="!memories.years.length">No memories found</div>
   <div v-else :class="containerClass">
     <div v-for="memory in memories.years" :key="memory.year" :class="itemClass" :style="itemStyle">
-      <CollectionTile :covers="memoryCovers[memory.year]" :error="!!errorMemoryCovers[memory.year]" @click="openMemory(memory)">
+      <CollectionTile :covers="memoryCovers[memory.year]?.items" :error="!!memoryCovers[memory.year]?.error" @click="openMemory(memory)">
         <div class="break-word text-left text-sm text-gray-800">{{ getYearsAgo(memory.year) }} {{ getYearsAgo(memory.year) === 1 ? 'year' : 'years' }} ago</div>
         <div class="text-left text-xs text-gray-500">{{ memory.count }} {{ memory.count === 1 ? 'item' : 'items' }}</div>
       </CollectionTile>
@@ -37,7 +37,6 @@ export default {
       memoryCovers: {},
       loading: true,
       error: false,
-      errorMemoryCovers: {},
     };
   },
   computed: {
@@ -56,10 +55,12 @@ export default {
       this.memories = await getMemoriesCovers();
 
       this.memories.years.forEach(memory => {
+        this.memoryCovers[memory.year] = {};
+
         try {
-          this.memoryCovers[memory.year] = memory.files.map(file => file.urls.view[PHOTO_SIZES.THUMB]);
+          this.memoryCovers[memory.year].items = memory.files.map(file => file.urls.view[PHOTO_SIZES.THUMB]);
         } catch (e) {
-          this.errorMemoryCovers[memory.year] = true;
+          this.memoryCovers[memory.year].error = true;
         }
       });
     } catch (e) {

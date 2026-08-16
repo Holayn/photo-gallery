@@ -9,7 +9,7 @@
       <div v-else-if="error" class="text-red-500">Failed to load sources</div>
       <div v-else class="flex flex-wrap gap-2">
         <div v-for="source in sources" :key="source.id" class="min-w-32 max-w-60" style="width: calc(50% - 0.5rem);">
-          <CollectionTile :covers="sourceCovers[source.id]" :error="!!errorSources[source.id]" @click="openSource(source)">
+          <CollectionTile :covers="sourceCovers[source.id]?.items" :error="!!sourceCovers[source.id]?.error" @click="openSource(source)">
             <div class="h-full flex">
               <div class="flex-auto flex flex-col">
                 <div class="line-clamp-2 break-word text-left text-sm text-gray-800">{{ source.alias }}</div>
@@ -68,7 +68,6 @@ export default {
       sourceCovers: {},
       loading: true,
       error: false,
-      errorSources: {},
       selectedSource: null,
       showCreateSource: false,
     };
@@ -77,21 +76,24 @@ export default {
     try {
       this.sources = await getSources();
       this.sources.sort((a, b) => b.alias.localeCompare(a.alias));
-      
-      await Promise.all(this.sources.map(async (source) => {
-        try {
-          const { photos } = await getSourceCover(source.id);
-          this.sourceCovers[source.id] = photos.map(photo => photo.urls.view[PHOTO_SIZES.THUMB]);
-        } catch (e) {
-          this.errorSources[source.id] = true;
-        }
-      }));
     } catch (e) {
       this.error = true;
     } finally {
       this.loading = false;
     }
-    
+
+    await Promise.all(this.sources.map(async (source) => {
+      this.sourceCovers[source.id] = {
+        loading: true,
+      };
+
+      try {
+        const { photos } = await getSourceCover(source.id);
+        this.sourceCovers[source.id].items = photos.map(photo => photo.urls.view[PHOTO_SIZES.THUMB]);
+      } catch (e) {
+        this.sourceCovers[source.id].error = true
+      }
+    }));
   },
   methods: {
     openSource(source, directory) {

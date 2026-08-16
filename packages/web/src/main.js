@@ -37,7 +37,7 @@ const routes = [
     showLightbox: route.query.showLightbox === 'true',
   })},
   { name: 'sources', path: '/sources', component: Sources },
-  { name: 'memory', path: '/memories/:year', component: Memory, props: route => ({
+  { name: 'memory', path: '/photos/memories/:year', component: Memory, props: route => ({
     ...route.params,
     showLightbox: route.query.showLightbox === 'true',
   })},
