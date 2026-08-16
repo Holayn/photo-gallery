@@ -1,7 +1,7 @@
 <template>
   <dialog ref="dialog">
     <div class="lightbox">
-      <div class="lightbox_menu p-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
+      <div class="lightbox_menu lightbox_menu--grid top-0 p-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
         <div class="flex h-9">
           <button @click.stop="showMetadata = !showMetadata">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -24,26 +24,55 @@
         </div>
       </div>
 
-      <div v-if="!showMetadata" class="lightbox_menu top-auto bottom-0 py-4 px-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
-        <div class="flex items-center gap-2">
-          <button @click="sharePhoto()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+      <div v-if="!showMetadata" class="lightbox_menu bottom-0 py-4 px-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
+        <div ref="photoStrip" class="mb-1 flex gap-1 overflow-x-auto">
+          <button
+            v-for="item in photoStripPhotos"
+            :key="item.photo.id"
+            :ref="el => setThumbRef(item.photo.id, el)"
+            class="relative shrink-0 h-16 rounded-sm"
+            :class="[item.index === index ? 'w-16' : 'w-10 md:w-16', { 'ring-2 ring-white': item.index === index }]"
+            @click.stop="goToPhoto(item.index)"
+          >
+            <div v-if="thumbs[item.photo.id]?.error" class="h-full w-full rounded-sm bg-slate-700 flex items-center justify-center text-white text-xs">:(</div>
+            <template v-else>
+              <div v-if="!thumbs[item.photo.id]?.loaded" class="h-full w-full rounded-sm bg-slate-700 flex items-center justify-center">
+                <Loading class="w-6 h-6"></Loading>
+              </div>
+              <img
+                class="h-full w-full rounded-sm object-cover"
+                :class="{ hidden: !thumbs[item.photo.id]?.loaded }"
+                :src="item.photo.urls.view[photoStripPhotoSize]"
+                :alt="item.photo.metadata.fileName"
+                @load="thumbLoad(item.photo)"
+                @error="thumbError(item.photo)"
+              >
+            </template>
+            <div v-if="item.photo.metadata.video" class="absolute bottom-0.5 right-0.5">
+              <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </div>
           </button>
-          <template v-if="authStore.isLoggedIn">
-            <button v-if="isSelectionMode" @click="select()">
-              <svg v-if="isSelected" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-            </button>
-            <button v-else @click="enableSelectionMode()">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-            </button>
-          </template>
         </div>
-        <div></div>
-        <div class="flex justify-end items-center">
-          <button class="ml-4" @click.stop="download()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"/></svg>
-          </button>
+        <div class="flex">
+          <div class="flex-auto flex items-center gap-2">
+            <button @click="sharePhoto()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            </button>
+            <template v-if="authStore.isLoggedIn">
+              <button v-if="isSelectionMode" @click="select()">
+                <svg v-if="isSelected" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+              </button>
+              <button v-else @click="enableSelectionMode()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+              </button>
+            </template>
+          </div>
+          <div class="flex justify-end items-center">
+            <button class="ml-4" @click.stop="download()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -164,6 +193,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import LightboxSlide from './LightboxSlide.vue';
+import Loading from './Loading.vue';
 import Toast from './Toast.vue';
 
 import { PHOTO_SIZES, sharePhoto } from '../services/api';
@@ -174,10 +204,18 @@ dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// Must be kept in sync with the photo strip thumbnail classes (w-16/h-16, w-10, gap-1, and the md: breakpoint).
+const PHOTO_STRIP_ACTIVE_THUMB_SIZE = 64;
+const PHOTO_STRIP_THUMB_SIZE = 40;
+const PHOTO_STRIP_THUMB_SIZE_DESKTOP = 64;
+const PHOTO_STRIP_THUMB_GAP = 4;
+const PHOTO_STRIP_DESKTOP_BREAKPOINT = 768;
+
 export default {
   name: 'Lightbox',
   components: {
     LightboxSlide,
+    Loading,
     Swiper,
     SwiperSlide,
     Toast,
@@ -214,6 +252,8 @@ export default {
       swiper: null,
       showMetadata: false,
       showMenu: true,
+      thumbs: {},
+      photoStripHalfCount: 5,
     }
   },
   computed: {
@@ -269,13 +309,41 @@ export default {
     },
     isSelected() {
       return this.selected[this.currentPhoto.id];
-    }
+    },
+
+    photoStripPhotos() {
+      const start = Math.max(0, this.index - this.photoStripHalfCount);
+      const end = Math.min(this.index + this.photoStripHalfCount, this.photos.length);
+      return this.photos.slice(start, end).map((photo, i) => ({ photo, index: start + i }));
+    },
+    photoStripPhotoSize() {
+      return PHOTO_SIZES.THUMB;
+    },
+  },
+  watch: {
+    async index() {
+      await this.$nextTick();
+      this.scrollThumbIntoView();
+    },
+    async showMetadata(showMetadata) {
+      if (!showMetadata) {
+        await this.$nextTick();
+        this.updatePhotoStripHalfCount();
+        this.scrollThumbIntoView();
+      }
+    },
   },
   mounted() {
     this.$refs.dialog.showModal();
     document.body.style.overflow = 'hidden';
+
+    this.updatePhotoStripHalfCount();
+    window.addEventListener('resize', this.updatePhotoStripHalfCount);
+
+    this.$nextTick(() => this.scrollThumbIntoView());
   },
   beforeUnmount() {
+    window.removeEventListener('resize', this.updatePhotoStripHalfCount);
     this.close();
   },
   methods: {
@@ -283,6 +351,21 @@ export default {
       this.$refs.dialog.close();
       document.body.style.overflow = '';
       this.$emit('close');
+    },
+
+    updatePhotoStripHalfCount() {
+      const container = this.$refs.photoStrip;
+      if (!container) {
+        return;
+      }
+
+      const isDesktop = window.innerWidth >= PHOTO_STRIP_DESKTOP_BREAKPOINT;
+      const sideThumbSize = isDesktop ? PHOTO_STRIP_THUMB_SIZE_DESKTOP : PHOTO_STRIP_THUMB_SIZE;
+
+      const availableWidth = container.clientWidth - PHOTO_STRIP_ACTIVE_THUMB_SIZE - PHOTO_STRIP_THUMB_GAP;
+      const sideCount = Math.max(0, Math.floor(availableWidth / (sideThumbSize + PHOTO_STRIP_THUMB_GAP)));
+
+      this.photoStripHalfCount = Math.max(1, Math.ceil(sideCount / 2));
     },
 
     toggleMenu() {
@@ -294,6 +377,8 @@ export default {
     },
 
     _swiperOnAfterInit(swiper) {
+      this.swiper = swiper;
+
       setTimeout(() => {
         const appHeight = () => document.documentElement.style.setProperty('--lightbox-height', `${window.innerHeight}px`);
         window.addEventListener('resize', appHeight);
@@ -319,6 +404,26 @@ export default {
     },
     _swiperOnActiveIndexChange({ activeIndex }) {
       this.$emit('index-update', activeIndex);
+    },
+
+    goToPhoto(index) {
+      this.swiper?.slideTo(index);
+    },
+    setThumbRef(photoId, el) {
+      if (el) {
+        (this.thumbs[photoId] ??= {}).ref = el;
+      } else if (this.thumbs[photoId]) {
+        delete this.thumbs[photoId].ref;
+      }
+    },
+    scrollThumbIntoView() {
+      this.thumbs[this.currentPhoto.id]?.ref?.scrollIntoView({ inline: 'center', block: 'nearest' });
+    },
+    thumbLoad(photo) {
+      (this.thumbs[photo.id] ??= {}).loaded = true;
+    },
+    thumbError(photo) {
+      (this.thumbs[photo.id] ??= {}).error = true;
     },
 
     enableSelectionMode() {
@@ -362,15 +467,17 @@ export default {
   }
 
   .lightbox_menu {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
     position: absolute;
     left: 0;
-    top: 0;
     width: 100%;
     z-index: 99;
 
     background-color: rgba(0, 0, 0, 0.75);
     transition: opacity 0.2s linear;
+  }
+
+  .lightbox_menu--grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
   }
 </style>
