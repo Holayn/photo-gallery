@@ -17,13 +17,13 @@
           @pointercancel="onPointerCancel"
           @contextmenu.prevent
         >
-          <div v-if="errorImages[photo.id]" class="flex justify-center items-center w-full h-full py-4">
+          <div v-if="coverThumbs[photo.id]?.error" class="flex justify-center items-center w-full h-full py-4">
             <div>:(</div>
           </div>
-          <div v-else-if="!loadedImages[photo.id]" class="flex justify-center items-center w-full h-full py-4">
+          <div v-else-if="!coverThumbs[photo.id]?.loaded" class="flex justify-center items-center w-full h-full py-4">
             <Loading class="w-8 h-8"></Loading>
           </div>
-          <img class="rounded-sm w-full h-full object-cover" :class="{ 'hidden': !loadedImages[photo.id] }" :src="thumbSrc(photo)" @load="imgLoad(photo)" @error="imgError(photo)">
+          <img class="rounded-sm w-full h-full object-cover" :class="{ 'hidden': !coverThumbs[photo.id]?.loaded }" :src="thumbSrc(photo)" @load="imgLoad(photo)" @error="imgError(photo)">
 
           <svg v-if="pressingIndex === i" class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 36 36">
             <circle
@@ -88,8 +88,7 @@ export default {
   emits: ['click'],
   data() {
     return {
-      loadedImages: {},
-      errorImages: {},
+      coverThumbs: {},
       pressingIndex: null,
       pressRingFilling: false,
       pressTimer: null,
@@ -116,10 +115,10 @@ export default {
       return photo.urls.view[PHOTO_SIZES.THUMB];
     },
     imgLoad(photo) {
-      this.loadedImages[photo.id] = true;
+      (this.coverThumbs[photo.id] ??= {}).loaded = true;
     },
     imgError(photo) {
-      this.errorImages[photo.id] = true;
+      (this.coverThumbs[photo.id] ??= {}).error = true;
     },
 
     onPointerDown(event, i) {
