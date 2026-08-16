@@ -13,7 +13,14 @@ const router = express.Router();
 const createSourceJobs = new Map();
 
 router.get('/sources', AuthController.authAdmin, (req, res) => {
-  res.send(SourceDAO.findAll().sort((a, b) => b.id - a.id));
+  res.send(
+    SourceDAO.findAll()
+      .sort((a, b) => b.id - a.id)
+      .map((source) => ({
+        ...source,
+        fileCount: source.processed ? SourceService.getFileCount(source.id) : 0,
+      }))
+  );
 });
 
 router.get(

@@ -9,43 +9,25 @@
       <div v-else-if="error" class="text-red-500">Failed to load sources</div>
       <div v-else class="flex flex-wrap gap-2">
         <div v-for="source in sources" :key="source.id" class="min-w-32 max-w-60" style="width: calc(50% - 0.5rem);">
-          <div class="p-1 bg-slate-100 rounded-md w-full">
-            <button class="w-full" @click="openSource(source)">
-              <div>
-                <div v-if="sourceCovers[source.id]" class="grid grid-cols-2 grid-rows-2 gap-1 h-full">
-                  <div v-for="photo in sourceCovers[source.id]" :key="photo" class="relative">
-                    <div v-if="errorImages[photo]" class="flex justify-center items-center w-full h-full py-4">
-                      <div>:(</div>
-                    </div>
-                    <div v-else-if="!loadedImages[photo]" class="flex justify-center items-center w-full h-full py-4">
-                      <Loading class="w-8 h-8"></Loading>
-                    </div>
-                    <img class="rounded-sm w-full object-cover" :class="{ 'hidden': !loadedImages[photo] }" :src="photo" style="aspect-ratio: 1/1;" @load="imgLoad(photo)" @error="imgError(photo)">
-                  </div>
-                </div>
-                <div v-else-if="errorSources[source.id]" class="flex h-full items-center justify-center">
-                  <div class="px-2 text-red-500">Failed to load cover</div>
-                </div>
-                <div v-else class="flex h-full items-center justify-center">
-                  <Loading class="w-8 h-8 my-4"></Loading>
-                </div>
+          <CollectionTile :covers="sourceCovers[source.id]" :error="!!errorSources[source.id]" @click="openSource(source)">
+            <div class="h-full flex">
+              <div class="flex-auto flex flex-col">
+                <div class="line-clamp-2 break-word text-left text-sm text-gray-800">{{ source.alias }}</div>
+                <div class="text-left text-xs text-gray-500">{{ source.fileCount }} {{ source.fileCount === 1 ? 'item' : 'items' }}</div>
               </div>
-              <div class="flex items-center">
-                <div class="flex-auto text-left break-word px-2">{{ source.alias }}</div>
-                <div class="flex justify-center" @click.stop>
-                  <sl-dropdown>
-                    <sl-icon-button slot="trigger" name="three-dots" label="Options"></sl-icon-button>
-                    <sl-menu @sl-select="onMenuSelect($event, source)">
-                      <sl-menu-item value="manage-users">
-                        <sl-icon slot="prefix" name="people"></sl-icon>
-                        Manage Users
-                      </sl-menu-item>
-                    </sl-menu>
-                  </sl-dropdown>
-                </div>
+              <div class="flex justify-center" @click.stop>
+                <sl-dropdown>
+                  <sl-icon-button slot="trigger" name="three-dots" label="Options"></sl-icon-button>
+                  <sl-menu @sl-select="onMenuSelect($event, source)">
+                    <sl-menu-item value="manage-users">
+                      <sl-icon slot="prefix" name="people"></sl-icon>
+                      Manage Users
+                    </sl-menu-item>
+                  </sl-menu>
+                </sl-dropdown>
               </div>
-            </button>
-          </div>
+            </div>
+          </CollectionTile>
         </div>
       </div>
     </div>
@@ -65,6 +47,7 @@
 </template>
 
 <script>
+import CollectionTile from '../components/CollectionTile.vue';
 import Loading from '../components/Loading.vue';
 import SourceUsersModal from '../components/SourceUsersModal.vue';
 import CreateSourceModal from '../components/CreateSourceModal.vue';
@@ -74,6 +57,7 @@ import { getSources, getSourceCover, PHOTO_SIZES } from '../services/api';
 export default {
   name: 'Sources',
   components: {
+    CollectionTile,
     Loading,
     SourceUsersModal,
     CreateSourceModal,
@@ -83,9 +67,7 @@ export default {
       sources: [],
       sourceCovers: {},
       loading: true,
-      loadedImages: {},
       error: false,
-      errorImages: {},
       errorSources: {},
       selectedSource: null,
       showCreateSource: false,
@@ -131,12 +113,6 @@ export default {
       if (value === 'manage-users') {
         this.openUsersModal(source);
       }
-    },
-    imgLoad(photo) {
-      this.loadedImages[photo] = true;
-    },
-    imgError(photo) {
-      this.errorImages[photo] = true;
     },
   },
 }

@@ -8,6 +8,8 @@ import Sources from './views/Sources.vue';
 import Source from './views/Source.vue';
 import SourceDirectories from './views/SourceDirectories.vue';
 import Memories from './views/Memories.vue';
+import Memory from './views/Memory.vue';
+import Photos from './views/Photos.vue';
 import { createPinia } from 'pinia'
 import { useAuthStore } from './store'
 
@@ -35,7 +37,7 @@ const routes = [
     showLightbox: route.query.showLightbox === 'true',
   })},
   { name: 'sources', path: '/sources', component: Sources },
-  { name: 'memories', path: '/memories', component: Memories, props: route => ({
+  { name: 'memory', path: '/memories/:year', component: Memory, props: route => ({
     ...route.params,
     showLightbox: route.query.showLightbox === 'true',
   })},
@@ -44,6 +46,8 @@ const routes = [
     showLightbox: route.query.showLightbox === 'true',
   })},
   { name: 'sourceDirectories', path: '/source/:sourceId/directories', component: SourceDirectories, props: true },
+  { name: 'photos', path: '/photos', component: Photos },
+  { name: 'memories', path: '/photos/memories', component: Memories },
 ];
 
 const router = createRouter({

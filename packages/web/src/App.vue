@@ -12,6 +12,12 @@
         <nav class="sticky top-0 hidden md:block shrink-0 w-[var(--sidebar-nav-width)] border-r p-8" style="top: var(--header-height); height: calc(100vh - var(--header-height));">
           <div class="grid grid-cols-1 gap-6 text-sm">
             <div>
+              <router-link class="flex items-center gap-4" :class="{ 'text-orange-500 font-bold': isPhotosActive }" :to="{ name: 'photos' }">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M20.4 14.5L16 10 4 20"/></svg>
+                Photos
+              </router-link>
+            </div>
+            <div>
               <router-link class="flex items-center gap-4" :class="{ 'text-orange-500 font-bold': isAlbumsActive }" :to="{ name: 'albums' }">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                 Albums
@@ -21,12 +27,6 @@
               <router-link class="flex items-center gap-4" :class="{ 'text-orange-500 font-bold': isSourcesActive }" :to="{ name: 'sources' }">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                 Sources
-              </router-link>
-            </div>
-            <div>
-              <router-link class="flex items-center gap-4" :class="{ 'text-orange-500 font-bold': isMemoriesActive }" :to="{ name: 'memories' }">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                Memories
               </router-link>
             </div>
             <div>
@@ -45,6 +45,10 @@
 
       <div class="sticky bottom-0 z-20 md:hidden w-full border-t py-1 px-1 bg-white" style="height: var(--mobile-nav-footer-height);">
         <div class="grid grid-cols-4 gap-1">
+          <button class="rounded p-2 flex flex-col items-center gap-1" :class="{ 'text-orange-500 font-bold': isPhotosActive }" @click="$router.push({ name: 'photos' })">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M20.4 14.5L16 10 4 20"/></svg>
+            <div class="text-xs">Photos</div>
+          </button>
           <button class="rounded p-2 flex flex-col items-center gap-1" :class="{ 'text-orange-500 font-bold': isAlbumsActive }" @click="$router.push({ name: 'albums' })">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
             <div class="text-xs">Albums</div>
@@ -52,10 +56,6 @@
           <button class="rounded p-2 flex flex-col items-center gap-1" :class="{ 'text-orange-500 font-bold': isSourcesActive }" @click="$router.push({ name: 'sources' })">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
             <div class="text-xs">Sources</div>
-          </button>
-          <button class="rounded p-2 flex flex-col items-center gap-1" :class="{ 'text-orange-500 font-bold': isMemoriesActive }" @click="$router.push({ name: 'memories' })">
-            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            <div class="text-xs">Memories</div>
           </button>
           <button class="rounded p-2 flex flex-col items-center gap-1" @click="startExplore">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
@@ -112,14 +112,14 @@ export default {
     }
   },
   computed: {
+    isPhotosActive() {
+      return this.$route.path.includes('photos');
+    },
     isAlbumsActive() {
       return this.$route.path.includes('album');
     },
     isSourcesActive() {
       return this.$route.path.includes('source');
-    },
-    isMemoriesActive() {
-      return this.$route.path.includes('memories');
     },
   },
   methods: {

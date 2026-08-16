@@ -4,30 +4,12 @@
     <div>
       <Loading v-if="loading" class="m-auto w-24 h-24"></Loading>
       <div v-else-if="error" class="text-red-500">Failed to load albums</div>
-      <div v-else class="flex flex-wrap gap-2">
-        <div v-for="album in albums" :key="album.id" class="min-w-32 max-w-60" style="width: calc(50% - 0.5rem);">
-          <button class="p-1 bg-slate-100 rounded-md w-full" @click="openAlbum(album)">
-            <div>
-              <div v-if="albumCovers[album.id]" class="grid grid-cols-2 grid-rows-2 gap-1 h-full">
-                <div v-for="photo in albumCovers[album.id]" :key="photo" class="relative">
-                  <div v-if="errorImages[photo]" class="flex justify-center items-center w-full h-full py-4">
-                    <div>:(</div>
-                  </div>
-                  <div v-else-if="!loadedImages[photo]" class="flex justify-center items-center w-full h-full py-4">
-                    <Loading class="w-8 h-8"></Loading>
-                  </div>
-                  <img class="rounded-sm w-full object-cover" :class="{ 'hidden': !loadedImages[photo] }" :src="photo" style="aspect-ratio: 1/1;" @load="imgLoad(photo)" @error="imgError(photo)">
-                </div>
-              </div>
-              <div v-else-if="errorAlbums[album.id]" class="flex h-full items-center justify-center">
-                <div class="text-red-500">Failed to load cover</div>
-              </div>
-              <div v-else class="flex h-full items-center justify-center">
-                <Loading class="w-8 h-8 my-4"></Loading>
-              </div>
-            </div>
-            <div class="break-word">{{ album.name }}</div>
-          </button>
+      <div v-else class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+        <div v-for="album in albums" :key="album.id" class="sm:w-60">
+          <CollectionTile :covers="albumCovers[album.id]" :error="!!errorAlbums[album.id]" @click="openAlbum(album)">
+            <div class="break-word text-left text-sm text-gray-800">{{ album.name }}</div>
+            <div class="text-left text-xs text-gray-500">{{ album.fileCount }} {{ album.fileCount === 1 ? 'item' : 'items' }}</div>
+          </CollectionTile>
         </div>
       </div>
     </div>
@@ -35,6 +17,7 @@
 </template>
 
 <script>
+import CollectionTile from '../components/CollectionTile.vue';
 import Loading from '../components/Loading.vue';
 
 import { getAlbums, getAlbumCover, PHOTO_SIZES } from '../services/api';
@@ -42,6 +25,7 @@ import { getAlbums, getAlbumCover, PHOTO_SIZES } from '../services/api';
 export default {
   name: 'Albums',
   components: {
+    CollectionTile,
     Loading,
   },
   data() {
@@ -49,9 +33,7 @@ export default {
       albums: [],
       albumCovers: {},
       loading: true,
-      loadedImages: {},
       error: false,
-      errorImages: {},
       errorAlbums: {},
     };
   },
@@ -76,12 +58,6 @@ export default {
   methods: {
     openAlbum(album) {
       this.$router.push({ name: 'album', params: { albumId: album.id } });
-    },
-    imgLoad(photo) {
-      this.loadedImages[photo] = true;
-    },
-    imgError(photo) {
-      this.errorImages[photo] = true;
     },
   },
 }

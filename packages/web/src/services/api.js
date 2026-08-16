@@ -73,7 +73,7 @@ export function logout() {
 export async function getSources() {
   const res = await fetcher.fetch(`${BASE}/sources`);
   if (res.data) {
-    return res.data.map(({ id, alias, path }) => ({ id, alias, path }));
+    return res.data.map(({ id, alias, path, fileCount }) => ({ id, alias, path, fileCount }));
   }
 }
 export async function getSource(sourceId) {
@@ -169,7 +169,7 @@ export async function getPhotosFromAlbum(albumId, albumToken) {
 export async function getAlbums() {
   const res = await fetcher.fetch(`${BASE}/albums`);
   if (res.data) {
-    return res.data.map(({ id, name }) => ({ id, name }));
+    return res.data.map(({ id, name, fileCount }) => ({ id, name, fileCount }));
   }
 }
 export async function getAlbum(albumId, albumToken) {
@@ -260,8 +260,17 @@ export async function sharePhoto(photo) {
   return res.data.shareUrl;
 }
 
-export async function getMemories() {
-  return (await fetcher.fetch(`${BASE}/memories`)).data;
+export async function getMemories(year) {
+  const url = new URL(`${BASE}/memories`, window.location.origin);
+  if (year) {
+    url.searchParams.append('year', year);
+  }
+
+  return (await fetcher.fetch(url.toString())).data;
+}
+
+export async function getMemoriesCovers() {
+  return (await fetcher.fetch(`${BASE}/memories/covers`)).data;
 }
 
 export async function getUsers() {

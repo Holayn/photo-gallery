@@ -130,6 +130,10 @@ module.exports = {
     }));
   },
 
+  getFileCount(sourceId) {
+    return new ProcessorSource(SourceDAO.getById(sourceId)).count();
+  },
+
   getFile(sourceId, sourceFileId) {
     const processorSource = new ProcessorSource(SourceDAO.getById(sourceId));
     const sourceFile = processorSource.getFile(sourceFileId);
