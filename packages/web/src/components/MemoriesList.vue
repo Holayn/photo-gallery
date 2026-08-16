@@ -15,7 +15,8 @@
 <script>
 import CollectionTile from './CollectionTile.vue';
 import Loading from './Loading.vue';
-import { getMemoriesCovers, PHOTO_SIZES } from '../services/api';
+import { getMemoriesCovers } from '../services/api';
+import Photo from '../model/photo';
 import dayjs from 'dayjs';
 
 export default {
@@ -58,7 +59,7 @@ export default {
         this.memoryCovers[memory.year] = {};
 
         try {
-          this.memoryCovers[memory.year].items = memory.files.map(file => file.urls.view[PHOTO_SIZES.THUMB]);
+          this.memoryCovers[memory.year].items = memory.files.map(file => new Photo(file));
         } catch (e) {
           this.memoryCovers[memory.year].error = true;
         }

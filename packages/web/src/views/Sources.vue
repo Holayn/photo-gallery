@@ -52,7 +52,7 @@ import Loading from '../components/Loading.vue';
 import SourceUsersModal from '../components/SourceUsersModal.vue';
 import CreateSourceModal from '../components/CreateSourceModal.vue';
 
-import { getSources, getSourceCover, PHOTO_SIZES } from '../services/api';
+import { getSources, getSourceCover } from '../services/api';
 
 export default {
   name: 'Sources',
@@ -89,7 +89,7 @@ export default {
 
       try {
         const { photos } = await getSourceCover(source.id);
-        this.sourceCovers[source.id].items = photos.map(photo => photo.urls.view[PHOTO_SIZES.THUMB]);
+        this.sourceCovers[source.id].items = photos;
       } catch (e) {
         this.sourceCovers[source.id].error = true
       }

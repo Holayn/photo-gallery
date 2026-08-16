@@ -20,7 +20,7 @@
 import CollectionTile from '../components/CollectionTile.vue';
 import Loading from '../components/Loading.vue';
 
-import { getAlbums, getAlbumCover, PHOTO_SIZES } from '../services/api';
+import { getAlbums, getAlbumCover } from '../services/api';
 
 export default {
   name: 'Albums',
@@ -52,7 +52,7 @@ export default {
 
       try {
         const { photos } = await getAlbumCover(album.id);
-        this.albumCovers[album.id].items = photos.map(photo => photo.urls.view[PHOTO_SIZES.THUMB]);
+        this.albumCovers[album.id].items = photos;
       } catch (e) {
         this.albumCovers[album.id].error = true;
       }
