@@ -57,6 +57,7 @@ export default {
       error: false,
       PHOTO_SIZES,
       player: null,
+      programmaticPause: false,
     }
   },
   computed: {
@@ -71,6 +72,7 @@ export default {
     active() {
       if (this.player) {
         if (!this.active) {
+          this.programmaticPause = true;
           this.player.pause();
         } else {
           this.player.play();
@@ -87,6 +89,22 @@ export default {
       player.on('ready', () => {
         this.loading = false;
       });
+      player.on('ended', () => {
+        if (this.active) {
+          this.$emit('video-ended');
+        }
+      });
+      player.on('pause', () => {
+        if (this.programmaticPause) {
+          this.programmaticPause = false;
+          return;
+        }
+        // Reaching the end of playback fires 'pause' before 'ended' — skip so that
+        // doesn't get mistaken for the user pausing.
+        if (this.active && !player.ended) {
+          this.$emit('video-paused');
+        }
+      });
 
       if (this.active) {
         player.play();
@@ -99,11 +117,16 @@ export default {
   },
   beforeUnmount() {
     if (this.player) {
+      this.programmaticPause = true;
       this.player.pause();
       this.player.destroy();
     }
   },
   methods: {
+    play() {
+      this.player?.play();
+    },
+
     onImgLoad() {
       this.loading = false;
     },

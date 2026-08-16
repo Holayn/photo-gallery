@@ -1,7 +1,7 @@
 <template>
   <dialog ref="dialog">
     <div class="lightbox">
-      <div class="lightbox_menu lightbox_menu--grid top-0 p-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
+      <div class="lightbox_menu lightbox_menugrid top-0 p-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
         <div class="flex h-9">
           <button @click.stop="showMetadata = !showMetadata">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -53,8 +53,8 @@
             </div>
           </button>
         </div>
-        <div class="flex">
-          <div class="flex-auto flex items-center gap-2">
+        <div class="lightbox_menugrid">
+          <div class="flex items-center gap-2">
             <button @click="sharePhoto()">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
             </button>
@@ -67,6 +67,12 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
               </button>
             </template>
+          </div>
+          <div class="flex justify-center items-center">
+            <button @click.stop="toggleSlideshow()">
+              <svg v-if="!isSlideshowPlaying" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </button>
           </div>
           <div class="flex justify-end items-center">
             <button class="ml-4" @click.stop="download()">
@@ -98,10 +104,13 @@
             :zoom="!photo.metadata.video"
           >
             <lightbox-slide
+              :ref="el => setSlideRef(i, el)"
               :active="i === index"
               :index="i"
               :photo="photo"
               :preview-size="previewSize"
+              @video-ended="onVideoEnded"
+              @video-paused="onVideoPaused"
             ></lightbox-slide>
           </swiper-slide>
         </swiper>
@@ -211,6 +220,8 @@ const PHOTO_STRIP_THUMB_SIZE_DESKTOP = 64;
 const PHOTO_STRIP_THUMB_GAP = 4;
 const PHOTO_STRIP_DESKTOP_BREAKPOINT = 768;
 
+const SLIDESHOW_INTERVAL_MS = 5000;
+
 export default {
   name: 'Lightbox',
   components: {
@@ -254,6 +265,9 @@ export default {
       showMenu: true,
       thumbs: {},
       photoStripHalfCount: 5,
+      isSlideshowPlaying: false,
+      slideshowTimer: null,
+      slideRefs: {},
     }
   },
   computed: {
@@ -324,6 +338,10 @@ export default {
     async index() {
       await this.$nextTick();
       this.scrollThumbIntoView();
+
+      if (this.isSlideshowPlaying) {
+        this.scheduleSlideshowAdvance();
+      }
     },
     async showMetadata(showMetadata) {
       if (!showMetadata) {
@@ -344,6 +362,7 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updatePhotoStripHalfCount);
+    clearTimeout(this.slideshowTimer);
     this.close();
   },
   methods: {
@@ -408,6 +427,61 @@ export default {
 
     goToPhoto(index) {
       this.swiper?.slideTo(index);
+    },
+
+    toggleSlideshow() {
+      if (this.isSlideshowPlaying) {
+        this.stopSlideshow();
+      } else {
+        this.startSlideshow();
+      }
+    },
+    startSlideshow() {
+      this.isSlideshowPlaying = true;
+
+      if (this.currentPhoto.metadata.video) {
+        this.slideRefs[this.index]?.play();
+      }
+
+      this.scheduleSlideshowAdvance();
+    },
+    stopSlideshow() {
+      this.isSlideshowPlaying = false;
+      clearTimeout(this.slideshowTimer);
+      this.slideshowTimer = null;
+    },
+    scheduleSlideshowAdvance() {
+      clearTimeout(this.slideshowTimer);
+      this.slideshowTimer = null;
+
+      // Video slides advance on the video's own 'ended' event instead of a fixed timer.
+      if (this.currentPhoto.metadata.video) {
+        return;
+      }
+
+      this.slideshowTimer = setTimeout(() => this.advanceSlideshow(), SLIDESHOW_INTERVAL_MS);
+    },
+    advanceSlideshow() {
+      const nextIndex = this.index + 1 >= this.photos.length ? 0 : this.index + 1;
+      this.goToPhoto(nextIndex);
+    },
+    onVideoEnded() {
+      if (this.isSlideshowPlaying) {
+        this.advanceSlideshow();
+      }
+    },
+    onVideoPaused() {
+      if (this.isSlideshowPlaying) {
+        this.stopSlideshow();
+      }
+    },
+
+    setSlideRef(index, el) {
+      if (el) {
+        this.slideRefs[index] = el;
+      } else {
+        delete this.slideRefs[index];
+      }
     },
     setThumbRef(photoId, el) {
       if (el) {
@@ -476,7 +550,7 @@ export default {
     transition: opacity 0.2s linear;
   }
 
-  .lightbox_menu--grid {
+  .lightbox_menugrid {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
   }
