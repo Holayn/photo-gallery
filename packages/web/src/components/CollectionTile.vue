@@ -31,10 +31,10 @@
               :class="{ 'press-ring--filling': pressRingFilling }"
               cx="18"
               cy="18"
-              r="15.5"
+              r="8"
               fill="none"
-              stroke="white"
-              stroke-width="3"
+              stroke="#f97316"
+              stroke-width="2.5"
             />
           </svg>
         </div>
@@ -173,8 +173,8 @@ export default {
 </script>
 <style scoped>
   .press-ring {
-    stroke-dasharray: 97.4;
-    stroke-dashoffset: 97.4;
+    stroke-dasharray: 50.3;
+    stroke-dashoffset: 50.3;
   }
   .press-ring--filling {
     stroke-dashoffset: 0;
