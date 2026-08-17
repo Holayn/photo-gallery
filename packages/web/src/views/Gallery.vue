@@ -74,6 +74,10 @@
                           <sl-menu-item value="viewDateSelection">
                             Show photos before...
                           </sl-menu-item>
+                          <sl-menu-item value="explore">
+                            Explore
+                            <svg slot="suffix" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                          </sl-menu-item>
                           <sl-menu-label>Layout</sl-menu-label>
                           <sl-menu-item :value="LAYOUT_TYPES.AUTO" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.AUTO" data-layout-option>Auto</sl-menu-item>
                           <sl-menu-item :value="LAYOUT_TYPES.JUSTIFIED" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.JUSTIFIED" data-layout-option>Justified</sl-menu-item>
@@ -140,7 +144,7 @@
 
     <Lightbox
       v-if="isShowLightbox"
-      :photos="displayedPhotos"
+      :photos="lightboxPhotos"
       :index="lightboxIndex"
       :is-selection-mode="isSelectionMode"
       :selected="selected"
@@ -250,6 +254,7 @@ export default {
 
       isShowLightbox: false,
       lightboxIndex: 0,
+      explorePhotos: null,
 
       sort: this.defaultSort,
       viewMode: null,
@@ -266,6 +271,9 @@ export default {
   computed: {
     isNoDisplayPhotos() {
       return this.displayedPhotos.length === 0;
+    },
+    lightboxPhotos() {
+      return this.explorePhotos || this.displayedPhotos;
     },
     token() {
       return this.authStore.authToken;
@@ -361,12 +369,22 @@ export default {
     
     async scrollImageIntoView() {
       if (this.$refs.photos && this.$refs.photos.scrollImageIntoView) {
-        await this.$refs.photos.scrollImageIntoView(this.lightboxIndex);
+        await this.$refs.photos.scrollImageIntoView(this.toGridIndex(this.lightboxIndex));
       }
+    },
+
+    // While exploring, lightboxIndex refers to a position in the shuffled explorePhotos
+    // order, not the grid's normal order — this maps it back to the real grid position.
+    toGridIndex(index) {
+      if (!this.explorePhotos) {
+        return index;
+      }
+      return this.displayedPhotos.indexOf(this.explorePhotos[index]);
     },
 
     openLightbox(photo) {
       if (!this.isShowLightbox) {
+        this.explorePhotos = null;
         this.isShowLightbox = true;
 
         if (photo) {
@@ -377,6 +395,13 @@ export default {
         }
       }
     },
+    openExplore() {
+      if (this.displayedPhotos.length) {
+        this.explorePhotos = shuffle(this.displayedPhotos);
+        this.lightboxIndex = 0;
+        this.isShowLightbox = true;
+      }
+    },
     closeLightbox(showTransition = true) {
       if (this.isShowLightbox) {
         this.isShowLightbox = false;
@@ -384,7 +409,7 @@ export default {
         // Helps to show which photo was just being viewed in the lightbox.
         if (showTransition) {
           if (this.$refs.photos && this.$refs.photos.getImageRefByPhotoIndex) {
-            const ref = this.$refs.photos.getImageRefByPhotoIndex(this.lightboxIndex);
+            const ref = this.$refs.photos.getImageRefByPhotoIndex(this.toGridIndex(this.lightboxIndex));
             if (ref) {
               ref.el.style.zIndex = '1';
               ref.el.animate([
@@ -400,6 +425,8 @@ export default {
             }
           }
         }
+
+        this.explorePhotos = null;
       }
     },
     updateLightboxQueryParam() {
@@ -543,6 +570,9 @@ export default {
       if (item.value === 'viewDateSelection') {
         this.showDateSelection = true;
       }
+      if (item.value === 'explore') {
+        this.openExplore();
+      }
       if (item.dataset.layoutOption != null) {
         this.galleryLayout = item.value;
       }
@@ -564,5 +594,14 @@ export default {
 
 function getLastViewed(id) {
   return parseInt(localStorage.getItem(`lastViewed-${id}`));
+}
+
+function shuffle(array) {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }
 </script>
