@@ -38,7 +38,7 @@
           </div>
         </nav>
 
-        <div class="flex-auto">
+        <div class="flex-auto min-w-0">
           <router-view></router-view>
         </div>
       </div>
