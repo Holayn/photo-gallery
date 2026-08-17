@@ -24,14 +24,14 @@
         </div>
       </div>
 
-      <div v-if="!showMetadata" class="lightbox_menu bottom-0 py-4 px-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
-        <div ref="photoStrip" class="mb-1 flex gap-1 overflow-x-auto">
+      <div v-if="!showMetadata" class="lightbox_menu bottom-0 pt-1 pb-4 px-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
+        <div ref="photoStrip" class="mb-3 flex gap-1 overflow-hidden">
           <button
             v-for="item in photoStripPhotos"
             :key="item.photo.id"
             :ref="el => setThumbRef(item.photo.id, el)"
-            class="relative shrink-0 h-16 rounded-sm"
-            :class="[item.index === index ? 'w-16' : 'w-10 md:w-16', { 'ring-2 ring-white': item.index === index }]"
+            class="relative shrink-0 h-10 rounded-sm"
+            :class="[item.index === index ? 'w-12 md:w-16' : 'w-8 md:w-10', { 'border-2': item.index === index }]"
             @click.stop="goToPhoto(item.index)"
           >
             <div v-if="thumbs[item.photo.id]?.error" class="h-full w-full rounded-sm bg-slate-700 flex items-center justify-center text-white text-xs">:(</div>
@@ -214,9 +214,10 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 // Must be kept in sync with the photo strip thumbnail classes (w-16/h-16, w-10, gap-1, and the md: breakpoint).
-const PHOTO_STRIP_ACTIVE_THUMB_SIZE = 64;
-const PHOTO_STRIP_THUMB_SIZE = 40;
-const PHOTO_STRIP_THUMB_SIZE_DESKTOP = 64;
+const PHOTO_STRIP_ACTIVE_THUMB_SIZE = 48;
+const PHOTO_STRIP_THUMB_SIZE = 32;
+const PHOTO_STRIP_ACTIVE_THUMB_SIZE_DESKTOP = 64;
+const PHOTO_STRIP_THUMB_SIZE_DESKTOP = 40;
 const PHOTO_STRIP_THUMB_GAP = 4;
 const PHOTO_STRIP_DESKTOP_BREAKPOINT = 768;
 
@@ -264,7 +265,7 @@ export default {
       showMetadata: false,
       showMenu: true,
       thumbs: {},
-      photoStripHalfCount: 5,
+      photoStripCount: 5,
       isSlideshowPlaying: false,
       slideshowTimer: null,
       slideRefs: {},
@@ -326,8 +327,8 @@ export default {
     },
 
     photoStripPhotos() {
-      const start = Math.max(0, this.index - this.photoStripHalfCount);
-      const end = Math.min(this.index + this.photoStripHalfCount, this.photos.length);
+      const start = Math.max(0, this.index - Math.floor(this.photoStripCount / 2));
+      const end = Math.min(this.index + this.photoStripCount + start, this.photos.length);
       return this.photos.slice(start, end).map((photo, i) => ({ photo, index: start + i }));
     },
     photoStripPhotoSize() {
@@ -346,7 +347,7 @@ export default {
     async showMetadata(showMetadata) {
       if (!showMetadata) {
         await this.$nextTick();
-        this.updatePhotoStripHalfCount();
+        this.updatePhotoStripCount();
         this.scrollThumbIntoView();
       }
     },
@@ -355,24 +356,24 @@ export default {
     this.$refs.dialog.showModal();
     document.body.style.overflow = 'hidden';
 
-    this.updatePhotoStripHalfCount();
-    window.addEventListener('resize', this.updatePhotoStripHalfCount);
+    this.updatePhotoStripCount();
+    window.addEventListener('resize', this.updatePhotoStripCount);
 
     this.$nextTick(() => this.scrollThumbIntoView());
   },
   beforeUnmount() {
-    window.removeEventListener('resize', this.updatePhotoStripHalfCount);
+    window.removeEventListener('resize', this.updatePhotoStripCount);
     clearTimeout(this.slideshowTimer);
     this.close();
   },
   methods: {
     close() {
-      this.$refs.dialog.close();
+      this.$refs.dialog?.close();
       document.body.style.overflow = '';
       this.$emit('close');
     },
 
-    updatePhotoStripHalfCount() {
+    updatePhotoStripCount() {
       const container = this.$refs.photoStrip;
       if (!container) {
         return;
@@ -381,10 +382,15 @@ export default {
       const isDesktop = window.innerWidth >= PHOTO_STRIP_DESKTOP_BREAKPOINT;
       const sideThumbSize = isDesktop ? PHOTO_STRIP_THUMB_SIZE_DESKTOP : PHOTO_STRIP_THUMB_SIZE;
 
-      const availableWidth = container.clientWidth - PHOTO_STRIP_ACTIVE_THUMB_SIZE - PHOTO_STRIP_THUMB_GAP;
+      const availableWidth = isDesktop 
+        ? container.clientWidth - PHOTO_STRIP_ACTIVE_THUMB_SIZE_DESKTOP - PHOTO_STRIP_THUMB_GAP 
+        : container.clientWidth - PHOTO_STRIP_ACTIVE_THUMB_SIZE - PHOTO_STRIP_THUMB_GAP;
       const sideCount = Math.max(0, Math.floor(availableWidth / (sideThumbSize + PHOTO_STRIP_THUMB_GAP)));
 
-      this.photoStripHalfCount = Math.max(1, Math.ceil(sideCount / 2));
+      // Just bump up a little extra so there's a little overflow.
+      const buffer = 2;
+
+      this.photoStripCount = sideCount + buffer;
     },
 
     toggleMenu() {
