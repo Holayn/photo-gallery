@@ -24,7 +24,7 @@
         </div>
       </div>
 
-      <div v-if="!showMetadata" class="lightbox_menu bottom-0 pt-1 pb-4 px-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
+      <div v-if="!showMetadata" class="lightbox_menu bottom-0 pt-1 pb-6 md:pb-4 px-6 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
         <div ref="photoStrip" class="mb-3 flex gap-1 overflow-hidden">
           <button
             v-for="item in photoStripPhotos"
