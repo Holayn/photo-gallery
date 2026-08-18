@@ -2,7 +2,7 @@
   "short_name": "kaifotos",
   "name": "kaifotos",
   "display": "standalone",
-  "start_url": "/#/albums",
+  "start_url": "/photos",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
