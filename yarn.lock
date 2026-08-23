@@ -1569,7 +1569,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"discord.js@npm:^14.16.3":
+"discord.js@npm:^14.27.0":
   version: 14.27.0
   resolution: "discord.js@npm:14.27.0"
   dependencies:
@@ -3300,21 +3300,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kaiauth@https://github.com/Holayn/kaiauth/archive/refs/tags/3.2.0.tar.gz":
+"kai-discord-sender@https://github.com/Holayn/discord-messenger-bot/releases/download/1.0.0/kai-discord-sender-1.0.0.tgz":
   version: 1.0.0
-  resolution: "kaiauth@https://github.com/Holayn/kaiauth/archive/refs/tags/3.2.0.tar.gz"
+  resolution: "kai-discord-sender@https://github.com/Holayn/discord-messenger-bot/releases/download/1.0.0/kai-discord-sender-1.0.0.tgz"
+  dependencies:
+    discord.js: ^14.27.0
+  checksum: 0d390e41211a82e20205783c28f0e3de4e28d07f0fa09a051aefa9f7d26a1e5ba0ef18e7fd05a155dcd1064afa1d785e147975ab27da67b65fa4611b2d993e45
+  languageName: node
+  linkType: hard
+
+"kaiauth@https://github.com/Holayn/kaiauth/archive/refs/tags/3.2.1.tar.gz":
+  version: 1.0.0
+  resolution: "kaiauth@https://github.com/Holayn/kaiauth/archive/refs/tags/3.2.1.tar.gz"
   dependencies:
     bcryptjs: ^2.4.3
     better-sqlite3: ">=9"
-    discord.js: ^14.16.3
     express: ^4.17.0
     express-session: ^1.17.3
+    kai-discord-sender: "https://github.com/Holayn/discord-messenger-bot/releases/download/1.0.0/kai-discord-sender-1.0.0.tgz"
     lru-cache: ^11.5.1
     resend: ^4.0.1
     yargs: ^18.1.0
   bin:
     kaiauth: dist/bin/kaiauth.js
-  checksum: f1dabc3ecb19129f81848ee57f4c3accbb3fa8a9bdf2b3e0258dd6639a074dff26611eccbe6fd2cb20386404bb8bb581eb721a2fb05e205b44de98de0629837e
+  checksum: d3c81ff4630abd3105f69ad8c501f87ec715f87c5d056975c4f78676049a158cda496ab62b715fac2dc24321b139ea1547568a76b32e2ae5a60d64bd4a8c7c74
   languageName: node
   linkType: hard
 
@@ -4034,7 +4043,7 @@ __metadata:
     express: ^4.17.1
     fs-extra: ^10.1.0
     helmet: ^4.5.0
-    kaiauth: "https://github.com/Holayn/kaiauth/archive/refs/tags/3.2.0.tar.gz"
+    kaiauth: "https://github.com/Holayn/kaiauth/archive/refs/tags/3.2.1.tar.gz"
     morgan: ^1.10.0
     node-cron: ^4.2.1
     nodemon: ^2.0.19
