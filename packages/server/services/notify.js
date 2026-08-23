@@ -20,7 +20,7 @@ async function notify(discordUserId, message) {
   }
 
   try {
-    const data = { message, user: discordUserId };
+    const data = { message: `photo-gallery: ${message}`, user: discordUserId };
     await axios(notifyUrl, { method: 'post', data });
   } catch (e) {
     logger.error('Failed to send notification', e);
