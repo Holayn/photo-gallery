@@ -28,7 +28,7 @@ const pinia = createPinia();
 
 const routes = [
   { name: 'home', path: '/', redirect: () => {
-    return { name: 'albums' };
+    return { name: 'photos' };
   } },
   { name: 'all', path: '/gallery', component: Gallery },
   { name: 'albums', path: '/albums', component: Albums },
