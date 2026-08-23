@@ -20,6 +20,9 @@ if (!process.env.WEB_IMG_TOOL_PATH) {
 if (env === 'production' && !process.env.DISCORD_BOT_TOKEN) {
   throw new Error('DISCORD_BOT_TOKEN not defined in .env!');
 }
+if (env === 'production' && !process.env.NOTIFY_URL) {
+  throw new Error('NOTIFY_URL not defined in .env!');
+}
 
 module.exports = Object.freeze({
   env,

@@ -12,7 +12,7 @@ const { apiRouter, pageRouter } = createAuthRouter({
     ...extra,
   }),
   notify: (message) => {
-    notify(message);
+    notify(undefined, message);
   },
   serveLoginPage: true,
   loginPageOptions: {
@@ -20,11 +20,7 @@ const { apiRouter, pageRouter } = createAuthRouter({
     apiBasePath: '/api',
   },
   development: config.isDevelopment,
-  ...(!config.isDevelopment ? {
-    discord: {
-      botToken: config.discordBotToken,
-    },
-  } : {}),
+  ...(!config.isDevelopment ? { discord: notify } : {}),
 });
 
 module.exports = { apiRouter, pageRouter };
