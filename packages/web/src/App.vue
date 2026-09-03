@@ -71,6 +71,8 @@
           </div>
         </div>
       </nav>
+
+      <Pwa></Pwa>
     </template>
     <template v-else>
       <div class="flex-auto">
@@ -92,12 +94,14 @@ import { logout } from './services/api';
 import { useAuthStore } from './store';
 import { redirectToLogin } from './utils.js';
 import Explore from './views/Explore.vue';
+import Pwa from './components/Pwa.vue';
 
 export default {
   name: 'App',
   components: {
     Toast,
     Explore,
+    Pwa,
   },
   setup() {
     const authStore = useAuthStore();

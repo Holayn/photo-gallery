@@ -7,7 +7,8 @@
     "start": "node index.js",
     "dev": "ENV=development nodemon --inspect index.js",
     "lint": "prettier --write . && eslint ./ --fix",
-    "index-memories": "node bin/photo-gallery.js index-memories"
+    "index-memories": "node bin/photo-gallery.js index-memories",
+    "generate-vapid-keys": "npx web-push generate-vapid-keys"
   },
   "dependencies": {
     "axios": "^1.2.2",
@@ -26,6 +27,7 @@
     "morgan": "^1.10.0",
     "node-cron": "^4.2.1",
     "send": "^1.2.1",
+    "web-push": "^3.6.7",
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^4.7.1",
     "yargs": "^17.5.1"

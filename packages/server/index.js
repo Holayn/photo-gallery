@@ -5,11 +5,12 @@ const path = require('path');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
-const cron = require('node-cron');
 
 const config = require('./services/config');
 const logger = require('./services/logger');
 const { indexMemories } = require('./services/memories');
+
+require('./services/job');
 
 logger.init(true);
 
@@ -131,9 +132,3 @@ app.listen(config.port, () => {
   console.info(`Listening on ${config.port}`);
 });
 
-// Schedule daily memory indexing at 12 AM
-cron.schedule('0 0 * * *', () => {
-  console.log('Running daily memory index...');
-  indexMemories();
-  console.log('Memories index created successfully');
-});

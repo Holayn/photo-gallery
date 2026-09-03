@@ -23,6 +23,15 @@ if (env === 'production' && !process.env.DISCORD_BOT_TOKEN) {
 if (env === 'production' && !process.env.NOTIFY_URL) {
   throw new Error('NOTIFY_URL not defined in .env!');
 }
+if (env === 'production' && !process.env.VAPID_PUBLIC_KEY) {
+  throw new Error('VAPID_PUBLIC_KEY not defined in .env!');
+}
+if (env === 'production' && !process.env.VAPID_PRIVATE_KEY) {
+  throw new Error('VAPID_PRIVATE_KEY not defined in .env!');
+}
+if (env === 'production' && !process.env.VAPID_EMAIL) {
+  throw new Error('VAPID_EMAIL not defined in .env!');
+}
 
 module.exports = Object.freeze({
   env,
@@ -36,4 +45,7 @@ module.exports = Object.freeze({
   disableNginxRedirect: process.env.DISABLE_NGINX_REDIRECT === 'true',
   webImgToolPath: process.env.WEB_IMG_TOOL_PATH,
   discordBotToken: process.env.DISCORD_BOT_TOKEN,
+  vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
+  vapidPrivateKey: process.env.VAPID_PRIVATE_KEY,
+  vapidEmail: process.env.VAPID_EMAIL,
 });

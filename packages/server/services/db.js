@@ -10,6 +10,7 @@ const Source = require('../model/source');
 const User = require('../model/user');
 const { generateRandomString } = require('../util/random');
 const UserExploreHistory = require('../model/user-explore-history');
+const PushSubscription = require('../model/push-subscription');
 const { dataDir } = require('../services/config');
 
 const DB_PATH = path.join(dataDir, 'photo-gallery.db');
@@ -284,6 +285,42 @@ const UserExploreHistoryDAO = {
   },
 }
 
+DB.exec(
+  'CREATE TABLE IF NOT EXISTS push_subscription (id INTEGER PRIMARY KEY, user_id INTEGER, endpoint TEXT, subscription TEXT, created_at INTEGER, FOREIGN KEY(user_id) REFERENCES user(id))'
+);
+try {
+  DB.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_push_subscription_user_endpoint ON push_subscription(user_id, endpoint)');
+} catch (e) {}
+
+const toPushSubscriptionModel = toModelFactory(PushSubscription);
+const PushSubscriptionDAO = {
+  upsert({ userId, subscription }) {
+    return DB.prepare(
+      `INSERT INTO push_subscription (user_id, endpoint, subscription, created_at)
+       VALUES (@userId, @endpoint, @subscription, @createdAt)
+       ON CONFLICT(user_id, endpoint) DO UPDATE SET subscription = excluded.subscription`
+    ).run({
+      userId,
+      endpoint: subscription.endpoint,
+      subscription: JSON.stringify(subscription),
+      createdAt: new Date().getTime(),
+    }).lastInsertRowid;
+  },
+  findAll() {
+    return DB.prepare('SELECT * FROM push_subscription')
+      .all()
+      .map((s) => toPushSubscriptionModel(s));
+  },
+  findByUserId(userId) {
+    return DB.prepare('SELECT * FROM push_subscription WHERE user_id = ?')
+      .all(userId)
+      .map((s) => toPushSubscriptionModel(s));
+  },
+  deleteById(id) {
+    return DB.prepare('DELETE FROM push_subscription WHERE id = ?').run(id).changes;
+  },
+};
+
 function attachDB(dbPath) {
   DB.prepare('ATTACH DATABASE ? AS attached_db').run(dbPath);
   return 'attached_db';
@@ -328,6 +365,7 @@ module.exports = {
   UserDAO,
   UserSourceDAO,
   UserExploreHistoryDAO,
+  PushSubscriptionDAO,
   attachDB,
   detachDB,
   findUnexploredFile,
