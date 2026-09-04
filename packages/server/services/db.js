@@ -8,6 +8,7 @@ const AlbumFile = require('../model/album-file');
 const GalleryFile = require('../model/gallery-file');
 const Source = require('../model/source');
 const User = require('../model/user');
+const UserSource = require('../model/user-source');
 const { generateRandomString } = require('../util/random');
 const UserExploreHistory = require('../model/user-explore-history');
 const PushSubscription = require('../model/push-subscription');
@@ -217,7 +218,7 @@ DB.exec(
 try {
   DB.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_user_source_unique ON user_source(user_id, source_id)');
 } catch (e) {}
-
+const toUserSourceModel = toModelFactory(UserSource);
 const UserSourceDAO = {
   insert({ userId, sourceId }) {
     try {
@@ -240,6 +241,12 @@ const UserSourceDAO = {
     )
       .all(sourceId)
       .map((u) => toUserModel(u));
+  },
+  findAll() {
+    return DB.prepare('SELECT * from user_source').all().map(us => toUserSourceModel(us));
+  },
+  findByUserId(userId) {
+    return DB.prepare('SELECT * from user_source WHERE user_id = ?').all(userId).map(us => toUserSourceModel(us));
   },
   hasAccess(userId, sourceId) {
     const result = DB.prepare(

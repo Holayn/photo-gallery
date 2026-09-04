@@ -38,31 +38,60 @@ cron.schedule('0 10 * * *', async () => {
     return;
   }
 
-  const usersWithMemories = UserDAO.findAll().filter((user) =>
-    sourceIds.some((sourceId) => UserSourceDAO.hasAccess(user.id, sourceId))
-  );
-
-  const subscriptions = usersWithMemories.flatMap((user) => PushSubscriptionDAO.findByUserId(user.id));
-
-  if (!subscriptions.length) {
-    return;
-  }
-
-  const payload = JSON.stringify({
-    title: 'New Memories Available!',
-    body: 'Check out your photos from this day in previous years.',
-    icon: '/icon-192x192.png'
+  const sourceToUserIds = {};
+  UserSourceDAO.findAll().forEach(us => {
+    if (!sourceToUserIds[us.sourceId]) {
+      sourceToUserIds[us.sourceId] = [];
+    }
+    sourceToUserIds[us.sourceId].push(us.userId);
   });
 
-  const pushPromises = subscriptions.map(async ({ id, subscription }) => {
-    try {
-      await webpush.sendNotification(subscription, payload);
-    } catch (err) {
-      // Clean up expired / unsubscribed endpoints (HTTP 410 Gone or 404)
-      if (err.statusCode === 410 || err.statusCode === 404) {
-        PushSubscriptionDAO.deleteById(id);
-      }
+  const users = UserDAO.findAll().reduce((acc, user) => {
+    acc[user.id] = {
+      subscriptions: PushSubscriptionDAO.findByUserId(user.id),
+      files: [],
     }
+    return acc;
+  }, {});
+
+  memoriesIndex.years.forEach(year => {
+    year.files.forEach(file => {
+      const userIds = sourceToUserIds[file.sourceId];
+      if (!userIds) {
+        return;
+      }
+      
+      userIds.forEach(userId => {
+        users[userId].files.push(file);
+      });
+    });
+  });
+
+  const pushPromises = [];
+
+  Object.values(users).forEach(({ subscriptions, files }) => {
+    if (!files.length) {
+      return;
+    }
+
+    const payload = JSON.stringify({
+      title: 'New Memories Available!',
+      body: `${files.length} ${files.length > 1 ? 'photos' : 'photo'} from this day in previous years.`,
+      icon: '/icon-192x192.png'
+    });
+    
+    subscriptions.forEach(subscription => {
+      pushPromises.push((async () => {
+        try {
+          await webpush.sendNotification(subscription.subscription, payload);
+        } catch (err) {
+          // Clean up expired / unsubscribed endpoints (HTTP 410 Gone or 404)
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            PushSubscriptionDAO.deleteById(subscription.id);
+          }
+        }
+      })());
+    });
   });
 
   await Promise.all(pushPromises);
