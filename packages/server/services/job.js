@@ -2,7 +2,7 @@ const cron = require('node-cron');
 const webpush = require('web-push');
 const { vapidPublicKey, vapidPrivateKey, vapidEmail } = require('./config');
 const { PushSubscriptionDAO, UserDAO, UserSourceDAO } = require('./db');
-const { getMemoriesIndex } = require('./memories');
+const { getMemoriesIndex, indexMemories } = require('./memories');
 
 // Configure VAPID
 webpush.setVapidDetails(
