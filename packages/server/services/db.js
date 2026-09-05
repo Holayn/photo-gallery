@@ -61,18 +61,28 @@ const generateIdAlias = () => generateRandomString(16);
 DB.exec(
   'CREATE TABLE IF NOT EXISTS album (id INTEGER PRIMARY KEY, name TEXT, token TEXT, id_alias TEXT)'
 );
+try {
+  DB.exec('ALTER TABLE album ADD COLUMN modified_date INTEGER');
+} catch (e) {}
 
 const toAlbumModel = toModelFactory(Album);
 const AlbumDAO = {
-  insert({ name }) {
+  insert({ name, modifiedDate = new Date().getTime() }) {
     const idAlias = generateIdAlias();
     return DB.prepare(
-      'INSERT INTO album (id_alias, name) VALUES (@idAlias, @name)'
-    ).run({ idAlias, name }).lastInsertRowid;
+      'INSERT INTO album (id_alias, name, modified_date) VALUES (@idAlias, @name, @modifiedDate)'
+    ).run({ idAlias, name, modifiedDate }).lastInsertRowid;
   },
   findAll() {
     return DB.prepare('SELECT * FROM album')
       .all()
+      .map((a) => toAlbumModel(a));
+  },
+  findRecentlyUpdated(limit = 10) {
+    return DB.prepare(
+      'SELECT * FROM album WHERE modified_date IS NOT NULL ORDER BY modified_date DESC LIMIT ?'
+    )
+      .all(limit)
       .map((a) => toAlbumModel(a));
   },
   getById(id) {
@@ -87,6 +97,11 @@ const AlbumDAO = {
     DB.prepare(
       'UPDATE album SET name = @name, token = @token WHERE id = @id'
     ).run({ id, name, token });
+  },
+  touch(id, modifiedDate = new Date().getTime()) {
+    DB.prepare(
+      'UPDATE album SET modified_date = @modifiedDate WHERE id = @id'
+    ).run({ id, modifiedDate });
   },
 };
 

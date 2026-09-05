@@ -172,6 +172,17 @@ export async function getAlbums() {
     return res.data.map(({ id, name, fileCount }) => ({ id, name, fileCount }));
   }
 }
+export async function getRecentlyUpdatedAlbums(limit) {
+  const url = new URL(`${BASE}/albums/recent`, window.location.origin);
+  if (limit) {
+    url.searchParams.append('limit', limit);
+  }
+
+  const res = await fetcher.fetch(url.toString());
+  if (res.data) {
+    return res.data.map(({ id, name, fileCount, modifiedDate }) => ({ id, name, fileCount, modifiedDate }));
+  }
+}
 export async function getAlbum(albumId, albumToken) {
   const res = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${albumToken ? `&token=${albumToken}` : ''}`);
   if (res.data) {

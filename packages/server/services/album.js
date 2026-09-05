@@ -19,6 +19,7 @@ module.exports = {
     transaction(() => {
       // Make all added files have the same createdAt time, so that they appear to have been added at the same time rather than milliseconds apart.
       const createdAt = new Date().getTime();
+      let changed = false;
 
       Object.keys(files).forEach((file) => {
         const f = files[file];
@@ -35,6 +36,7 @@ module.exports = {
             AlbumFileDAO.insert(
               new AlbumFile({ albumId, fileId: existingFile.id, createdAt })
             );
+            changed = true;
           }
         } else {
           const sourceFile = SourceService.getFile(f.sourceId, f.sourceFileId);
@@ -45,13 +47,20 @@ module.exports = {
             })
           );
           AlbumFileDAO.insert(new AlbumFile({ albumId, fileId: newFileId }));
+          changed = true;
         }
       });
+
+      if (changed) {
+        AlbumDAO.touch(albumId, createdAt);
+      }
     });
   },
 
   removeFromAlbum(albumId, files = {}) {
     transaction(() => {
+      let changed = false;
+
       Object.keys(files).forEach((file) => {
         const f = files[file];
         const existingFile = GalleryFileDAO.getBySource(
@@ -65,9 +74,14 @@ module.exports = {
           );
           if (existsInAlbum) {
             AlbumFileDAO.deleteByFileId(existingFile.id);
+            changed = true;
           }
         }
       });
+
+      if (changed) {
+        AlbumDAO.touch(albumId);
+      }
     });
   },
 
