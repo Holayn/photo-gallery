@@ -10,10 +10,23 @@
       <div v-else class="flex flex-wrap gap-2">
         <div v-for="source in sources" :key="source.id" class="min-w-32 max-w-60" style="width: calc(50% - 0.5rem);">
           <CollectionTile :covers="sourceCovers[source.id]?.items" :error="!!sourceCovers[source.id]?.error" @click="openSource(source)">
-            <div class="h-full flex">
+            <div class="h-full flex text-left">
               <div class="flex-auto flex flex-col">
-                <div class="line-clamp-2 break-word text-left text-sm text-gray-800">{{ source.alias }}</div>
-                <div class="text-left text-xs text-gray-500">{{ source.fileCount }} {{ source.fileCount === 1 ? 'item' : 'items' }}</div>
+                <div class="line-clamp-2 break-word text-sm text-gray-800">{{ source.alias }}</div>
+                <div class="flex items-center gap-1">
+                  <div class="flex gap-1">
+                    <div class="text-xs text-gray-500">{{ source.fileCount }} {{ source.fileCount === 1 ? 'item' : 'items' }}</div>
+                    <div v-if="source.users.length">
+                      <div class="text-xs text-gray-500">&bull;</div>
+                    </div>
+                  </div>
+                  <div v-if="source.users.length" class="flex items-center gap-1">
+                    <div class="flex items-center gap-1 text-xs text-gray-500">
+                      <sl-icon name="people"></sl-icon>
+                      {{ source.users.length }}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="flex justify-center" @click.stop>
                 <sl-dropdown>
@@ -36,6 +49,7 @@
       v-if="selectedSource"
       :source="selectedSource"
       @close="selectedSource = null"
+      @users-updated="onSourceUsersUpdated"
     />
 
     <CreateSourceModal
@@ -114,6 +128,12 @@ export default {
       const value = event.detail.item.value;
       if (value === 'manage-users') {
         this.openUsersModal(source);
+      }
+    },
+    onSourceUsersUpdated({ sourceId, users }) {
+      const source = this.sources.find((s) => s.id === sourceId);
+      if (source) {
+        source.users = users;
       }
     },
   },

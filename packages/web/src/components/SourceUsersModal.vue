@@ -77,7 +77,7 @@ export default {
       required: true,
     },
   },
-  emits: ['close'],
+  emits: ['close', 'users-updated'],
   data() {
     return {
       loading: true,
@@ -107,21 +107,26 @@ export default {
         ]);
         this.allUsers = users;
         this.sourceUsers = sourceUsers;
+        this.emitUsersUpdated();
       } catch (e) {
         console.error('Failed to load users:', e);
       } finally {
         this.loading = false;
       }
     },
+    emitUsersUpdated() {
+      this.$emit('users-updated', { sourceId: this.source.id, users: this.sourceUsers.slice() });
+    },
     async addUser() {
       if (!this.selectedUserId) return;
-      
+
       this.adding = true;
       try {
         await addSourceUser(this.source.id, this.selectedUserId);
         const user = this.allUsers.find(u => u.id === parseInt(this.selectedUserId));
         if (user) {
           this.sourceUsers.push(user);
+          this.emitUsersUpdated();
         }
         this.selectedUserId = '';
       } catch (e) {
@@ -136,6 +141,7 @@ export default {
       try {
         await removeSourceUser(this.source.id, user.id);
         this.sourceUsers = this.sourceUsers.filter(u => u.id !== user.id);
+        this.emitUsersUpdated();
       } catch (e) {
         console.error('Failed to remove user:', e);
         alert('Failed to remove user');

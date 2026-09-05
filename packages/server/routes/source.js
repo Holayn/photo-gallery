@@ -19,6 +19,7 @@ router.get('/sources', AuthController.authAdmin, (req, res) => {
       .map((source) => ({
         ...source,
         fileCount: source.processed ? SourceService.getFileCount(source.id) : 0,
+        users: UserSourceDAO.findUsersBySourceId(source.id),
       }))
   );
 });

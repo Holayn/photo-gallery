@@ -73,7 +73,7 @@ export function logout() {
 export async function getSources() {
   const res = await fetcher.fetch(`${BASE}/sources`);
   if (res.data) {
-    return res.data.map(({ id, alias, path, fileCount }) => ({ id, alias, path, fileCount }));
+    return res.data.map(({ id, alias, path, fileCount, users }) => ({ id, alias, path, fileCount, users }));
   }
 }
 export async function getSource(sourceId) {
