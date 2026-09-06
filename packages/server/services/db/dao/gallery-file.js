@@ -18,6 +18,18 @@ module.exports = {
       'UPDATE file SET date = @date, source_id = @sourceId, source_file_id = @sourceFileId, token = @token WHERE id = @id'
     ).run({ ...file });
   },
+  upsertFromSource({ sourceId, sourceFileId, date }) {
+    return DB.prepare(
+      `INSERT INTO file (timestamp_added, date, source_id, source_file_id)
+       VALUES (@timestampAdded, @date, @sourceId, @sourceFileId)
+       ON CONFLICT(source_id, source_file_id) DO UPDATE SET date = excluded.date`
+    ).run({
+      timestampAdded: new Date().getTime(),
+      date,
+      sourceId,
+      sourceFileId,
+    }).lastInsertRowid;
+  },
   findBySourceId(sourceId) {
     return DB.prepare('SELECT * FROM file WHERE source_id = ?')
       .all(sourceId)

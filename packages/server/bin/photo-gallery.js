@@ -55,6 +55,16 @@ yargs(args)
     }
   )
   .command(
+    'backfill-file-index',
+    'Populate the centralized file index from every existing source\'s processed files',
+    {},
+    () => {
+      console.log('Backfilling file index...');
+      SourceService.backfillFileIndex();
+      console.log('Backfill complete.');
+    }
+  )
+  .command(
     'remove-source',
     'Remove a source',
     {

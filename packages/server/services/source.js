@@ -67,6 +67,30 @@ module.exports = {
     });
   },
 
+  backfillFileIndex() {
+    SourceDAO.findAll().forEach((source) => {
+      if (!fs.existsSync(ProcessorSource.getFullDbPath(source.path))) {
+        logger.info(`${source.alias}: no index found, skipping.`);
+        return;
+      }
+
+      transaction(() => {
+        const processorSource = new ProcessorSource(source);
+        const files = processorSource.findFiles();
+
+        files.forEach((file) => {
+          GalleryFileDAO.upsertFromSource({
+            sourceId: source.id,
+            sourceFileId: file.id,
+            date: file.date,
+          });
+        });
+
+        logger.info(`${source.alias}: backfilled ${files.length} files into the centralized index.`);
+      });
+    });
+  },
+
   createSource({
     sourceFilesPath,
     alias,
