@@ -81,7 +81,7 @@ export default {
         this.showLightbox = true;
       } catch (e) {
         console.error('Error loading photos:', e);
-        alert('Error loading Explore. Please try again later.');
+        alert(`Error loading photos: ${e.message}`);
         this.$emit('close');
       } finally {
         this.loading = false;
@@ -98,7 +98,7 @@ export default {
         this.photos.push(new Photo({ ...response, source: this.sources.find(s => s.id === response.sourceId) }));
       } catch (e) {
         console.error('Error loading next photo:', e);
-        alert('Error loading next photo.');
+        alert(`Error loading next photo: ${e.message}`);
       }
     },
 
@@ -115,7 +115,7 @@ export default {
         this.$emit('restart');
       } catch (e) {
         console.error('Error clearing explore history:', e);
-        alert('Failed to clear explore history.');
+        alert(`Error clearing explore history: ${e.message}`);
       }
     },
     onExploreLoadClose() {

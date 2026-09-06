@@ -151,38 +151,46 @@ export default {
     async loadPhotoInfo() {
       this.loadingPhotoInfo = true;
 
-      const res = [
-        getPhotosFromAlbum(this.albumId, this.albumToken),
-      ];
+      try {
+        const res = [
+          getPhotosFromAlbum(this.albumId, this.albumToken),
+        ];
 
-      if (this.authStore.isLoggedIn) {
-        res.push(getSources());
+        if (this.authStore.isLoggedIn) {
+          res.push(getSources());
+        }
+
+        const [ { photos }, sources ] = await Promise.all(res);
+
+        this.photos = photos
+          .filter(photo => !this.date || !photo.date || photo.date < new Date(this.date).getTime())
+          .map(photo => {
+            if (sources) {
+              return new Photo({ ...photo, source: sources.find(s => s.id === photo.sourceId) });
+            }
+            return photo;
+          });
+      } catch (e) {
+        alert(`Error loading photos: ${e.message}`);
+      } finally {
+        this.loadingPhotoInfo = false;
       }
-
-      const [ { photos }, sources ] = await Promise.all(res);
-
-      this.photos = photos
-        .filter(photo => !this.date || !photo.date || photo.date < new Date(this.date).getTime())
-        .map(photo => {
-          if (sources) {
-            return new Photo({ ...photo, source: sources.find(s => s.id === photo.sourceId) });
-          }
-          return photo;
-        });
-      this.loadingPhotoInfo = false;
     },
 
-    onDateUpdate(date) {
+    async onDateUpdate(date) {
       this.date = date;
-      this.loadPhotoInfo();
+      await this.loadPhotoInfo();
     },
 
     showModalAlbumLink() {
       this.isModalAlbumLinkShowing = true;
     },
     async shareAlbum() {
-      const token = await shareAlbum(this.album);
-      this.album.token = token;
+      try {
+        this.album.token = await shareAlbum(this.album);
+      } catch (e) {
+        alert(`Error sharing album: ${e.message}`);
+      }
     },
     copyToClipboard(link) {
       window.navigator.clipboard.writeText(link);

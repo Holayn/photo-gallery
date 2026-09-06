@@ -454,25 +454,35 @@ export default {
     async showAlbumSelection() {
       this.showAddToAlbum = true;
       this.loadingAlbums = true;
-      this.albums = await getAlbums();
-      this.loadingAlbums = false;
+      try {
+        this.albums = await getAlbums();
+      } catch (e) {
+        alert(`Error loading albums: ${e.message}`);
+        this.showAddToAlbum = false;
+      } finally {
+        this.loadingAlbums = false;
+      }
     },
     async addToAlbumFromSelected({ id, name }) {
       this.loadingAlbums = true;
 
-      await addToAlbum(id, Object.values(this.selected));
-      Object.keys(this.selected).forEach(selected => {
-        const file = this.displayedPhotos.find(photo => photo.id === selected);
-        file.albums.push({
-          name,
-          idAlias: id,
+      try {
+        await addToAlbum(id, Object.values(this.selected));
+        Object.keys(this.selected).forEach(selected => {
+          const file = this.displayedPhotos.find(photo => photo.id === selected);
+          file.albums.push({
+            name,
+            idAlias: id,
+          });
         });
-      });
-      alert(`Album updated.`);
-      this.selected = {};
-      this.isSelectionMode = false;
-      this.showAddToAlbum = false;
-      
+        alert(`Album updated.`);
+        this.selected = {};
+        this.isSelectionMode = false;
+        this.showAddToAlbum = false;
+      } catch (e) {
+        alert(`Error adding to album: ${e.message}`);
+      }
+
       this.loadingAlbums = false;
     },
     async createAlbumFromSelected() {
@@ -481,18 +491,22 @@ export default {
       if (!albumName) {
         alert('Album name required.');
       } else {
-        const { id, name } = (await createAlbum(albumName, Object.values(this.selected))).data;
-        alert(`Album "${name}" created.`);
-        Object.keys(this.selected).forEach(selected => {
-          const file = this.displayedPhotos.find(photo => photo.id === selected);
-          file.albums.push({
-            name,
-            idAlias: id,
+        try {
+          const { id, name } = await createAlbum(albumName, Object.values(this.selected));
+          alert(`Album "${name}" created.`);
+          Object.keys(this.selected).forEach(selected => {
+            const file = this.displayedPhotos.find(photo => photo.id === selected);
+            file.albums.push({
+              name,
+              idAlias: id,
+            });
           });
-        });
-        this.selected = {};
-        this.isSelectionMode = false;
-        this.showAddToAlbum = false;
+          this.selected = {};
+          this.isSelectionMode = false;
+          this.showAddToAlbum = false;
+        } catch (e) {
+          alert(`Error creating album: ${e.message}`);
+        }
       }
 
       this.loadingCreateAlbum = false;
@@ -506,7 +520,7 @@ export default {
         this.isSelectionMode = false;
         window.location.reload();
       } catch (e) {
-        alert(e);
+        alert(`Error removing from album: ${e.message}`);
       } finally {
         this.loadingRemoveFromAlbum = false;
       }

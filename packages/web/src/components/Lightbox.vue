@@ -519,7 +519,12 @@ export default {
           return;
         }
 
-        this.currentPhoto.shareUrl = await sharePhoto(this.currentPhoto);
+        try {
+          this.currentPhoto.shareUrl = await sharePhoto(this.currentPhoto);
+        } catch (e) {
+          alert(`Error sharing photo: ${e.message}`);
+          return;
+        }
       }
 
       window.navigator.clipboard.writeText(`${window.location.origin}${this.currentPhoto.shareUrl}`);

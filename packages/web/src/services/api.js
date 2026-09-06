@@ -10,22 +10,6 @@ export const PHOTO_SIZES = {
   FULL: 'full',
 }
 
-class ApiError extends Error {
-  constructor(status, description, ...params) {
-    // Pass remaining arguments (including vendor specific ones) to parent constructor
-    super(...params);
-
-    // Maintains proper stack trace for where our error was thrown (only available on V8)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ApiError);
-    }
-
-    this.name = "ApiError";
-    this.status = status;
-    this.description = description;
-  }
-}
-
 export function error(error) {
   return fetcher.fetch(`${BASE}/client-error`, {
     method: 'POST',
@@ -35,95 +19,47 @@ export function error(error) {
     body: JSON.stringify({
       error: `${error.message}\n\nstack:\n${error.stack}`,
     }),
-  });
+  }).catch(() => {});
 }
 
-export function auth(username, password) {
-  return fetcher.fetch(`${BASE}/auth`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      username,
-      password,
-    }),
-  });
-}
 export async function authVerify() {
-  const res = await fetcher.fetch(`${BASE}/auth/verify`, { redirectOn401: false });
-
-  return !res.error;
-}
-export async function auth2FA(code) {
-  return fetcher.fetch(`${BASE}/auth/2fa`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      twoFACode: code,
-    }),
-  });
+  try {
+    await fetcher.fetch(`${BASE}/auth/verify`, { redirectOn401: false });
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 export function logout() {
   return fetcher.fetch(`${BASE}/auth/logout`, { method: 'post' });
 }
 
-export async function getSources() {
-  const res = await fetcher.fetch(`${BASE}/sources`);
-  if (res.data) {
-    return res.data.map(({ id, alias, path, fileCount, users }) => ({ id, alias, path, fileCount, users }));
-  }
+export function getSources() {
+  return fetcher.fetch(`${BASE}/sources`);
 }
-export async function getSource(sourceId) {
-  const res = await fetcher.fetch(`${BASE}/source/info?id=${sourceId}`);
-  if (res.data) {
-    return {
-      id: res.data.id,
-      alias: res.data.alias,
-      path: res.data.path,
-      processed: res.data.processed,
-    }
-  } else if (res.error) {
-    throw new ApiError(res.error.status);
-  }
+export function getSource(sourceId) {
+  return fetcher.fetch(`${BASE}/source/info?id=${sourceId}`);
 }
-export async function createSource(sourceFilesPath, alias, exclude) {
-  const res = await fetcher.fetch(`${BASE}/source/create`, {
+export function createSource(sourceFilesPath, alias, exclude) {
+  return fetcher.fetch(`${BASE}/source/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ sourceFilesPath, alias, exclude }),
   });
-  if (res.data) {
-    return res.data;
-  } else if (res.error) {
-    throw new ApiError(res.error.status, res.error.message);
-  }
 }
 export function subscribeToSourceCreation(sourceId) {
   return new EventSource(`${BASE}/source/create/stream?id=${sourceId}`);
 }
 export async function getSourceCover(sourceId) {
-  const res = await fetcher.fetch(`${BASE}/source/cover?id=${sourceId}`);
-  if (res.data) {
-    const { files } = res.data;
-    return {
-      photos: files.map(f => new Photo(f)),
-    }
-  } else if (res.error) {
-    throw new ApiError(res.error.status);
-  }
+  const { files } = await fetcher.fetch(`${BASE}/source/cover?id=${sourceId}`);
+  return {
+    photos: files.map(f => new Photo(f)),
+  };
 }
-export async function getSourceDirectories(sourceId) {
-  const res = await fetcher.fetch(`${BASE}/source/directories?id=${sourceId}`);
-  if (res.data) {
-    return res.data;
-  } else if (res.error) {
-    throw new ApiError(res.error.status);
-  }
+export function getSourceDirectories(sourceId) {
+  return fetcher.fetch(`${BASE}/source/directories?id=${sourceId}`);
 }
 export async function getPhotosFromSource(sourceId, date, directory) {
   const url = new URL(`${BASE}/source/photos`, window.location.origin);
@@ -134,19 +70,14 @@ export async function getPhotosFromSource(sourceId, date, directory) {
   if (directory) {
     url.searchParams.append('directory', directory);
   }
-  
-  const res = await fetcher.fetch(url.toString());
-  if (res.data) {
-    const { files } = res.data;
-    return {
-      photos: files.map(f => new Photo({
-        ...f,
-        sourceId,
-      })),
-    }
-  } else if (res.error) {
-    throw new ApiError(res.error.status);
-  }
+
+  const { files } = await fetcher.fetch(url.toString());
+  return {
+    photos: files.map(f => new Photo({
+      ...f,
+      sourceId,
+    })),
+  };
 }
 
 export async function getPhotosFromAlbum(albumId, albumToken) {
@@ -156,55 +87,31 @@ export async function getPhotosFromAlbum(albumId, albumToken) {
     url.searchParams.append('token', albumToken);
   }
 
-  const res = await fetcher.fetch(url.toString());
-  if (res.data) {
-    const { files } = res.data;
-    return {
-      photos: files.map(f => new Photo(f)),
-    }
-  } else if (res.error) {
-    throw new ApiError(res.error.status);
-  }
+  const { files } = await fetcher.fetch(url.toString());
+  return {
+    photos: files.map(f => new Photo(f)),
+  };
 }
-export async function getAlbums() {
-  const res = await fetcher.fetch(`${BASE}/albums`);
-  if (res.data) {
-    return res.data.map(({ id, name, fileCount }) => ({ id, name, fileCount }));
-  }
+export function getAlbums() {
+  return fetcher.fetch(`${BASE}/albums`);
 }
-export async function getRecentlyUpdatedAlbums(limit) {
+export function getRecentlyUpdatedAlbums(limit) {
   const url = new URL(`${BASE}/albums/recent`, window.location.origin);
   if (limit) {
     url.searchParams.append('limit', limit);
   }
 
-  const res = await fetcher.fetch(url.toString());
-  if (res.data) {
-    return res.data.map(({ id, name, fileCount, modifiedDate }) => ({ id, name, fileCount, modifiedDate }));
-  }
+  return fetcher.fetch(url.toString());
 }
 export async function getAlbum(albumId, albumToken) {
-  const res = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${albumToken ? `&token=${albumToken}` : ''}`);
-  if (res.data) {
-    return {
-      id: res.data.id,
-      name: res.data.name,
-      token: res.data.token,
-    }
-  } else if (res.error) {
-    throw new ApiError(res.error.status, albumToken ? 'Bad album link' : null);
-  }
+  const { id, name, token } = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${albumToken ? `&token=${albumToken}` : ''}`);
+  return { id, name, token };
 }
 export async function getAlbumCover(albumId) {
-  const res = await fetcher.fetch(`${BASE}/album/cover?id=${albumId}`);
-  if (res.data) {
-    const { files } = res.data;
-    return {
-      photos: files.map(f => new Photo(f)),
-    }
-  } else if (res.error) {
-    throw new ApiError(res.error.status);
-  }
+  const { files } = await fetcher.fetch(`${BASE}/album/cover?id=${albumId}`);
+  return {
+    photos: files.map(f => new Photo(f)),
+  };
 }
 export function createAlbum(name, files) {
   return fetcher.fetch(`${BASE}/album`, {
@@ -243,7 +150,7 @@ export function deleteFromAlbum(albumId, files) {
   });
 }
 export async function shareAlbum(album) {
-  const res = await fetcher.fetch(`${BASE}/album/share`, {
+  const { token } = await fetcher.fetch(`${BASE}/album/share`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -252,12 +159,11 @@ export async function shareAlbum(album) {
       id: album.id,
     }),
   });
-
-  return res.data.token;
+  return token;
 }
 
 export async function sharePhoto(photo) {
-  const res = await fetcher.fetch(`${BASE}/photo/share`, {
+  const { shareUrl } = await fetcher.fetch(`${BASE}/photo/share`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -267,78 +173,54 @@ export async function sharePhoto(photo) {
       sourceFileId: photo.sourceFileId,
     }),
   });
-
-  return res.data.shareUrl;
+  return shareUrl;
 }
 
-export async function getMemories(year) {
+export function getMemories(year) {
   const url = new URL(`${BASE}/memories`, window.location.origin);
   if (year) {
     url.searchParams.append('year', year);
   }
 
-  return (await fetcher.fetch(url.toString())).data;
+  return fetcher.fetch(url.toString());
 }
 
-export async function getMemoriesCovers() {
-  return (await fetcher.fetch(`${BASE}/memories/covers`)).data;
+export function getMemoriesCovers() {
+  return fetcher.fetch(`${BASE}/memories/covers`);
 }
 
-export async function getUsers() {
-  const res = await fetcher.fetch(`${BASE}/users`);
-  if (res.data) {
-    return res.data;
-  } else if (res.error) {
-    throw new ApiError(res.error.status);
-  }
+export function getUsers() {
+  return fetcher.fetch(`${BASE}/users`);
 }
 
-export async function getSourceUsers(sourceId) {
-  const res = await fetcher.fetch(`${BASE}/source/users?id=${sourceId}`);
-  if (res.data) {
-    return res.data;
-  } else if (res.error) {
-    throw new ApiError(res.error.status);
-  }
+export function getSourceUsers(sourceId) {
+  return fetcher.fetch(`${BASE}/source/users?id=${sourceId}`);
 }
 
-export async function addSourceUser(sourceId, userId) {
-  const res = await fetcher.fetch(`${BASE}/source/users`, {
+export function addSourceUser(sourceId, userId) {
+  return fetcher.fetch(`${BASE}/source/users`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ sourceId, userId }),
   });
-  if (res.error) {
-    throw new ApiError(res.error.status);
-  }
-  return res.data;
 }
 
-export async function removeSourceUser(sourceId, userId) {
-  const res = await fetcher.fetch(`${BASE}/source/users/delete`, {
+export function removeSourceUser(sourceId, userId) {
+  return fetcher.fetch(`${BASE}/source/users/delete`, {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ sourceId, userId }),
   });
-  return res.data;
 }
 
-export async function getExploreNext() {
-  const res = await fetcher.fetch(`${BASE}/explore/next`);
-  if (res.error) {
-    throw new ApiError(res.error.status);
-  }
-  return res.data;
+export function getExploreNext() {
+  return fetcher.fetch(`${BASE}/explore/next`);
 }
 
-export async function clearExploreHistory() {
-  const res = await fetcher.fetch(`${BASE}/explore/history/clear`, { method: 'POST' });
-  if (res.error) {
-    throw new ApiError(res.error.status);
-  }
-  return res.data;
+export function clearExploreHistory() {
+  return fetcher.fetch(`${BASE}/explore/history/clear`, { method: 'POST' });
 }

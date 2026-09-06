@@ -95,7 +95,7 @@ export default {
           this.subscribeToProcessing();
         }
       } catch(e) {
-        alert('An error occurred.');
+        alert(`Error loading source: ${e.message}`);
         throw e;
       } finally {
         this.loadingSourceInfo = false;
@@ -146,7 +146,7 @@ export default {
 
         this.photos = photos;
       } catch(e) {
-        alert('An error occurred.');
+        alert(`Error loading photos: ${e.message}`);
         throw e;
       } finally {
         this.loadingPhotoInfo = false;

@@ -79,7 +79,7 @@ export default {
         const { id } = await createSource(this.sourceFilesPath, this.alias, exclude);
         this.$emit('created', { id });
       } catch (e) {
-        this.error = e.description || 'Failed to create source.';
+        this.error = e.message || 'Failed to create source.';
       } finally {
         this.creating = false;
       }

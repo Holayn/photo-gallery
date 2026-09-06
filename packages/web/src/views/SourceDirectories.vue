@@ -53,8 +53,11 @@ export default {
     
     getSource(this.sourceId).then(source => {
       this.source = source;
-      this.loadingSourceInfo = false;
       document.title = this.source.alias;
+    }).catch(e => {
+      alert(`Error loading source: ${e.message}`);
+    }).finally(() => {
+      this.loadingSourceInfo = false;
     });
 
     try {

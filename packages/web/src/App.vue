@@ -128,7 +128,11 @@ export default {
   },
   methods: {
     async logout() {
-      await logout();
+      try {
+        await logout();
+      } catch (e) {
+        console.error(e);
+      }
       redirectToLogin();
     },
     startExplore() {

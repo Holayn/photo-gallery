@@ -110,6 +110,7 @@ export default {
         this.emitUsersUpdated();
       } catch (e) {
         console.error('Failed to load users:', e);
+        alert(`Failed to load users: ${e.message}`);
       } finally {
         this.loading = false;
       }
@@ -131,7 +132,7 @@ export default {
         this.selectedUserId = '';
       } catch (e) {
         console.error('Failed to add user:', e);
-        alert('Failed to add user');
+        alert(`Failed to add user: ${e.message}`);
       } finally {
         this.adding = false;
       }
@@ -144,7 +145,7 @@ export default {
         this.emitUsersUpdated();
       } catch (e) {
         console.error('Failed to remove user:', e);
-        alert('Failed to remove user');
+        alert(`Failed to remove user: ${e.message}`);
       } finally {
         this.removing = null;
       }
