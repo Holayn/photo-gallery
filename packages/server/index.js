@@ -8,7 +8,6 @@ const compression = require('compression');
 
 const config = require('./services/config');
 const logger = require('./services/logger');
-const { indexMemories } = require('./services/memories');
 
 require('./services/job');
 

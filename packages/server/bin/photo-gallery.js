@@ -3,7 +3,6 @@ const Database = require('better-sqlite3');
 
 const { filesMoved } = require('../services/files-moved');
 const logger = require('../services/logger');
-const { indexMemories } = require('../services/memories');
 const { UserStore } = require('kaiauth');
 
 logger.init();
@@ -95,16 +94,6 @@ yargs(args)
     },
     (options) => {
       filesMoved(options.from, options.to);
-    }
-  )
-  .command(
-    'index-memories',
-    'Create memories index',
-    {},
-    () => {
-      console.log('Creating memories index...');
-      indexMemories();
-      console.log('Memories index created successfully');
     }
   )
   .command(

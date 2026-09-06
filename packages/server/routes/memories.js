@@ -1,7 +1,7 @@
 const express = require('express');
 
 const AuthController = require('../controllers/auth');
-const { getMemoriesIndex } = require('../services/memories');
+const { getMemories } = require('../services/memories');
 const SourceService = require('../services/source');
 const { UserDAO, UserSourceDAO } = require('../services/db');
 
@@ -19,12 +19,12 @@ router.get(
     }
 
     try {
-      const memoriesIndex = getMemoriesIndex();
+      const memories = getMemories();
 
       const { year: yearParam } = req.query;
       const memoryYears = yearParam
-        ? memoriesIndex.years.filter(year => String(year.year) === String(yearParam))
-        : memoriesIndex.years;
+        ? memories.years.filter(year => String(year.year) === String(yearParam))
+        : memories.years;
 
       let years = memoryYears.map(year => ({
           ...year,
@@ -56,9 +56,9 @@ router.get(
     }
 
     try {
-      const memoriesIndex = getMemoriesIndex();
+      const memories = getMemories();
 
-      let years = memoriesIndex.years.map(year => {
+      let years = memories.years.map(year => {
         const files = year.files.filter(file => UserSourceDAO.hasAccess(user.id, file.sourceId));
         return {
           year: year.year,

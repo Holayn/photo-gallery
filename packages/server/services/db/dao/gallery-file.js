@@ -62,4 +62,21 @@ module.exports = {
       .all(sourceId, sourceFileIds)
       .map((f) => toGalleryFileModel(f));
   },
+  // monthDay: 'MM-DD'. Matches files taken on that month/day in any year, as
+  // long as that occurrence is strictly before beforeDate (excludes today/future).
+  findOnMonthDayBefore(monthDay, beforeDate) {
+    /**
+     * date is stored in epoch milliseconds, but strftime's 'unixepoch' modifier 
+     * expects epoch seconds, hence the / 1000. '%m-%d' then extracts just the 
+     * month and day (dropping the year) so this matches across every year at once.
+     */
+    return DB.prepare(
+      `SELECT * FROM file
+       WHERE strftime('%m-%d', date / 1000, 'unixepoch') = ?
+         AND date < ?
+       ORDER BY date DESC`
+    )
+      .all(monthDay, beforeDate)
+      .map((f) => toGalleryFileModel(f));
+  },
 };

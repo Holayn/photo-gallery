@@ -3,7 +3,7 @@ const webpush = require('web-push');
 const logger = require('./logger');
 const { vapidPublicKey, vapidPrivateKey, vapidEmail } = require('./config');
 const { PushSubscriptionDAO, UserDAO, UserSourceDAO } = require('./db');
-const { getMemoriesIndex, indexMemories } = require('./memories');
+const { getMemories } = require('./memories');
 
 // Configure VAPID
 webpush.setVapidDetails(
@@ -12,32 +12,21 @@ webpush.setVapidDetails(
   vapidPrivateKey,
 );
 
-// Schedule daily memory indexing at 12 AM
-cron.schedule('0 0 * * *', () => {
-  try {
-    logger.info('Running daily memory index...');
-    indexMemories();
-    logger.info('Memories index created successfully');
-  } catch (err) {
-    logger.error('Failed to run daily memory index job', err, true);
-  }
-});
-
 // Notify of memories 10 AM.
 cron.schedule('0 10 * * *', async () => {
   try {
     logger.info('Sending push notifications');
 
-    let memoriesIndex;
+    let memories;
     try {
-      memoriesIndex = getMemoriesIndex();
+      memories = getMemories();
     } catch (err) {
-      logger.error('Failed to load memories index, skipping notifications', err);
+      logger.error('Failed to load memories, skipping notifications', err);
       return;
     }
 
     const sourceIds = [...new Set(
-      memoriesIndex.years.flatMap((year) => year.files.map((file) => file.sourceId))
+      memories.years.flatMap((year) => year.files.map((file) => file.sourceId))
     )];
 
     if (!sourceIds.length) {
@@ -60,7 +49,7 @@ cron.schedule('0 10 * * *', async () => {
       return acc;
     }, {});
 
-    memoriesIndex.years.forEach(year => {
+    memories.years.forEach(year => {
       year.files.forEach(file => {
         const userIds = sourceToUserIds[file.sourceId];
         if (!userIds) {
