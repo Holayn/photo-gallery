@@ -79,4 +79,31 @@ module.exports = {
       .all(monthDay, beforeDate)
       .map((f) => toGalleryFileModel(f));
   },
+  // Uniform-random pick of one file, among sourceIds, the given user hasn't
+  // explored yet. Count-then-offset (rather than ORDER BY RANDOM()) so it
+  // stays an index scan instead of a full-table sort.
+  findRandomUnexplored(userId, sourceIds) {
+    if (!sourceIds.length) {
+      return null;
+    }
+
+    const placeholders = sourceIds.map(() => '?').join(',');
+    const unexploredInSources = `
+      FROM file f
+      LEFT JOIN user_explore_history ueh
+        ON f.source_id = ueh.source_id AND f.source_file_id = ueh.source_file_id AND ueh.user_id = ?
+      WHERE ueh.id IS NULL AND f.source_id IN (${placeholders})
+    `;
+
+    const { count } = DB.prepare(`SELECT COUNT(*) AS count ${unexploredInSources}`).get(userId, ...sourceIds);
+    if (!count) {
+      return null;
+    }
+
+    const offset = Math.floor(Math.random() * count);
+
+    return toGalleryFileModel(
+      DB.prepare(`SELECT f.* ${unexploredInSources} LIMIT 1 OFFSET ?`).get(userId, ...sourceIds, offset)
+    );
+  },
 };

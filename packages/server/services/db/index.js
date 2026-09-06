@@ -11,7 +11,6 @@ const UserDAO = require('./dao/user');
 const UserSourceDAO = require('./dao/user-source');
 const UserExploreHistoryDAO = require('./dao/user-explore-history');
 const PushSubscriptionDAO = require('./dao/push-subscription');
-const { attachDB, detachDB, findUnexploredFile } = require('./attached-source');
 
 module.exports = {
   AlbumFileDAO,
@@ -22,8 +21,5 @@ module.exports = {
   UserSourceDAO,
   UserExploreHistoryDAO,
   PushSubscriptionDAO,
-  attachDB,
-  detachDB,
-  findUnexploredFile,
   transaction: (fn) => DB.transaction(() => fn())(),
 };
