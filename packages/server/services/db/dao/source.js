@@ -5,14 +5,14 @@ const Source = require('../../../model/source');
 const toSourceModel = toModelFactory(Source);
 
 module.exports = {
-  insert({ path: sourcePath, alias, processed = true }) {
+  insert({ path: sourcePath, alias, processed = true, filesPath = null }) {
     return DB.prepare(
-      'INSERT INTO source (path, alias, processed) VALUES (@path, @alias, @processed)'
-    ).run({ path: sourcePath, alias, processed: processed ? 1 : 0 }).lastInsertRowid;
+      'INSERT INTO source (path, alias, processed, files_path) VALUES (@path, @alias, @processed, @filesPath)'
+    ).run({ path: sourcePath, alias, processed: processed ? 1 : 0, filesPath }).lastInsertRowid;
   },
   update(source) {
     DB.prepare(
-      'UPDATE source SET path = @path, alias = @alias, processed = @processed WHERE id = @id'
+      'UPDATE source SET path = @path, alias = @alias, processed = @processed, files_path = @filesPath WHERE id = @id'
     ).run({ ...source, processed: source.processed ? 1 : 0 });
   },
   getById(id) {

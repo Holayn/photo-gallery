@@ -8,7 +8,7 @@ const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = requi
 const Source = require('../model/source');
 
 module.exports = {
-  addSource(sourcePath, alias, { processed = true } = {}) {
+  addSource(sourcePath, alias, { processed = true, filesPath } = {}) {
     return transaction(() => {
       const existingSource = SourceDAO.getSourceByPathOrAlias(
         sourcePath,
@@ -16,7 +16,7 @@ module.exports = {
       );
 
       if (!existingSource) {
-        const id = SourceDAO.insert(new Source({ alias, path: sourcePath, processed }));
+        const id = SourceDAO.insert(new Source({ alias, path: sourcePath, processed, filesPath }));
         logger.info(`${alias} added with source path: ${sourcePath}.`);
         return id;
       } else {
@@ -67,28 +67,35 @@ module.exports = {
     });
   },
 
-  backfillFileIndex() {
-    SourceDAO.findAll().forEach((source) => {
-      if (!fs.existsSync(ProcessorSource.getFullDbPath(source.path))) {
-        logger.info(`${source.alias}: no index found, skipping.`);
-        return;
-      }
+  // Reads a single source's already-produced index.db and upserts its
+  // processed files into the centralized file index. Called both by the
+  // one-time backfill below and right after the app finishes processing a
+  // source, so `file` never depends on anything more than what webimg
+  // already wrote out.
+  ingestSourceFileIndex(source) {
+    if (!fs.existsSync(ProcessorSource.getFullDbPath(source.path))) {
+      logger.info(`${source.alias}: no index found, skipping.`);
+      return;
+    }
 
-      transaction(() => {
-        const processorSource = new ProcessorSource(source);
-        const files = processorSource.findFiles();
+    transaction(() => {
+      const processorSource = new ProcessorSource(source);
+      const files = processorSource.findFiles();
 
-        files.forEach((file) => {
-          GalleryFileDAO.upsertFromSource({
-            sourceId: source.id,
-            sourceFileId: file.id,
-            date: file.date,
-          });
+      files.forEach((file) => {
+        GalleryFileDAO.upsertFromSource({
+          sourceId: source.id,
+          sourceFileId: file.id,
+          date: file.date,
         });
-
-        logger.info(`${source.alias}: backfilled ${files.length} files into the centralized index.`);
       });
+
+      logger.info(`${source.alias}: ingested ${files.length} files into the centralized index.`);
     });
+  },
+
+  backfillFileIndex() {
+    SourceDAO.findAll().forEach((source) => this.ingestSourceFileIndex(source));
   },
 
   createSource({
@@ -108,7 +115,7 @@ module.exports = {
       exclude,
     };
     fs.writeFileSync(webImgConfigPath, JSON.stringify(webImgConfig, null, 2));
-    const id = this.addSource(sourceDirPath, alias, { processed: false });
+    const id = this.addSource(sourceDirPath, alias, { processed: false, filesPath: sourceFilesPath });
 
     const promise = (async () => {
       const { execa } = await import('execa');
@@ -120,6 +127,8 @@ module.exports = {
       const source = SourceDAO.getById(id);
       source.processed = true;
       SourceDAO.update(source);
+
+      this.ingestSourceFileIndex(source);
     })();
 
     return { id, promise };
