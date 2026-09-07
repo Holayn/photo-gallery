@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const ProcessorSource = require('./processor-source/processor-source');
 const logger = require('./logger');
+const notify = require('./notify');
 const { baseUrl, filesPath, webImgToolPath } = require('./config');
 const { PHOTO_SIZES } = require('../constants/photo');
 const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = require('./db');
@@ -132,6 +133,48 @@ module.exports = {
     })();
 
     return { id, promise };
+  },
+
+  processSource(sourceId) {
+    const source = SourceDAO.getById(sourceId);
+    if (!source) {
+      throw new Error(`Source ${sourceId} does not exist.`);
+    }
+    if (!source.filesPath) {
+      throw new Error(`${source.alias} has no files path to reprocess from.`);
+    }
+    if (source.processing) {
+      throw new Error(`${source.alias} is already processing.`);
+    }
+
+    const webImgConfigPath = path.join(source.path, 'config.json');
+
+    if (!fs.existsSync(webImgConfigPath)) {
+      throw new Error(`No webimg config file found in ${source.path}.`);
+    }
+
+    source.processing = true;
+    SourceDAO.update(source);
+    notify(undefined, `${source.alias} started processing.`);
+
+    return (async () => {
+      try {
+        const { execa } = await import('execa');
+        await execa('npm', ['run', 'start', '--', '--config', webImgConfigPath], {
+          cwd: webImgToolPath,
+          stdio: 'inherit',
+        });
+
+        this.ingestSourceFileIndex(source);
+        notify(undefined, `${source.alias} finished processing.`);
+      } catch (err) {
+        notify(undefined, `${source.alias} failed to process: ${err.message}`);
+        throw err;
+      } finally {
+        source.processing = false;
+        SourceDAO.update(source);
+      }
+    })();
   },
 
   findFiles(sourceId, startDateRange, directory) {

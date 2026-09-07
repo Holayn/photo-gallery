@@ -52,6 +52,15 @@ export function createSource(sourceFilesPath, alias, exclude) {
 export function subscribeToSourceCreation(sourceId) {
   return new EventSource(`${BASE}/source/create/stream?id=${sourceId}`);
 }
+export function processSource(sourceId) {
+  return fetcher.fetch(`${BASE}/source/process`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ id: sourceId }),
+  });
+}
 export async function getSourceCover(sourceId) {
   const { files } = await fetcher.fetch(`${BASE}/source/cover?id=${sourceId}`);
   return {

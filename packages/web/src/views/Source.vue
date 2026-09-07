@@ -15,7 +15,22 @@
   <Gallery v-else :id="sourceId" :show-lightbox="showLightbox" :photos="photos" @date="onDateUpdate($event)" @reset="photos = []">
     <template #heading>
       <h1 class="text-xl md:text-2xl">
-        <div>{{ title }}</div>
+        <div class="flex items-center gap-2">
+          <span>{{ title }}</span>
+          <span v-if="source?.processing" class="flex items-center gap-2 text-sm font-normal text-gray-500">
+            <Loading class="w-6 h-6"></Loading>
+            Source processing
+          </span>
+          <sl-dropdown v-if="source">
+            <sl-icon-button slot="trigger" name="three-dots" label="Options"></sl-icon-button>
+            <sl-menu @sl-select="onMenuSelect">
+              <sl-menu-item :disabled="!source.filesPath || source.processing" value="process">
+                <sl-icon slot="prefix" name="arrow-repeat"></sl-icon>
+                Run photo processessing
+              </sl-menu-item>
+            </sl-menu>
+          </sl-dropdown>
+        </div>
         <div v-if="directory" class="text-xl mt-1">({{ directory }})</div>
       </h1>
     </template>
@@ -32,7 +47,7 @@
 import Loading from '../components/Loading.vue';
 import Gallery from './Gallery.vue';
 
-import { getPhotosFromSource, getSource, subscribeToSourceCreation } from '../services/api';
+import { getPhotosFromSource, getSource, processSource, subscribeToSourceCreation } from '../services/api';
 import {  setDocumentTitle } from '../utils';
 
 export default {
@@ -56,6 +71,7 @@ export default {
 
       processing: false,
       eventSource: null,
+      processingPollInterval: null,
 
       date: null,
       source: null,
@@ -72,10 +88,12 @@ export default {
   },
   beforeUnmount() {
     this.closeEventSource();
+    this.stopPollingProcessing();
   },
   watch: {
     sourceId() {
       this.closeEventSource();
+      this.stopPollingProcessing();
       this.photos = [];
       this.source = null;
       this.date = null;
@@ -91,6 +109,10 @@ export default {
 
         if (this.source.processed) {
           this.loadPhotoInfo();
+
+          if (this.source.processing) {
+            this.startPollingProcessing();
+          }
         } else {
           this.subscribeToProcessing();
         }
@@ -99,6 +121,46 @@ export default {
         throw e;
       } finally {
         this.loadingSourceInfo = false;
+      }
+    },
+    onMenuSelect(event) {
+      const value = event.detail.item.value;
+      if (value === 'process') {
+        this.triggerProcessing();
+      }
+    },
+    async triggerProcessing() {
+      try {
+        await processSource(this.sourceId);
+        this.source.processing = true;
+        this.startPollingProcessing();
+      } catch (e) {
+        alert(`Error processing source: ${e.message}`);
+      }
+    },
+    startPollingProcessing() {
+      if (this.processingPollInterval) {
+        return;
+      }
+
+      this.processingPollInterval = setInterval(async () => {
+        try {
+          const updated = await getSource(this.sourceId);
+          this.source.processing = updated.processing;
+
+          if (!updated.processing) {
+            this.stopPollingProcessing();
+            this.loadPhotoInfo();
+          }
+        } catch (e) {
+          this.stopPollingProcessing();
+        }
+      }, 5000);
+    },
+    stopPollingProcessing() {
+      if (this.processingPollInterval) {
+        clearInterval(this.processingPollInterval);
+        this.processingPollInterval = null;
       }
     },
     subscribeToProcessing() {

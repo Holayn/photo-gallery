@@ -4,6 +4,7 @@ const express = require('express');
 
 const AuthController = require('../controllers/auth');
 const SourceService = require('../services/source');
+const logger = require('../services/logger');
 const { SourceDAO, UserSourceDAO, UserDAO } = require('../services/db');
 const { requiredParams, requiredBody } = require('../util/route-utils');
 
@@ -30,8 +31,31 @@ router.get(
   AuthController.authAdmin,
   (req, res) => {
     const { id: sourceId } = req.query;
-    const { id, alias, processed } = SourceDAO.getById(sourceId);
-    res.send({ id, alias, processed });
+    const { id, alias, processed, processing } = SourceDAO.getById(sourceId);
+    res.send({ id, alias, processed, processing });
+  }
+);
+
+router.post(
+  '/source/process',
+  requiredBody(['id']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { id: sourceId } = req.body;
+
+    let promise;
+    try {
+      promise = SourceService.processSource(sourceId);
+    } catch (err) {
+      res.status(400).send({ message: err.message });
+      return;
+    }
+
+    promise.catch((err) => {
+      logger.error(`Failed to process source ${sourceId}`, err);
+    });
+
+    res.sendStatus(202);
   }
 );
 
