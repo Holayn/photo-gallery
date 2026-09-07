@@ -37,6 +37,15 @@ node packages/server/bin/photo-gallery.js add-user --username <name> --password 
 
 This inserts the user into both the auth database (managed by `kaiauth`) and the server's own user table. If the user already exists, it is overwritten.
 
+## Reprocessing sources
+
+A source created via the "Create" flow (not the `add-source` CLI command above, which never records an input path to reprocess from) can be reprocessed after creation, from its page in the web app (⋮ menu next to the source name):
+
+- **Run photo processessing** — re-runs webimg against the source's original input directory right away, picking up any files added since the last run. Only available for sources with a known input path (i.e. created via "Create", not added via the `add-source` CLI).
+- **Continuous Processing** — a per-source toggle that watches the source's input directory and reprocesses it automatically a short while after new files stop arriving, with no manual trigger needed. Off by default; only enable it for sources that are actually expected to keep receiving new files, since watching a directory has a real ongoing cost.
+
+While a source is processing (manually or automatically triggered), the app shows a loading indicator — inline next to the heading on the source's own page, and per-source on the Sources list page. A notification is sent (via the configured `NOTIFY_URL`) when a source starts and finishes processing.
+
 ## Development
 
 ```sh

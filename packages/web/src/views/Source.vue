@@ -28,6 +28,10 @@
                 <sl-icon slot="prefix" name="arrow-repeat"></sl-icon>
                 Run photo processessing
               </sl-menu-item>
+              <sl-menu-item type="checkbox" :checked="source.continuous" :disabled="!source.filesPath" value="continuous">
+                <sl-icon slot="prefix" name="eye"></sl-icon>
+                Continuous Processing
+              </sl-menu-item>
             </sl-menu>
           </sl-dropdown>
         </div>
@@ -47,7 +51,7 @@
 import Loading from '../components/Loading.vue';
 import Gallery from './Gallery.vue';
 
-import { getPhotosFromSource, getSource, processSource, subscribeToSourceCreation } from '../services/api';
+import { getPhotosFromSource, getSource, processSource, setSourceContinuous, subscribeToSourceCreation } from '../services/api';
 import {  setDocumentTitle } from '../utils';
 
 export default {
@@ -127,6 +131,8 @@ export default {
       const value = event.detail.item.value;
       if (value === 'process') {
         this.triggerProcessing();
+      } else if (value === 'continuous') {
+        this.toggleContinuous();
       }
     },
     async triggerProcessing() {
@@ -136,6 +142,15 @@ export default {
         this.startPollingProcessing();
       } catch (e) {
         alert(`Error processing source: ${e.message}`);
+      }
+    },
+    async toggleContinuous() {
+      const next = !this.source.continuous;
+      try {
+        await setSourceContinuous(this.sourceId, next);
+        this.source.continuous = next;
+      } catch (e) {
+        alert(`Error updating continuous processing: ${e.message}`);
       }
     },
     startPollingProcessing() {

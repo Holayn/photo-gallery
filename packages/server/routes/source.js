@@ -4,6 +4,7 @@ const express = require('express');
 
 const AuthController = require('../controllers/auth');
 const SourceService = require('../services/source');
+const SourceWatcher = require('../services/source-watcher');
 const logger = require('../services/logger');
 const { SourceDAO, UserSourceDAO, UserDAO } = require('../services/db');
 const { requiredParams, requiredBody } = require('../util/route-utils');
@@ -31,8 +32,48 @@ router.get(
   AuthController.authAdmin,
   (req, res) => {
     const { id: sourceId } = req.query;
-    const { id, alias, processed, processing } = SourceDAO.getById(sourceId);
-    res.send({ id, alias, processed, processing });
+    const { id, alias, processed, processing, continuous, filesPath } = SourceDAO.getById(sourceId);
+    res.send({ id, alias, processed, processing, continuous, filesPath });
+  }
+);
+
+// Cheap polling endpoint for processing status only - no ProcessorSource
+// connections opened, unlike /sources which also computes fileCount per
+// source. Safe to poll frequently regardless of source count.
+router.get('/sources/processing', AuthController.authAdmin, (req, res) => {
+  res.send(
+    SourceDAO.findAll().map(({ id, processing }) => ({ id, processing }))
+  );
+});
+
+router.post(
+  '/source/continuous',
+  requiredBody(['id', 'continuous']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { id: sourceId, continuous } = req.body;
+
+    const source = SourceDAO.getById(sourceId);
+    if (!source) {
+      res.sendStatus(400);
+      return;
+    }
+
+    if (continuous && !source.filesPath) {
+      res.status(400).send({ message: `${source.alias} has no files path to watch.` });
+      return;
+    }
+
+    source.continuous = !!continuous;
+    SourceDAO.update(source);
+
+    if (source.continuous) {
+      SourceWatcher.watchSource(source);
+    } else {
+      SourceWatcher.unwatchSource(source.id);
+    }
+
+    res.sendStatus(200);
   }
 );
 

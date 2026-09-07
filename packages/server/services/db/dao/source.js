@@ -12,8 +12,13 @@ module.exports = {
   },
   update(source) {
     DB.prepare(
-      'UPDATE source SET path = @path, alias = @alias, processed = @processed, files_path = @filesPath, processing = @processing WHERE id = @id'
-    ).run({ ...source, processed: source.processed ? 1 : 0, processing: source.processing ? 1 : 0 });
+      'UPDATE source SET path = @path, alias = @alias, processed = @processed, files_path = @filesPath, processing = @processing, continuous = @continuous WHERE id = @id'
+    ).run({
+      ...source,
+      processed: source.processed ? 1 : 0,
+      processing: source.processing ? 1 : 0,
+      continuous: source.continuous ? 1 : 0,
+    });
   },
   getById(id) {
     return toSourceModel(

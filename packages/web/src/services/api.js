@@ -61,6 +61,18 @@ export function processSource(sourceId) {
     body: JSON.stringify({ id: sourceId }),
   });
 }
+export function setSourceContinuous(sourceId, continuous) {
+  return fetcher.fetch(`${BASE}/source/continuous`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ id: sourceId, continuous }),
+  });
+}
+export function getSourcesProcessing() {
+  return fetcher.fetch(`${BASE}/sources/processing`);
+}
 export async function getSourceCover(sourceId) {
   const { files } = await fetcher.fetch(`${BASE}/source/cover?id=${sourceId}`);
   return {

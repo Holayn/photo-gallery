@@ -13,6 +13,10 @@
             <div class="h-full flex text-left">
               <div class="flex-auto flex flex-col">
                 <div class="line-clamp-2 break-word text-sm text-gray-800">{{ source.alias }}</div>
+                <div v-if="source.processing" class="flex items-center gap-1 text-xs text-gray-500">
+                  <Loading class="w-3 h-3"></Loading>
+                  Processing
+                </div>
                 <div class="flex items-center gap-1">
                   <div class="flex gap-1">
                     <div class="text-xs text-gray-500">{{ source.fileCount }} {{ source.fileCount === 1 ? 'item' : 'items' }}</div>
@@ -66,7 +70,7 @@ import Loading from '../components/Loading.vue';
 import SourceUsersModal from '../components/SourceUsersModal.vue';
 import CreateSourceModal from '../components/CreateSourceModal.vue';
 
-import { getSources, getSourceCover } from '../services/api';
+import { getSources, getSourceCover, getSourcesProcessing } from '../services/api';
 
 export default {
   name: 'Sources',
@@ -84,12 +88,14 @@ export default {
       error: false,
       selectedSource: null,
       showCreateSource: false,
+      processingPollInterval: null,
     };
   },
   async mounted() {
     try {
       this.sources = await getSources();
       this.sources.sort((a, b) => b.alias.localeCompare(a.alias));
+      this.startPollingProcessing();
     } catch (e) {
       this.error = true;
     } finally {
@@ -109,7 +115,36 @@ export default {
       }
     }));
   },
+  beforeUnmount() {
+    this.stopPollingProcessing();
+  },
   methods: {
+    startPollingProcessing() {
+      if (this.processingPollInterval) {
+        return;
+      }
+
+      this.processingPollInterval = setInterval(async () => {
+        try {
+          const statuses = await getSourcesProcessing();
+          const processingById = new Map(statuses.map((s) => [s.id, s.processing]));
+
+          this.sources.forEach((source) => {
+            if (processingById.has(source.id)) {
+              source.processing = processingById.get(source.id);
+            }
+          });
+        } catch (e) {
+          // Transient polling failure - try again next interval.
+        }
+      }, 5000);
+    },
+    stopPollingProcessing() {
+      if (this.processingPollInterval) {
+        clearInterval(this.processingPollInterval);
+        this.processingPollInterval = null;
+      }
+    },
     openSource(source, directory) {
       if (directory) {
         this.$router.push({ name: 'sourceDirectories', params: { sourceId: source.id } });
