@@ -354,7 +354,9 @@ export default {
   },
   mounted() {
     this.$refs.dialog.showModal();
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
 
     this.updatePhotoStripCount();
     window.addEventListener('resize', this.updatePhotoStripCount);
@@ -369,7 +371,9 @@ export default {
   methods: {
     close() {
       this.$refs.dialog?.close();
+      document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
       this.$emit('close');
     },
 
