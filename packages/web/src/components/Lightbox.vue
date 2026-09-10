@@ -247,6 +247,7 @@ export default {
       type: String,
       default: PHOTO_SIZES.SMALL,
     },
+    autoStartSlideshow: Boolean,
   },
   setup() {
     const authStore = useAuthStore();
@@ -362,6 +363,10 @@ export default {
     window.addEventListener('resize', this.updatePhotoStripCount);
 
     this.$nextTick(() => this.scrollThumbIntoView());
+
+    if (this.autoStartSlideshow) {
+      this.startSlideshow();
+    }
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updatePhotoStripCount);

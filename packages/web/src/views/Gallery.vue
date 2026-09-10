@@ -78,6 +78,14 @@
                             Explore
                             <svg slot="suffix" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
                           </sl-menu-item>
+                          <sl-menu-item v-if="settingsStore.photoFrameMode" value="explorePhotosOnly">
+                            Explore (photos only)
+                            <svg slot="suffix" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                          </sl-menu-item>
+                          <sl-menu-item v-if="settingsStore.photoFrameMode" value="slideshowPhotosOnly">
+                            Slideshow (photos only)
+                            <svg slot="suffix" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                          </sl-menu-item>
                           <sl-menu-label>Layout</sl-menu-label>
                           <sl-menu-item :value="LAYOUT_TYPES.AUTO" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.AUTO" data-layout-option>Auto</sl-menu-item>
                           <sl-menu-item :value="LAYOUT_TYPES.JUSTIFIED" type="checkbox" :checked="galleryLayout === LAYOUT_TYPES.JUSTIFIED" data-layout-option>Justified</sl-menu-item>
@@ -149,6 +157,7 @@
       :is-selection-mode="isSelectionMode"
       :selected="selected"
       :preview-size="getLightboxPreviewSize(galleryLayout)"
+      :auto-start-slideshow="autoStartSlideshow"
       @close="closeLightbox()"
       @enable-selection-mode="toggleSelectionMode(true)"
       @select="photo => select(photo)"
@@ -185,7 +194,7 @@
 
 <script>
 import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum, PHOTO_SIZES } from '../services/api';
-import { useAuthStore } from '../store';
+import { useAuthStore, useSettingsStore } from '../store';
 
 import Lightbox from '../components/Lightbox.vue'
 import Loading from '../components/Loading.vue';
@@ -209,7 +218,8 @@ export default {
   },
   setup() {
     const authStore = useAuthStore();
-    return { authStore };
+    const settingsStore = useSettingsStore();
+    return { authStore, settingsStore };
   },
   props: {
     id: {
@@ -255,6 +265,7 @@ export default {
       isShowLightbox: false,
       lightboxIndex: 0,
       explorePhotos: null,
+      autoStartSlideshow: false,
 
       sort: this.defaultSort,
       viewMode: null,
@@ -385,6 +396,7 @@ export default {
     openLightbox(photo) {
       if (!this.isShowLightbox) {
         this.explorePhotos = null;
+        this.autoStartSlideshow = false;
         this.isShowLightbox = true;
 
         if (photo) {
@@ -399,6 +411,25 @@ export default {
       if (this.displayedPhotos.length) {
         this.explorePhotos = shuffle(this.displayedPhotos);
         this.lightboxIndex = 0;
+        this.autoStartSlideshow = false;
+        this.isShowLightbox = true;
+      }
+    },
+    openExplorePhotosOnly() {
+      const photosOnly = this.displayedPhotos.filter(photo => !photo.metadata.video);
+      if (photosOnly.length) {
+        this.explorePhotos = shuffle(photosOnly);
+        this.lightboxIndex = 0;
+        this.autoStartSlideshow = true;
+        this.isShowLightbox = true;
+      }
+    },
+    openSlideshowPhotosOnly() {
+      const photosOnly = this.displayedPhotos.filter(photo => !photo.metadata.video);
+      if (photosOnly.length) {
+        this.explorePhotos = photosOnly;
+        this.lightboxIndex = 0;
+        this.autoStartSlideshow = true;
         this.isShowLightbox = true;
       }
     },
@@ -586,6 +617,12 @@ export default {
       }
       if (item.value === 'explore') {
         this.openExplore();
+      }
+      if (item.value === 'explorePhotosOnly') {
+        this.openExplorePhotosOnly();
+      }
+      if (item.value === 'slideshowPhotosOnly') {
+        this.openSlideshowPhotosOnly();
       }
       if (item.dataset.layoutOption != null) {
         this.galleryLayout = item.value;

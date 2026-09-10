@@ -67,6 +67,12 @@
       <nav v-if="showRightDrawer" class="fixed z-50 top-0 w-full h-full bg-black/25" @click="showRightDrawer = false">
         <div class="bg-white px-8 py-4 h-full absolute right-0 w-[var(--sidebar-nav-width)]" @click.stop>
           <div class="mt-4">
+            <button class="text-left flex items-center gap-2" @click="settingsStore.setPhotoFrameMode(!settingsStore.photoFrameMode)">
+              Enable photo-frame mode
+              <svg v-if="settingsStore.photoFrameMode" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </button>
+          </div>
+          <div class="mt-4">
             <button @click="logout">Logout</button>
           </div>
         </div>
@@ -91,7 +97,7 @@
 <script>
 import Toast from './components/Toast.vue';
 import { logout } from './services/api';
-import { useAuthStore } from './store';
+import { useAuthStore, useSettingsStore } from './store';
 import { redirectToLogin } from './utils.js';
 import Explore from './views/Explore.vue';
 import Pwa from './components/Pwa.vue';
@@ -105,7 +111,8 @@ export default {
   },
   setup() {
     const authStore = useAuthStore();
-    return { authStore };
+    const settingsStore = useSettingsStore();
+    return { authStore, settingsStore };
   },
   data() {
     return {
