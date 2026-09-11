@@ -24,7 +24,7 @@
         </div>
       </div>
 
-      <div v-if="!showMetadata" class="lightbox_menu bottom-0 pt-1 pb-6 md:pb-4 px-6 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
+      <div v-if="!showMetadata && showPhotoStrip" class="lightbox_menu bottom-0 pt-1 pb-6 md:pb-4 px-6 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
         <div ref="photoStrip" class="mb-3 flex gap-1 overflow-hidden">
           <button
             v-for="item in photoStripPhotos"
@@ -270,6 +270,7 @@ export default {
       isSlideshowPlaying: false,
       slideshowTimer: null,
       slideRefs: {},
+      showPhotoStrip: false,
     }
   },
   computed: {
@@ -359,14 +360,20 @@ export default {
     document.body.style.overflow = 'hidden';
     document.body.style.touchAction = 'none';
 
-    this.updatePhotoStripCount();
     window.addEventListener('resize', this.updatePhotoStripCount);
-
-    this.$nextTick(() => this.scrollThumbIntoView());
 
     if (this.autoStartSlideshow) {
       this.startSlideshow();
     }
+
+    // Let the main lightbox image fetch go out first. Do not let the photo strip fetches hog the request limit and delay the main image from loading.
+    setTimeout(() => {
+      this.showPhotoStrip = true;
+      this.$nextTick(() => {
+        this.updatePhotoStripCount();
+        this.scrollThumbIntoView()
+      });
+    });
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updatePhotoStripCount);
