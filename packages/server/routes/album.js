@@ -19,18 +19,6 @@ router.get('/albums', AuthController.authAdmin, (req, res) => {
   );
 });
 
-router.get('/albums/recent', AuthController.authAdmin, (req, res) => {
-  const limit = req.query.limit ? Number(req.query.limit) : 10;
-
-  res.send(
-    AlbumDAO.findRecentlyUpdated(limit).map((album) => ({
-      ...album,
-      id: album.idAlias,
-      fileCount: AlbumService.getFileCount(album.id),
-    }))
-  );
-});
-
 router.get(
   '/album/info',
   requiredParams(['id']),

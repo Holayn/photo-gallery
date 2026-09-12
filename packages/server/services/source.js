@@ -183,6 +183,7 @@ module.exports = {
         }));
 
         this.ingestSourceFileIndex(source);
+        SourceDAO.touch(source.id);
         notify(undefined, `${source.alias} finished processing.`);
       } catch (err) {
         notify(undefined, `${source.alias} failed to process: ${err.message}`);

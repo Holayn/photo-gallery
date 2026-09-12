@@ -6,8 +6,9 @@ class Source {
   filesPath;
   processing;
   continuous;
+  updatedDate;
 
-  constructor({ id, alias, path, processed = true, filesPath, processing = false, continuous = false }) {
+  constructor({ id, alias, path, processed = true, filesPath, processing = false, continuous = false, updatedDate }) {
     this.id = id;
     this.alias = alias;
     this.path = path;
@@ -15,6 +16,7 @@ class Source {
     this.filesPath = filesPath;
     this.processing = Boolean(processing);
     this.continuous = Boolean(continuous);
+    this.updatedDate = updatedDate;
   }
 }
 

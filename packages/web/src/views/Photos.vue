@@ -14,13 +14,13 @@
     </div>
 
     <Loading v-if="loading" class="w-16 h-16"></Loading>
-    <div v-else-if="error" class="text-red-500">Failed to load recently updated albums</div>
-    <div v-else-if="!recentAlbums.length">No recently updated albums</div>
+    <div v-else-if="error" class="text-red-500">Failed to load recently updated collections</div>
+    <div v-else-if="!recentCollections.length">No recently updated collections</div>
     <div v-else class="flex gap-2 overflow-x-auto pb-2">
-      <div v-for="album in recentAlbums" :key="album.id" class="w-32 shrink-0">
-        <CollectionTile :covers="albumCovers[album.id]?.items" :error="!!albumCovers[album.id]?.error" @click="openAlbum(album)">
-          <div class="break-word text-left text-sm text-gray-800">{{ album.name }}</div>
-          <div class="text-left text-xs text-gray-500">{{ formatModifiedDate(album.modifiedDate) }}</div>
+      <div v-for="collection in recentCollections" :key="collectionKey(collection)" class="w-32 shrink-0">
+        <CollectionTile :covers="collectionCovers[collectionKey(collection)]?.items" :error="!!collectionCovers[collectionKey(collection)]?.error" @click="openCollection(collection)">
+          <div class="break-word text-left text-sm text-gray-800">{{ collection.name }}</div>
+          <div class="text-left text-xs text-gray-500">{{ formatUpdatedDate(collection.updatedDate) }}</div>
         </CollectionTile>
       </div>
     </div>
@@ -34,7 +34,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import MemoriesList from '../components/MemoriesList.vue';
 import CollectionTile from '../components/CollectionTile.vue';
 import Loading from '../components/Loading.vue';
-import { getRecentlyUpdatedAlbums, getAlbumCover } from '../services/api';
+import { getRecentlyUpdatedCollections, getAlbumCover, getSourceCover } from '../services/api';
 
 dayjs.extend(relativeTime);
 
@@ -47,40 +47,50 @@ export default {
   },
   data() {
     return {
-      recentAlbums: [],
-      albumCovers: {},
+      recentCollections: [],
+      collectionCovers: {},
       loading: true,
       error: false,
     };
   },
   async mounted() {
     try {
-      this.recentAlbums = await getRecentlyUpdatedAlbums();
+      this.recentCollections = await getRecentlyUpdatedCollections();
     } catch (e) {
       this.error = true;
     } finally {
       this.loading = false;
     }
 
-    await Promise.all(this.recentAlbums.map(async (album) => {
-      this.albumCovers[album.id] = {
+    await Promise.all(this.recentCollections.map(async (collection) => {
+      const key = this.collectionKey(collection);
+      this.collectionCovers[key] = {
         loading: true,
       };
 
       try {
-        const { photos } = await getAlbumCover(album.id);
-        this.albumCovers[album.id].items = photos;
+        const { photos } = collection.type === 'source'
+          ? await getSourceCover(collection.id)
+          : await getAlbumCover(collection.id);
+        this.collectionCovers[key].items = photos;
       } catch (e) {
-        this.albumCovers[album.id].error = true;
+        this.collectionCovers[key].error = true;
       }
     }));
   },
   methods: {
-    formatModifiedDate(modifiedDate) {
-      return dayjs(modifiedDate).fromNow();
+    collectionKey(collection) {
+      return `${collection.type}:${collection.id}`;
     },
-    openAlbum(album) {
-      this.$router.push({ name: 'album', params: { albumId: album.id } });
+    formatUpdatedDate(updatedDate) {
+      return dayjs(updatedDate).fromNow();
+    },
+    openCollection(collection) {
+      if (collection.type === 'source') {
+        this.$router.push({ name: 'source', params: { sourceId: collection.id } });
+      } else {
+        this.$router.push({ name: 'album', params: { albumId: collection.id } });
+      }
     },
   },
 }

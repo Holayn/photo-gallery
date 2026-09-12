@@ -116,8 +116,8 @@ export async function getPhotosFromAlbum(albumId, albumToken) {
 export function getAlbums() {
   return fetcher.fetch(`${BASE}/albums`);
 }
-export function getRecentlyUpdatedAlbums(limit) {
-  const url = new URL(`${BASE}/albums/recent`, window.location.origin);
+export function getRecentlyUpdatedCollections(limit) {
+  const url = new URL(`${BASE}/recently-updated`, window.location.origin);
   if (limit) {
     url.searchParams.append('limit', limit);
   }
