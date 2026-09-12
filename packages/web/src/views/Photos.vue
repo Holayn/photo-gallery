@@ -34,7 +34,8 @@
     <div v-else-if="!photoOfDay">No photo of the day</div>
     <div v-else class="w-32 md:w-60">
       <button class="w-full p-1 bg-slate-100 rounded-md" style="aspect-ratio: 1/1;" @click="showPhotoOfDay = true">
-        <img class="w-full h-full object-cover rounded-sm" :src="photoOfDay.urls.view[PHOTO_SIZES.SMALL]">
+        <img class="hidden md:block w-full h-full object-cover rounded-sm" :src="photoOfDay.urls.view[photoOfDay.metadata.video ? PHOTO_SIZES.SMALL : PHOTO_SIZES.LARGE]">
+        <img class="md:hidden w-full h-full object-cover rounded-sm" :src="photoOfDay.urls.view[PHOTO_SIZES.SMALL]">
       </button>
     </div>
 
