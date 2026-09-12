@@ -1,16 +1,8 @@
 const cron = require('node-cron');
-const webpush = require('web-push');
 const logger = require('./logger');
-const { vapidPublicKey, vapidPrivateKey, vapidEmail } = require('./config');
 const { PushSubscriptionDAO, UserDAO, UserSourceDAO } = require('./db');
 const { getMemories } = require('./memories');
-
-// Configure VAPID
-webpush.setVapidDetails(
-  `mailto:${vapidEmail}`,
-  vapidPublicKey,
-  vapidPrivateKey,
-);
+const { sendToSubscriptions } = require('./push-notification');
 
 // Notify of memories 10 AM.
 cron.schedule('0 10 * * *', async () => {
@@ -75,20 +67,7 @@ cron.schedule('0 10 * * *', async () => {
         icon: '/icon-192x192.png'
       });
 
-      subscriptions.forEach(subscription => {
-        pushPromises.push((async () => {
-          try {
-            await webpush.sendNotification(subscription.subscription, payload);
-          } catch (err) {
-            logger.error(`Failed to send push notification (subscription #${subscription.id})`, err);
-
-            // Clean up expired / unsubscribed endpoints (HTTP 410 Gone or 404)
-            if (err.statusCode === 410 || err.statusCode === 404) {
-              PushSubscriptionDAO.deleteById(subscription.id);
-            }
-          }
-        })());
-      });
+      pushPromises.push(sendToSubscriptions(subscriptions, payload));
     });
 
     await Promise.all(pushPromises);

@@ -1,4 +1,6 @@
 const SourceService = require('./source');
+const PushNotification = require('./push-notification');
+const logger = require('./logger');
 const { generateUniqueRandomNumbers, generateRandomString } = require('../util/random');
 
 const { AlbumDAO, AlbumFileDAO, GalleryFileDAO, SourceDAO, transaction } = require('./db');
@@ -19,7 +21,7 @@ module.exports = {
     transaction(() => {
       // Make all added files have the same createdAt time, so that they appear to have been added at the same time rather than milliseconds apart.
       const createdAt = new Date().getTime();
-      let changed = false;
+      let addedCount = 0;
 
       Object.keys(files).forEach((file) => {
         const f = files[file];
@@ -28,15 +30,17 @@ module.exports = {
           f.sourceFileId
         );
         if (existingFile) {
-          const existsInAlbum = AlbumFileDAO.getByAlbumIdFileId(
+          const existingAlbumFile = AlbumFileDAO.findAnyByAlbumIdFileId(
             albumId,
             existingFile.id
           );
-          if (!existsInAlbum) {
+          if (!existingAlbumFile) {
             AlbumFileDAO.insert(
               new AlbumFile({ albumId, fileId: existingFile.id, createdAt })
             );
-            changed = true;
+            addedCount += 1;
+          } else if (existingAlbumFile.hidden) {
+            AlbumFileDAO.unhide(albumId, existingFile.id, createdAt);
           }
         } else {
           const sourceFile = SourceService.getFile(f.sourceId, f.sourceFileId);
@@ -47,12 +51,18 @@ module.exports = {
             })
           );
           AlbumFileDAO.insert(new AlbumFile({ albumId, fileId: newFileId }));
-          changed = true;
+          addedCount += 1;
         }
       });
 
-      if (changed) {
+      if (addedCount > 0) {
         AlbumDAO.touch(albumId, createdAt);
+
+        const album = AlbumDAO.getById(albumId);
+        PushNotification.notifyAll({
+          title: 'New Photos',
+          body: `${addedCount} new ${addedCount > 1 ? 'photos were' : 'photo was'} added to ${album.name}.`,
+        }).catch((err) => logger.error(`Failed to send push notification for album #${albumId}`, err));
       }
     });
   },
@@ -73,7 +83,7 @@ module.exports = {
             existingFile.id
           );
           if (existsInAlbum) {
-            AlbumFileDAO.deleteByFileId(existingFile.id);
+            AlbumFileDAO.hide(albumId, existingFile.id);
             changed = true;
           }
         }

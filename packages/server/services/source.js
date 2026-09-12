@@ -3,6 +3,7 @@ const fs = require('fs');
 const ProcessorSource = require('./processor-source/processor-source');
 const logger = require('./logger');
 const notify = require('./notify');
+const PushNotification = require('./push-notification');
 const { enqueue } = require('./processing-queue');
 const { baseUrl, filesPath, webImgToolPath } = require('./config');
 const { PHOTO_SIZES } = require('../constants/photo');
@@ -14,6 +15,10 @@ const Source = require('../model/source');
 function findConfigPath(sourcePath) {
   const configFile = fs.readdirSync(sourcePath).find((file) => file.endsWith('config.json'));
   return configFile ? path.join(sourcePath, configFile) : undefined;
+}
+
+function countIndexedFiles(sourceId) {
+  return GalleryFileDAO.findBySourceId(sourceId).length;
 }
 
 module.exports = {
@@ -176,6 +181,8 @@ module.exports = {
   runProcessing(source, webImgConfigPath) {
     return (async () => {
       try {
+        const fileCountBefore = countIndexedFiles(source.id);
+
         const { execa } = await import('execa');
         await enqueue(() => execa('npm', ['run', 'start', '--', '--config', webImgConfigPath], {
           cwd: webImgToolPath,
@@ -183,8 +190,18 @@ module.exports = {
         }));
 
         this.ingestSourceFileIndex(source);
+        const fileCountAfter = countIndexedFiles(source.id);
+
         SourceDAO.touch(source.id);
         notify(undefined, `${source.alias} finished processing.`);
+
+        const addedCount = fileCountAfter - fileCountBefore;
+        if (addedCount > 0) {
+          PushNotification.notifyAll({
+            title: 'New Photos',
+            body: `${addedCount} new ${addedCount > 1 ? 'photos were' : 'photo was'} added to ${source.alias}.`,
+          }).catch((err) => logger.error(`Failed to send push notification for source #${source.id}`, err));
+        }
       } catch (err) {
         notify(undefined, `${source.alias} failed to process: ${err.message}`);
         throw err;
