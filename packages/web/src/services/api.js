@@ -134,6 +134,15 @@ export async function getAlbumCover(albumId) {
     photos: files.map(f => new Photo(f)),
   };
 }
+export function deleteAlbum(albumId) {
+  return fetcher.fetch(`${BASE}/album/delete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ id: albumId }),
+  });
+}
 export function createAlbum(name, files) {
   return fetcher.fetch(`${BASE}/album`, {
     method: 'POST',

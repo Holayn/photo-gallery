@@ -161,6 +161,10 @@ module.exports = {
       }));
   },
 
+  deleteAlbum(albumId) {
+    AlbumDAO.hide(albumId);
+  },
+
   generateAlbumToken(id) {
     const album = AlbumDAO.getById(id);
     if (album.token) {

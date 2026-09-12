@@ -21,9 +21,12 @@
         <span v-else>{{ title }}</span>
       </h1>
     </template>
-    <template v-if="authStore.isLoggedIn" #controls> 
+    <template v-if="authStore.isLoggedIn" #controls>
       <button class="p-2 text-gray-700" @click="showModalAlbumLink()">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+      </button>
+      <button class="p-2 text-gray-700" @click="onDeleteAlbum" title="Delete album">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
       </button>
     </template>
     <template v-if="brokenAlbumPhotos.length" #notices>
@@ -60,7 +63,7 @@ import Loading from '../components/Loading.vue';
 import Modal from '../components/Modal.vue';
 import Gallery from './Gallery.vue';
 
-import { getPhotosFromAlbum, getAlbum, shareAlbum, getSources } from '../services/api';
+import { getPhotosFromAlbum, getAlbum, shareAlbum, deleteAlbum, getSources } from '../services/api';
 import { setDocumentTitle } from '../utils';
 import { useAuthStore } from '../store';
 import Photo from '../model/photo';
@@ -195,6 +198,18 @@ export default {
     copyToClipboard(link) {
       window.navigator.clipboard.writeText(link);
       this.isModalAlbumLinkCopied = true;
+    },
+    async onDeleteAlbum() {
+      if (!confirm(`Are you sure you want to delete "${this.album.name}"?`)) {
+        return;
+      }
+
+      try {
+        await deleteAlbum(this.albumId);
+        this.$router.push({ name: 'albums' });
+      } catch (e) {
+        alert(`Error deleting album: ${e.message}`);
+      }
     },
   }
 }

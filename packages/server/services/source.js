@@ -314,14 +314,19 @@ function setFileProperties(sourceId, sourceFiles) {
   });
   albumIds.forEach(albumId => {
     const album = AlbumDAO.getById(albumId);
-    albums[albumId] = {
-      name: album.name,
-      idAlias: album.idAlias,
-    };
+    if (album && !album.hidden) {
+      albums[albumId] = {
+        name: album.name,
+        idAlias: album.idAlias,
+      };
+    }
   });
 
   const fileIdToAlbum = {};
   albumFiles.forEach(af => {
+    if (!albums[af.albumId]) {
+      return;
+    }
     if (!fileIdToAlbum[af.fileId]) {
       fileIdToAlbum[af.fileId] = [];
     }

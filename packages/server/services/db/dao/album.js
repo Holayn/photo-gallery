@@ -14,23 +14,28 @@ module.exports = {
     ).run({ idAlias, name, modifiedDate }).lastInsertRowid;
   },
   findAll() {
-    return DB.prepare('SELECT * FROM album')
+    return DB.prepare('SELECT * FROM album WHERE hidden = 0')
       .all()
       .map((a) => toAlbumModel(a));
   },
   findRecentlyUpdated(limit = 10) {
     return DB.prepare(
-      'SELECT * FROM album WHERE modified_date IS NOT NULL ORDER BY modified_date DESC LIMIT ?'
+      'SELECT * FROM album WHERE modified_date IS NOT NULL AND hidden = 0 ORDER BY modified_date DESC LIMIT ?'
     )
       .all(limit)
       .map((a) => toAlbumModel(a));
   },
+  // Internal lookup by primary key - not filtered by hidden, since it's used
+  // by trusted server-side code that already knows which album it wants
+  // (e.g. right after inserting/updating one).
   getById(id) {
     return toAlbumModel(DB.prepare('SELECT * FROM album WHERE id = ?').get(id));
   },
+  // Public lookup by the id exposed to clients - hidden (i.e. "deleted")
+  // albums are unreachable here, same as if the row didn't exist.
   getByIdAlias(idAlias) {
     return toAlbumModel(
-      DB.prepare('SELECT * FROM album WHERE id_alias = ?').get(idAlias)
+      DB.prepare('SELECT * FROM album WHERE id_alias = ? AND hidden = 0').get(idAlias)
     );
   },
   update({ id, name, token }) {
@@ -42,5 +47,8 @@ module.exports = {
     DB.prepare(
       'UPDATE album SET modified_date = @modifiedDate WHERE id = @id'
     ).run({ id, modifiedDate });
+  },
+  hide(id) {
+    DB.prepare('UPDATE album SET hidden = 1 WHERE id = ?').run(id);
   },
 };
