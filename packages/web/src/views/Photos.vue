@@ -24,6 +24,28 @@
         </CollectionTile>
       </div>
     </div>
+
+    <div class="mt-4 mb-2">
+      <div class="text-lg">Photo of the Day</div>
+    </div>
+
+    <Loading v-if="photoOfDayLoading" class="w-16 h-16"></Loading>
+    <div v-else-if="photoOfDayError" class="text-red-500">Failed to load photo of the day</div>
+    <div v-else-if="!photoOfDay">No photo of the day</div>
+    <div v-else class="w-32 md:w-60">
+      <button class="w-full p-1 bg-slate-100 rounded-md" style="aspect-ratio: 1/1;" @click="showPhotoOfDay = true">
+        <img class="w-full h-full object-cover rounded-sm" :src="photoOfDay.urls.view[PHOTO_SIZES.THUMB]">
+      </button>
+    </div>
+
+    <Lightbox
+      v-if="showPhotoOfDay"
+      :photos="[photoOfDay]"
+      :index="0"
+      :is-selection-mode="false"
+      :selected="{}"
+      @close="showPhotoOfDay = false"
+    ></Lightbox>
   </div>
 </template>
 
@@ -33,8 +55,9 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 import MemoriesList from '../components/MemoriesList.vue';
 import CollectionTile from '../components/CollectionTile.vue';
+import Lightbox from '../components/Lightbox.vue';
 import Loading from '../components/Loading.vue';
-import { getRecentlyUpdatedCollections, getAlbumCover, getSourceCover } from '../services/api';
+import { getRecentlyUpdatedCollections, getAlbumCover, getSourceCover, getPhotoOfDay, PHOTO_SIZES } from '../services/api';
 
 dayjs.extend(relativeTime);
 
@@ -43,42 +66,63 @@ export default {
   components: {
     MemoriesList,
     CollectionTile,
+    Lightbox,
     Loading,
   },
   data() {
     return {
+      PHOTO_SIZES,
       recentCollections: [],
       collectionCovers: {},
       loading: true,
       error: false,
+      photoOfDay: null,
+      photoOfDayLoading: true,
+      photoOfDayError: false,
+      showPhotoOfDay: false,
     };
   },
   async mounted() {
-    try {
-      this.recentCollections = await getRecentlyUpdatedCollections();
-    } catch (e) {
-      this.error = true;
-    } finally {
-      this.loading = false;
-    }
-
-    await Promise.all(this.recentCollections.map(async (collection) => {
-      const key = this.collectionKey(collection);
-      this.collectionCovers[key] = {
-        loading: true,
-      };
-
-      try {
-        const { photos } = collection.type === 'source'
-          ? await getSourceCover(collection.id)
-          : await getAlbumCover(collection.id);
-        this.collectionCovers[key].items = photos;
-      } catch (e) {
-        this.collectionCovers[key].error = true;
-      }
-    }));
+    await Promise.all([
+      this.loadRecentCollections(),
+      this.loadPhotoOfDay(),
+    ]);
   },
   methods: {
+    async loadRecentCollections() {
+      try {
+        this.recentCollections = await getRecentlyUpdatedCollections();
+      } catch (e) {
+        this.error = true;
+      } finally {
+        this.loading = false;
+      }
+
+      await Promise.all(this.recentCollections.map(async (collection) => {
+        const key = this.collectionKey(collection);
+        this.collectionCovers[key] = {
+          loading: true,
+        };
+
+        try {
+          const { photos } = collection.type === 'source'
+            ? await getSourceCover(collection.id)
+            : await getAlbumCover(collection.id);
+          this.collectionCovers[key].items = photos;
+        } catch (e) {
+          this.collectionCovers[key].error = true;
+        }
+      }));
+    },
+    async loadPhotoOfDay() {
+      try {
+        this.photoOfDay = await getPhotoOfDay();
+      } catch (e) {
+        this.photoOfDayError = true;
+      } finally {
+        this.photoOfDayLoading = false;
+      }
+    },
     collectionKey(collection) {
       return `${collection.type}:${collection.id}`;
     },

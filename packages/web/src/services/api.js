@@ -183,6 +183,11 @@ export async function shareAlbum(album) {
   return token;
 }
 
+export async function getPhotoOfDay() {
+  const photo = await fetcher.fetch(`${BASE}/photo/of-day`);
+  return photo ? new Photo(photo) : null;
+}
+
 export async function sharePhoto(photo) {
   const { shareUrl } = await fetcher.fetch(`${BASE}/photo/share`, {
     method: 'POST',

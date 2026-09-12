@@ -106,4 +106,30 @@ module.exports = {
       DB.prepare(`SELECT f.* ${unexploredInSources} LIMIT 1 OFFSET ?`).get(userId, ...sourceIds, offset)
     );
   },
+  // Deterministic pick among sourceIds for a given integer seed - the same
+  // seed (e.g. derived from today's date) always returns the same file, so
+  // callers get a stable "pick of the day" rather than a fresh random file
+  // on every request. ORDER BY id makes the offset meaningful across calls.
+  findRandomForSeed(seed, sourceIds) {
+    if (!sourceIds.length) {
+      return null;
+    }
+
+    const placeholders = sourceIds.map(() => '?').join(',');
+
+    const { count } = DB.prepare(
+      `SELECT COUNT(*) AS count FROM file WHERE source_id IN (${placeholders})`
+    ).get(...sourceIds);
+    if (!count) {
+      return null;
+    }
+
+    const offset = seed % count;
+
+    return toGalleryFileModel(
+      DB.prepare(
+        `SELECT * FROM file WHERE source_id IN (${placeholders}) ORDER BY id LIMIT 1 OFFSET ?`
+      ).get(...sourceIds, offset)
+    );
+  },
 };

@@ -5,11 +5,29 @@ const send = require('send');
 const config = require('../services/config');
 const SourceService = require('../services/source');
 const PhotoService = require('../services/photo');
+const PhotoOfDayService = require('../services/photo-of-day');
 const AuthController = require('../controllers/auth');
 const logger = require('../services/logger');
+const { UserDAO } = require('../services/db');
 const { asyncHandler, requiredParams, requiredBody } = require('../util/route-utils');
 
 const router = express.Router();
+
+router.get(
+  '/photo/of-day',
+  AuthController.authAdmin,
+  asyncHandler(async (req, res) => {
+    const { username } = req.session.user;
+    const user = UserDAO.getByUsername(username);
+
+    if (!user) {
+      res.status(400).send('Failed to find user from session');
+      return;
+    }
+
+    res.json(PhotoOfDayService.getPhotoOfDay(user));
+  })
+);
 
 router.get(
   '/photo',
