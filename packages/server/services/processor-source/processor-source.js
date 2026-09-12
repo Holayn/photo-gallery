@@ -103,17 +103,6 @@ class ProcessorSource {
       .get());
   }
 
-  findLatest() {
-    return toModel(this.db
-      .prepare(`
-        SELECT * FROM ${FILES_TABLE_NAME}
-        WHERE processed != 0 AND date != 0
-        ORDER BY date DESC
-        LIMIT 1
-      `)
-      .get());
-  }
-
   findBetweenDates(startDate, endDate) {
     return this.db
       .prepare(
