@@ -9,15 +9,15 @@
 
     <MemoriesList layout="row"></MemoriesList>
 
-    <div class="mt-6 mb-2">
+    <div class="mt-4 mb-2">
       <div class="text-lg">Recently Updated</div>
     </div>
 
     <Loading v-if="loading" class="w-16 h-16"></Loading>
     <div v-else-if="error" class="text-red-500">Failed to load recently updated collections</div>
     <div v-else-if="!recentCollections.length">No recently updated collections</div>
-    <div v-else class="flex gap-2 overflow-x-auto pb-2">
-      <div v-for="collection in recentCollections" :key="collectionKey(collection)" class="w-32 shrink-0">
+    <div v-else class="flex gap-2 overflow-x-auto">
+      <div v-for="collection in recentCollections" :key="collectionKey(collection)" class="w-32 md:w-60 shrink-0">
         <CollectionTile :covers="collectionCovers[collectionKey(collection)]?.items" :error="!!collectionCovers[collectionKey(collection)]?.error" @click="openCollection(collection)">
           <div class="break-word text-left text-sm text-gray-800">{{ collection.name }}</div>
           <div class="text-left text-xs text-gray-500">{{ formatUpdatedDate(collection.updatedDate) }}</div>

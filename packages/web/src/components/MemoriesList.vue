@@ -42,10 +42,10 @@ export default {
   },
   computed: {
     containerClass() {
-      return this.layout === 'row' ? 'flex gap-2 overflow-x-auto pb-2' : 'flex flex-wrap gap-2';
+      return this.layout === 'row' ? 'flex gap-2 overflow-x-auto' : 'flex flex-wrap gap-2';
     },
     itemClass() {
-      return this.layout === 'row' ? 'w-32 shrink-0' : 'min-w-32 max-w-60';
+      return this.layout === 'row' ? 'w-32 md:w-60 shrink-0' : 'min-w-32 max-w-60';
     },
     itemStyle() {
       return this.layout === 'row' ? {} : { width: 'calc(50% - 0.5rem)' };
