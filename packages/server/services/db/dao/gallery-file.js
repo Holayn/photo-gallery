@@ -66,13 +66,19 @@ module.exports = {
   // long as that occurrence is strictly before beforeDate (excludes today/future).
   findOnMonthDayBefore(monthDay, beforeDate) {
     /**
-     * date is stored in epoch milliseconds, but strftime's 'unixepoch' modifier 
-     * expects epoch seconds, hence the / 1000. '%m-%d' then extracts just the 
+     * date is stored in epoch milliseconds, but strftime's 'unixepoch' modifier
+     * expects epoch seconds, hence the / 1000. '%m-%d' then extracts just the
      * month and day (dropping the year) so this matches across every year at once.
+     * The 'localtime' modifier matters: without it, strftime extracts the
+     * month/day in UTC, while `monthDay`/`beforeDate` are computed from the
+     * server's local time (dayjs()) by the caller. For any non-UTC server
+     * timezone, that mismatch lets a photo from just a few hours ago (still
+     * "today" locally but already "tomorrow" in UTC, or vice versa) get
+     * miscategorized as matching today's local month/day.
      */
     return DB.prepare(
       `SELECT * FROM file
-       WHERE strftime('%m-%d', date / 1000, 'unixepoch') = ?
+       WHERE strftime('%m-%d', date / 1000, 'unixepoch', 'localtime') = ?
          AND date < ?
        ORDER BY date DESC`
     )
