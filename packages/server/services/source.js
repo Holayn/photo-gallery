@@ -3,6 +3,7 @@ const fs = require('fs');
 const ProcessorSource = require('./processor-source/processor-source');
 const logger = require('./logger');
 const notify = require('./notify');
+const { enqueue } = require('./processing-queue');
 const { baseUrl, filesPath, webImgToolPath } = require('./config');
 const { PHOTO_SIZES } = require('../constants/photo');
 const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = require('./db');
@@ -120,10 +121,10 @@ module.exports = {
 
     const promise = (async () => {
       const { execa } = await import('execa');
-      await execa('npm', ['run', 'start', '--', '--config', webImgConfigPath], {
+      await enqueue(() => execa('npm', ['run', 'start', '--', '--config', webImgConfigPath], {
         cwd: webImgToolPath,
         stdio: 'inherit',
-      });
+      }));
 
       const source = SourceDAO.getById(id);
       source.processed = true;
@@ -157,13 +158,23 @@ module.exports = {
     SourceDAO.update(source);
     notify(undefined, `${source.alias} started processing.`);
 
+    return this.runProcessing(source, webImgConfigPath);
+  },
+
+  // Runs webimg (queued behind any other in-flight run) and reconciles the
+  // centralized index afterward. Assumes `source.processing` is already true
+  // and the config path has already been validated - shared by processSource()
+  // above and resumeInterruptedProcessing() below, which re-enters here
+  // directly for sources a crash/restart left mid-run, without going back
+  // through processSource()'s own "already processing" guard.
+  runProcessing(source, webImgConfigPath) {
     return (async () => {
       try {
         const { execa } = await import('execa');
-        await execa('npm', ['run', 'start', '--', '--config', webImgConfigPath], {
+        await enqueue(() => execa('npm', ['run', 'start', '--', '--config', webImgConfigPath], {
           cwd: webImgToolPath,
           stdio: 'inherit',
-        });
+        }));
 
         this.ingestSourceFileIndex(source);
         notify(undefined, `${source.alias} finished processing.`);
@@ -175,6 +186,30 @@ module.exports = {
         SourceDAO.update(source);
       }
     })();
+  },
+
+  // Called once at server startup. A source left with processing=true has no
+  // actual webimg process behind it anymore - the process that was running
+  // it is gone - so without this it would stay stuck "processing" forever.
+  // Re-enqueues each one to actually finish the job.
+  resumeInterruptedProcessing() {
+    SourceDAO.findAll()
+      .filter((source) => source.processing)
+      .forEach((source) => {
+        const webImgConfigPath = path.join(source.path, 'config.json');
+
+        if (!fs.existsSync(webImgConfigPath)) {
+          logger.error(`${source.alias} was left processing after a restart, but its config is missing - skipping...`);
+          source.processing = false;
+          SourceDAO.update(source);
+          return;
+        }
+
+        logger.info(`${source.alias} was left processing after a restart, resuming...`);
+        this.runProcessing(source, webImgConfigPath).catch((err) => {
+          logger.error(`Failed to process source ${source.alias}`, err);
+        });
+      });
   },
 
   findFiles(sourceId, startDateRange, directory) {

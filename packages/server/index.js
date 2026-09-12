@@ -13,6 +13,7 @@ require('./services/job');
 
 logger.init(true);
 
+require('./services/source').resumeInterruptedProcessing();
 require('./services/source-watcher').initSourceWatchers();
 
 const { apiRouter, pageRouter } = require('./routes');
