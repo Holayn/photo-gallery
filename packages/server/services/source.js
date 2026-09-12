@@ -9,6 +9,13 @@ const { PHOTO_SIZES } = require('../constants/photo');
 const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = require('./db');
 const Source = require('../model/source');
 
+// A source's webimg config may be named anything as long as it ends with
+// "config.json" - find whichever file in the source's directory matches.
+function findConfigPath(sourcePath) {
+  const configFile = fs.readdirSync(sourcePath).find((file) => file.endsWith('config.json'));
+  return configFile ? path.join(sourcePath, configFile) : undefined;
+}
+
 module.exports = {
   addSource(sourcePath, alias, { processed = true, filesPath } = {}) {
     return transaction(() => {
@@ -148,9 +155,8 @@ module.exports = {
       throw new Error(`${source.alias} is already processing.`);
     }
 
-    const webImgConfigPath = path.join(source.path, 'config.json');
-
-    if (!fs.existsSync(webImgConfigPath)) {
+    const webImgConfigPath = findConfigPath(source.path);
+    if (!webImgConfigPath) {
       throw new Error(`No webimg config file found in ${source.path}.`);
     }
 
@@ -196,9 +202,9 @@ module.exports = {
     SourceDAO.findAll()
       .filter((source) => source.processing)
       .forEach((source) => {
-        const webImgConfigPath = path.join(source.path, 'config.json');
+        const webImgConfigPath = findConfigPath(source.path);
 
-        if (!fs.existsSync(webImgConfigPath)) {
+        if (!webImgConfigPath) {
           logger.error(`${source.alias} was left processing after a restart, but its config is missing - skipping...`);
           source.processing = false;
           SourceDAO.update(source);
