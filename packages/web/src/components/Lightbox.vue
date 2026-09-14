@@ -329,8 +329,9 @@ export default {
     },
 
     photoStripPhotos() {
-      const start = Math.max(0, this.index - Math.floor(this.photoStripCount / 2));
-      const end = Math.min(this.index + this.photoStripCount + start, this.photos.length);
+      const sideCount = Math.floor(this.photoStripCount / 2);
+      const start = Math.max(0, this.index - sideCount);
+      const end = Math.min(this.index + sideCount, this.photos.length);
       return this.photos.slice(start, end).map((photo, i) => ({ photo, index: start + i }));
     },
     photoStripPhotoSize() {
