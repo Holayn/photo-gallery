@@ -25,33 +25,33 @@
       </div>
 
       <div v-if="!showMetadata && showPhotoStrip" class="lightbox_menu bottom-0 pt-1 pb-6 md:pb-4 px-6 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
-        <div ref="photoStrip" class="mb-3 flex gap-1 overflow-hidden">
-          <button
-            v-for="item in photoStripPhotos"
-            :key="item.photo.id"
-            :ref="el => setThumbRef(item.photo.id, el)"
-            class="relative shrink-0 h-10 rounded-sm"
-            :class="[item.index === index ? 'w-12 md:w-16' : 'w-8 md:w-10', { 'border-2': item.index === index }]"
-            @click.stop="goToPhoto(item.index)"
-          >
-            <div v-if="thumbs[item.photo.id]?.error" class="h-full w-full rounded-sm bg-slate-700 flex items-center justify-center text-white text-xs">:(</div>
-            <template v-else>
-              <div v-if="!thumbs[item.photo.id]?.loaded" class="h-full w-full rounded-sm bg-slate-700 flex items-center justify-center">
-                <Loading class="w-6 h-6"></Loading>
-              </div>
-              <img
-                class="h-full w-full rounded-sm object-cover"
-                :class="{ hidden: !thumbs[item.photo.id]?.loaded }"
-                :src="item.photo.urls.view[photoStripPhotoSize]"
-                :alt="item.photo.metadata.fileName"
-                @load="thumbLoad(item.photo)"
-                @error="thumbError(item.photo)"
-              >
-            </template>
-            <div v-if="item.photo.metadata.video" class="absolute bottom-0.5 right-0.5">
-              <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            </div>
-          </button>
+        <div ref="photoStrip" class="mb-3 grid gap-1 overflow-hidden" style="grid-template-columns: 1fr auto 1fr;">
+          <div class="flex justify-end gap-1">
+            <PhotoStripPhoto
+              v-for="item in photoStripPhotos.filter(item => item.index < index)"
+              :key="item.photo.id"
+              :ref="el => setThumbRef(item.photo.id, el)"
+              :photo="item.photo"
+              @click="goToPhoto(item.index)"
+            ></PhotoStripPhoto>
+          </div>
+
+          <PhotoStripPhoto
+            :ref="el => setThumbRef(activePhotoStripPhoto.photo.id, el)"
+            :photo="activePhotoStripPhoto.photo"
+            active
+            @click="goToPhoto(activePhotoStripPhoto.index)"
+          ></PhotoStripPhoto>
+
+          <div class="flex gap-1">
+            <PhotoStripPhoto
+              v-for="item in photoStripPhotos.filter(item => item.index > index)"
+              :key="item.photo.id"
+              :ref="el => setThumbRef(item.photo.id, el)"
+              :photo="item.photo"
+              @click="goToPhoto(item.index)"
+            ></PhotoStripPhoto>
+          </div>
         </div>
         <div class="lightbox_menugrid">
           <div class="flex items-center gap-2">
@@ -202,7 +202,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import LightboxSlide from './LightboxSlide.vue';
-import Loading from './Loading.vue';
+import PhotoStripPhoto from './PhotoStripPhoto.vue';
 import Toast from './Toast.vue';
 
 import { PHOTO_SIZES, sharePhoto } from '../services/api';
@@ -227,7 +227,7 @@ export default {
   name: 'Lightbox',
   components: {
     LightboxSlide,
-    Loading,
+    PhotoStripPhoto,
     Swiper,
     SwiperSlide,
     Toast,
@@ -265,7 +265,7 @@ export default {
       swiper: null,
       showMetadata: false,
       showMenu: true,
-      thumbs: {},
+      thumbRefs: {},
       photoStripCount: 5,
       isSlideshowPlaying: false,
       slideshowTimer: null,
@@ -334,8 +334,8 @@ export default {
       const end = Math.min(this.index + sideCount, this.photos.length);
       return this.photos.slice(start, end).map((photo, i) => ({ photo, index: start + i }));
     },
-    photoStripPhotoSize() {
-      return PHOTO_SIZES.THUMB;
+    activePhotoStripPhoto() {
+      return this.photoStripPhotos.find(photo => photo.index === this.index);
     },
   },
   watch: {
@@ -508,19 +508,13 @@ export default {
     },
     setThumbRef(photoId, el) {
       if (el) {
-        (this.thumbs[photoId] ??= {}).ref = el;
-      } else if (this.thumbs[photoId]) {
-        delete this.thumbs[photoId].ref;
+        this.thumbRefs[photoId] = el;
+      } else if (this.thumbRefs[photoId]) {
+        delete this.thumbRefs[photoId];
       }
     },
     scrollThumbIntoView() {
-      this.thumbs[this.currentPhoto.id]?.ref?.scrollIntoView({ inline: 'center', block: 'nearest' });
-    },
-    thumbLoad(photo) {
-      (this.thumbs[photo.id] ??= {}).loaded = true;
-    },
-    thumbError(photo) {
-      (this.thumbs[photo.id] ??= {}).error = true;
+      this.thumbRefs[this.currentPhoto.id]?.scrollIntoView({ inline: 'center', block: 'nearest' });
     },
 
     enableSelectionMode() {
