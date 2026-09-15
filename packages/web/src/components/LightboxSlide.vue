@@ -45,7 +45,6 @@ export default {
       default: false,
     },
     photo: Object,
-    index: Number,
     previewSize: {
       type: String,
       default: PHOTO_SIZES.SMALL,

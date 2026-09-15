@@ -104,6 +104,7 @@
             :zoom="!photo.metadata.video"
           >
             <lightbox-slide
+              v-if="i === (index - 1) || i === index || i === (index + 1)"
               :ref="el => setSlideRef(i, el)"
               :active="i === index"
               :index="i"
