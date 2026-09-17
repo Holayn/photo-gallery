@@ -183,11 +183,15 @@ module.exports = {
       try {
         const fileCountBefore = countIndexedFiles(source.id);
 
+        logger.info(`Started processing ${source.alias}`);
+
         const { execa } = await import('execa');
         await enqueue(() => execa('npm', ['run', 'start', '--', '--config', webImgConfigPath], {
           cwd: webImgToolPath,
           stdio: 'inherit',
         }));
+
+        logger.info(`Finishing processing ${source.alias}`);
 
         this.ingestSourceFileIndex(source);
         const fileCountAfter = countIndexedFiles(source.id);
