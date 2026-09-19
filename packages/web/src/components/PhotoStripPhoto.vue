@@ -14,7 +14,7 @@
         :class="{ hidden: !loaded }"
         :src="photo.urls.view[PHOTO_SIZES.THUMB]"
         :alt="photo.metadata.fileName"
-        @load="loaded = true"
+        @load="onImageLoad"
         @error="error = true"
       >
     </template>
@@ -54,6 +54,10 @@ export default {
     // Lets the parent scroll the active thumbnail into view via a template ref.
     scrollIntoView(options) {
       this.$el.scrollIntoView(options);
+    },
+    onImageLoad() {
+      this.loaded = true
+      this.error = false;
     },
   },
 }
