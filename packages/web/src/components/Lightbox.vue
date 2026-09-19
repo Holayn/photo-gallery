@@ -70,9 +70,14 @@
           </div>
           <div class="flex justify-center items-center">
             <button @click.stop="toggleSlideshow()">
-              <svg v-if="!isSlideshowPlaying" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <svg v-if="!slideshow.playing" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
               <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
             </button>
+            <template v-if="slideshow.playing">
+              <button @click.stop="showSlideshowSettings = true">
+                <svg class="text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </template>
           </div>
           <div class="flex justify-end items-center">
             <button class="ml-4" @click.stop="download()">
@@ -85,6 +90,7 @@
       <div class="flex flex-col h-full">
         <swiper
           class="min-h-0 h-full w-full"
+          :key="slideshow.effect"
           :keyboard="{enabled: true, onlyInViewport: false}"
           :modules="modules"
           :space-between="50"
@@ -93,6 +99,8 @@
           centered-slides
           virtual
           zoom
+          :effect="slideshow.effect"
+          :fade-effect="{ crossFade: slideshow.effect === 'fade' }"
           @activeIndexChange="_swiperOnActiveIndexChange"
           @afterInit="_swiperOnAfterInit"
           @click="toggleMenu"
@@ -185,14 +193,39 @@
       </div>
     </div>
 
+    <Modal v-if="showSlideshowSettings" size="md" @close="showSlideshowSettings = false">
+      <div class="grid grid-cols-1 gap-2">
+        <div>
+          <label>Interval</label>
+          <div>
+            <select v-model="slideshow.interval" class="border rounded px-2 py-1">
+              <option v-for="interval in slideshowIntervals" :key="interval" :value="interval">{{ interval/1000 }} seconds</option>
+            </select>
+          </div>
+        </div>
+        
+        <div>
+          <div>Effect</div>
+          <div>
+            <input v-model="slideshow.effect" id="slide" type="radio" name="effect" :value="null">
+            <label class="ml-1" for="slide">Slide</label>
+          </div>
+          <div>
+            <input v-model="slideshow.effect" id="fade" type="radio" name="effect" value="fade">
+            <label class="ml-1" for="fade">Fade</label>
+          </div>
+        </div>
+      </div>
+    </Modal>
     <Toast></Toast>
   </dialog>
 </template>
 
 <script>
-import { Keyboard, Virtual, Zoom } from 'swiper/modules';
+import { EffectFade, Keyboard, Virtual, Zoom } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import 'swiper/css';
+import 'swiper/css/effect-fade';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/zoom';
@@ -205,6 +238,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import LightboxSlide from './LightboxSlide.vue';
 import PhotoStripPhoto from './PhotoStripPhoto.vue';
 import Toast from './Toast.vue';
+import Modal from './Modal.vue';
 
 import { PHOTO_SIZES, sharePhoto } from '../services/api';
 import { useAuthStore } from '../store';
@@ -222,12 +256,13 @@ const PHOTO_STRIP_THUMB_SIZE_DESKTOP = 40;
 const PHOTO_STRIP_THUMB_GAP = 4;
 const PHOTO_STRIP_DESKTOP_BREAKPOINT = 768;
 
-const SLIDESHOW_INTERVAL_MS = 5000;
+const DEFAULT_SLIDESHOW_INTERVAL_MS = 5000;
 
 export default {
   name: 'Lightbox',
   components: {
     LightboxSlide,
+    Modal,
     PhotoStripPhoto,
     Swiper,
     SwiperSlide,
@@ -255,6 +290,7 @@ export default {
     return {
       authStore,
       modules: [
+        EffectFade,
         Keyboard,
         Virtual,
         Zoom,
@@ -268,10 +304,15 @@ export default {
       showMenu: true,
       thumbRefs: {},
       photoStripCount: 5,
-      isSlideshowPlaying: false,
-      slideshowTimer: null,
-      slideRefs: {},
+      slideshow: {
+        playing: false,
+        refs: {},
+        effect: null,
+        interval: DEFAULT_SLIDESHOW_INTERVAL_MS,
+        timer: null,
+      },
       showPhotoStrip: false,
+      showSlideshowSettings: false,
     }
   },
   computed: {
@@ -338,13 +379,17 @@ export default {
     activePhotoStripPhoto() {
       return this.photoStripPhotos.find(photo => photo.index === this.index);
     },
+
+    slideshowIntervals() {
+      return [3000, DEFAULT_SLIDESHOW_INTERVAL_MS, 6000, 8000, 10000];
+    },
   },
   watch: {
     async index() {
       await this.$nextTick();
       this.scrollThumbIntoView();
 
-      if (this.isSlideshowPlaying) {
+      if (this.slideshow.playing) {
         this.scheduleSlideshowAdvance();
       }
     },
@@ -353,6 +398,11 @@ export default {
         await this.$nextTick();
         this.updatePhotoStripCount();
         this.scrollThumbIntoView();
+      }
+    },
+    'slideshow.interval': function() {
+      if (this.slideshow.playing) {
+        this.scheduleSlideshowAdvance();
       }
     },
   },
@@ -379,7 +429,7 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updatePhotoStripCount);
-    clearTimeout(this.slideshowTimer);
+    clearTimeout(this.slideshow.timer);
     this.close();
   },
   methods: {
@@ -454,57 +504,57 @@ export default {
     },
 
     toggleSlideshow() {
-      if (this.isSlideshowPlaying) {
+      if (this.slideshow.playing) {
         this.stopSlideshow();
       } else {
         this.startSlideshow();
       }
     },
     startSlideshow() {
-      this.isSlideshowPlaying = true;
+      this.slideshow.playing = true;
 
       if (this.currentPhoto.metadata.video) {
-        this.slideRefs[this.index]?.play();
+        this.slideshow.refs[this.index]?.play();
       }
 
       this.scheduleSlideshowAdvance();
     },
     stopSlideshow() {
-      this.isSlideshowPlaying = false;
-      clearTimeout(this.slideshowTimer);
-      this.slideshowTimer = null;
+      this.slideshow.playing = false;
+      clearTimeout(this.slideshow.timer);
+      this.slideshow.timer = null;
     },
     scheduleSlideshowAdvance() {
-      clearTimeout(this.slideshowTimer);
-      this.slideshowTimer = null;
+      clearTimeout(this.slideshow.timer);
+      this.slideshow.timer = null;
 
       // Video slides advance on the video's own 'ended' event instead of a fixed timer.
       if (this.currentPhoto.metadata.video) {
         return;
       }
 
-      this.slideshowTimer = setTimeout(() => this.advanceSlideshow(), SLIDESHOW_INTERVAL_MS);
+      this.slideshow.timer = setTimeout(() => this.advanceSlideshow(), this.slideshow.interval);
     },
     advanceSlideshow() {
       const nextIndex = this.index + 1 >= this.photos.length ? 0 : this.index + 1;
       this.goToPhoto(nextIndex);
     },
     onVideoEnded() {
-      if (this.isSlideshowPlaying) {
+      if (this.slideshow.playing) {
         this.advanceSlideshow();
       }
     },
     onVideoPaused() {
-      if (this.isSlideshowPlaying) {
+      if (this.slideshow.playing) {
         this.stopSlideshow();
       }
     },
 
     setSlideRef(index, el) {
       if (el) {
-        this.slideRefs[index] = el;
+        this.slideshow.refs[index] = el;
       } else {
-        delete this.slideRefs[index];
+        delete this.slideshow.refs[index];
       }
     },
     setThumbRef(photoId, el) {
