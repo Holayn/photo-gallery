@@ -8,14 +8,11 @@ const compression = require('compression');
 
 const config = require('./services/config');
 const logger = require('./services/logger');
-const SourceService = require('./services/source');
+logger.init(true);
 
 require('./services/job');
 require('./services/source-watcher').initSourceWatchers();
-
-logger.init(true);
-
-SourceService.resumeInterruptedProcessing();
+require('./services/source').resumeInterruptedProcessing();
 
 const { apiRouter, pageRouter } = require('./routes');
 const AlbumPreviewController = require('./controllers/album-preview');
