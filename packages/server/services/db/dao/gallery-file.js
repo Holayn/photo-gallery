@@ -62,6 +62,23 @@ module.exports = {
       .all(sourceId, sourceFileIds)
       .map((f) => toGalleryFileModel(f));
   },
+  setProcessing({ sourceId, sourceFileId, processing }) {
+    DB.prepare(
+      `INSERT INTO file (timestamp_added, date, source_id, source_file_id, processing)
+       VALUES (@timestampAdded, 0, @sourceId, @sourceFileId, @processing)
+       ON CONFLICT(source_id, source_file_id) DO UPDATE SET processing = excluded.processing`
+    ).run({
+      timestampAdded: new Date().getTime(),
+      sourceId,
+      sourceFileId,
+      processing: processing ? 1 : 0,
+    });
+  },
+  findProcessing() {
+    return DB.prepare('SELECT * FROM file WHERE processing != 0')
+      .all()
+      .map((f) => toGalleryFileModel(f));
+  },
   // monthDay: 'MM-DD'. Matches files taken on that month/day in any year, as
   // long as that occurrence is strictly before beforeDate (excludes today/future).
   findOnMonthDayBefore(monthDay, beforeDate) {

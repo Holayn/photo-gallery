@@ -10,6 +10,8 @@ const { PHOTO_SIZES } = require('../constants/photo');
 const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = require('./db');
 const Source = require('../model/source');
 
+const SKIP_LARGE_VIDEOS_ARG = '--skip-large-videos';
+
 // A source's webimg config may be named anything as long as it ends with
 // "config.json" - find whichever file in the source's directory matches.
 function findConfigPath(sourcePath) {
@@ -133,7 +135,7 @@ module.exports = {
 
     const promise = (async () => {
       const { execa } = await import('execa');
-      await enqueue(() => execa('npm', ['run', 'start', '--', '--config', webImgConfigPath], {
+      await enqueue(() => execa('npm', ['run', 'start', '--', '--config', webImgConfigPath, SKIP_LARGE_VIDEOS_ARG], {
         cwd: webImgToolPath,
         stdio: 'inherit',
       }));
@@ -186,7 +188,7 @@ module.exports = {
         logger.info(`Started processing ${source.alias}`);
 
         const { execa } = await import('execa');
-        await enqueue(() => execa('npm', ['run', 'start', '--', '--config', webImgConfigPath], {
+        await enqueue(() => execa('npm', ['run', 'start', '--', '--config', webImgConfigPath, SKIP_LARGE_VIDEOS_ARG], {
           cwd: webImgToolPath,
           stdio: 'inherit',
         }));
@@ -216,10 +218,6 @@ module.exports = {
     })();
   },
 
-  // Called once at server startup. A source left with processing=true has no
-  // actual webimg process behind it anymore - the process that was running
-  // it is gone - so without this it would stay stuck "processing" forever.
-  // Re-enqueues each one to actually finish the job.
   resumeInterruptedProcessing() {
     SourceDAO.findAll()
       .filter((source) => source.processing)
@@ -238,6 +236,101 @@ module.exports = {
           logger.error(`Failed to process source ${source.alias}`, err);
         });
       });
+
+      GalleryFileDAO.findProcessing().forEach((file) => {
+      const source = SourceDAO.getById(file.sourceId);
+      const webImgConfigPath = source && findConfigPath(source.path);
+
+      if (!webImgConfigPath) {
+        logger.error(`File #${file.sourceFileId} was left converting after a restart, but its source/config is missing - skipping...`);
+        GalleryFileDAO.setProcessing({ sourceId: file.sourceId, sourceFileId: file.sourceFileId, processing: false });
+        return;
+      }
+
+      logger.info(`File #${file.sourceFileId} in ${source.alias} was left converting after a restart, resuming...`);
+      this.runFileConversion(source, file.sourceFileId, webImgConfigPath).catch((err) => {
+        logger.error(`Failed to convert file #${file.sourceFileId} in ${source.alias}`, err);
+      });
+    });
+  },
+
+  convertFile(sourceId, sourceFileId) {
+    const source = SourceDAO.getById(sourceId);
+    if (!source) {
+      throw new Error(`Source ${sourceId} does not exist.`);
+    }
+
+    const existing = GalleryFileDAO.getBySource(sourceId, sourceFileId);
+    if (existing?.processing) {
+      throw new Error(`File ${sourceFileId} in ${source.alias} is already converting.`);
+    }
+
+    const webImgConfigPath = findConfigPath(source.path);
+    if (!webImgConfigPath) {
+      throw new Error(`No webimg config file found in ${source.path}.`);
+    }
+
+    GalleryFileDAO.setProcessing({ sourceId, sourceFileId, processing: true });
+    notify(undefined, `${source.alias}: converting file #${sourceFileId}.`);
+
+    return this.runFileConversion(source, sourceFileId, webImgConfigPath);
+  },
+
+  runFileConversion(source, sourceFileId, webImgConfigPath) {
+    return (async () => {
+      try {
+        logger.info(`Converting file #${sourceFileId} in ${source.alias}`);
+
+        const { execa } = await import('execa');
+        await enqueue(() => execa('npm', ['run', 'start', '--', 'convert', '--id', String(sourceFileId), '--config', webImgConfigPath], {
+          cwd: webImgToolPath,
+          stdio: 'inherit',
+        }));
+
+        logger.info(`Finished converting file #${sourceFileId} in ${source.alias}`);
+
+        this.ingestSourceFileIndex(source);
+        notify(undefined, `${source.alias}: file #${sourceFileId} finished converting.`);
+      } catch (err) {
+        notify(undefined, `${source.alias}: file #${sourceFileId} failed to convert: ${err.message}`);
+        throw err;
+      } finally {
+        GalleryFileDAO.setProcessing({ sourceId: source.id, sourceFileId, processing: false });
+      }
+    })();
+  },
+
+  // Cheap, batched status check to poll while one or more videos are preview-only/converting.
+  getFilesStatus(files) {
+    const sourceFileIdsBySourceId = new Map();
+    files.forEach(({ sourceId, sourceFileId }) => {
+      if (!sourceFileIdsBySourceId.has(sourceId)) {
+        sourceFileIdsBySourceId.set(sourceId, []);
+      }
+      sourceFileIdsBySourceId.get(sourceId).push(sourceFileId);
+    });
+
+    const result = [];
+    sourceFileIdsBySourceId.forEach((sourceFileIds, sourceId) => {
+      const source = SourceDAO.getById(sourceId);
+      if (!source) {
+        return;
+      }
+
+      const processorSource = new ProcessorSource(source);
+      sourceFileIds.forEach((sourceFileId) => {
+        const sourceFile = processorSource.getFile(sourceFileId);
+        const galleryFile = GalleryFileDAO.getBySource(sourceId, sourceFileId);
+        result.push({
+          sourceId,
+          sourceFileId,
+          previewOnly: sourceFile ? sourceFile.previewOnly : false,
+          processing: galleryFile ? galleryFile.processing : false,
+        });
+      });
+    });
+
+    return result;
   },
 
   findFiles(sourceId, startDateRange, directory) {
@@ -245,12 +338,13 @@ module.exports = {
     if (source) {
       const processorSource = new ProcessorSource(source);
       const sourceFiles = processorSource.findFiles(startDateRange, directory);
-      return setFileProperties(sourceId, sourceFiles.map(({ id, date, metadata, createdAt }) => ({
+      return setFileProperties(sourceId, sourceFiles.map(({ id, date, metadata, createdAt, previewOnly }) => ({
         date,
         metadata,
         sourceFileId: id,
         urls: generateSourceFileUrls(sourceId, id),
         createdAt,
+        previewOnly,
       })));
     }
 
@@ -278,7 +372,7 @@ module.exports = {
     const sourceFile = processorSource.getFile(sourceFileId);
 
     if (sourceFile) {
-      const { date, metadata } = sourceFile;
+      const { date, metadata, previewOnly } = sourceFile;
 
       const galleryFile = GalleryFileDAO.getBySource(sourceId, sourceFileId);
 
@@ -289,6 +383,8 @@ module.exports = {
         sourceFileId,
         urls: generateSourceFileUrls(sourceId, sourceFileId),
         shareUrl: galleryFile ? galleryFile.token ? `${baseUrl}/api/photo?sourceId=${sourceId}&sourceFileId=${sourceFileId}&size=full&token=${galleryFile.token}` : null : null,
+        previewOnly,
+        processing: galleryFile ? galleryFile.processing : false,
       };
     }
 
@@ -339,6 +435,7 @@ function setFileProperties(sourceId, sourceFiles) {
 
   const sourceFileIdToAlbums = {};
   const sourceFileIdToTokens = {};
+  const sourceFileIdToProcessing = {};
   galleryFiles.forEach(gf => {
     if (fileIdToAlbum[gf.id]) {
       sourceFileIdToAlbums[gf.sourceFileId] = {
@@ -352,12 +449,15 @@ function setFileProperties(sourceId, sourceFiles) {
     if (gf.token) {
       sourceFileIdToTokens[gf.sourceFileId] = gf.token;
     }
+
+    sourceFileIdToProcessing[gf.sourceFileId] = gf.processing;
   });
 
   return sourceFiles.map(sf => ({
     ...sf,
     albums: sourceFileIdToAlbums[sf.sourceFileId]?.albums ?? [],
     shareUrl: sourceFileIdToTokens[sf.sourceFileId] ? `${baseUrl}/api/photo?sourceId=${sourceId}&sourceFileId=${sf.sourceFileId}&size=full&token=${sourceFileIdToTokens[sf.sourceFileId]}` : null,
+    processing: sourceFileIdToProcessing[sf.sourceFileId] ?? false,
   }));
 }
 

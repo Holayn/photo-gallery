@@ -10,10 +10,12 @@ export default class Photo {
   urls = {};
   createdAt;
   shareUrl;
+  previewOnly;
+  processing;
 
   source;
 
-  constructor({ date, sourceId, sourceFileId, galleryFileId, metadata = {}, albums = [], urls = {}, createdAt, shareUrl, source }) {
+  constructor({ date, sourceId, sourceFileId, galleryFileId, metadata = {}, albums = [], urls = {}, createdAt, shareUrl, source, previewOnly = false, processing = false }) {
     this.date = date;
     this.sourceId = sourceId;
     this.sourceFileId = sourceFileId;
@@ -24,6 +26,8 @@ export default class Photo {
     this.createdAt = createdAt;
     this.shareUrl = shareUrl;
     this.source = source;
+    this.previewOnly = previewOnly;
+    this.processing = processing;
   }
 
   get id() {

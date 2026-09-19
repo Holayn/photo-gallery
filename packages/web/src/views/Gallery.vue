@@ -193,7 +193,7 @@
 </template>
 
 <script>
-import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum, PHOTO_SIZES } from '../services/api';
+import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum, getFilesStatus, PHOTO_SIZES } from '../services/api';
 import { useAuthStore, useSettingsStore } from '../store';
 
 import Lightbox from '../components/Lightbox.vue'
@@ -207,6 +207,9 @@ export const SORT_TYPES = {
   DATE_DESC: 'dateDesc',
   DATE_ADDED: 'dateAdded',
 };
+
+// How often to poll for updates while any item in this gallery is converting.
+const STATUS_POLL_INTERVAL_MS = 5000;
 
 export default {
   name: 'Gallery',
@@ -275,11 +278,31 @@ export default {
       showDateSelection: false,
       showUnknownDateItems: false,
 
+      statusPollTimer: null,
+
       SORT_TYPES,
       LAYOUT_TYPES,
     };
   },
   computed: {
+    filesToPollStatus() {
+      if (!this.authStore.isLoggedIn) {
+        return [];
+      }
+
+      const seen = new Set();
+      const files = [];
+      this.photos.forEach((photo) => {
+        if (photo.metadata.video && (photo.processing)) {
+          const key = `${photo.sourceId}_${photo.sourceFileId}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            files.push({ sourceId: photo.sourceId, sourceFileId: photo.sourceFileId });
+          }
+        }
+      });
+      return files;
+    },
     isNoDisplayPhotos() {
       return this.displayedPhotos.length === 0;
     },
@@ -348,6 +371,17 @@ export default {
         this.viewMode = 'showUnknownDateItems';
       }
     },
+    filesToPollStatus: {
+      immediate: true,
+      handler(files) {
+        if (files.length && !this.statusPollTimer) {
+          this.statusPollTimer = setInterval(() => this.pollFileStatus(), STATUS_POLL_INTERVAL_MS);
+        } else if (!files.length && this.statusPollTimer) {
+          clearInterval(this.statusPollTimer);
+          this.statusPollTimer = null;
+        }
+      },
+    },
   },
   created() {
     // Ensure the page isn't loaded with this query parameter set.
@@ -367,7 +401,34 @@ export default {
       this.showUnknownDateItems = true;
     }
   },
+  beforeUnmount() {
+    if (this.statusPollTimer) {
+      clearInterval(this.statusPollTimer);
+      this.statusPollTimer = null;
+    }
+  },
   methods: {
+    async pollFileStatus() {
+      const files = this.filesToPollStatus;
+      if (!files.length) return;
+
+      let results;
+      try {
+        results = await getFilesStatus(files);
+      } catch (e) {
+        // Transient failure - just try again on the next tick.
+        return;
+      }
+
+      results.forEach(({ sourceId, sourceFileId, previewOnly, processing }) => {
+        const photo = this.photos.find(p => p.sourceId === sourceId && p.sourceFileId === sourceFileId);
+        if (photo) {
+          photo.previewOnly = previewOnly;
+          photo.processing = processing;
+        }
+      });
+    },
+
     onSelectionChange({ selected }) {
       this.selected = selected;
     },

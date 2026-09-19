@@ -61,6 +61,24 @@ export function processSource(sourceId) {
     body: JSON.stringify({ id: sourceId }),
   });
 }
+export function convertFile(sourceId, sourceFileId) {
+  return fetcher.fetch(`${BASE}/source/file/convert`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sourceId, sourceFileId }),
+  });
+}
+export function getFilesStatus(files) {
+  return fetcher.fetch(`${BASE}/source/files/status`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ files }),
+  });
+}
 export function setSourceContinuous(sourceId, continuous) {
   return fetcher.fetch(`${BASE}/source/continuous`, {
     method: 'POST',

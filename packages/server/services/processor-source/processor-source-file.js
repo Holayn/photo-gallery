@@ -1,7 +1,7 @@
 const ProcessorSourceFileMetadata = require('./processor-source-file-metadata');
 
 class ProcessorSourceFile {
-  constructor({ id, path, fileName, fileDate, date, metadata, sourceId, createdAt }) {
+  constructor({ id, path, fileName, fileDate, date, metadata, sourceId, createdAt, previewOnly }) {
     this.id = id;
     this.path = path;
     this.date = date;
@@ -10,6 +10,7 @@ class ProcessorSourceFile {
     this.metadata = new ProcessorSourceFileMetadata(JSON.parse(metadata));
     this.sourceId = sourceId;
     this.createdAt = createdAt;
+    this.previewOnly = Boolean(previewOnly);
   }
 }
 

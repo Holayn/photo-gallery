@@ -100,6 +100,39 @@ router.post(
   }
 );
 
+router.post(
+  '/source/file/convert',
+  requiredBody(['sourceId', 'sourceFileId']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { sourceId, sourceFileId } = req.body;
+
+    let promise;
+    try {
+      promise = SourceService.convertFile(sourceId, sourceFileId);
+    } catch (err) {
+      res.status(400).send({ message: err.message });
+      return;
+    }
+
+    promise.catch((err) => {
+      logger.error(`Failed to convert file ${sourceFileId} in source ${sourceId}`, err);
+    });
+
+    res.sendStatus(202);
+  }
+);
+
+router.post(
+  '/source/files/status',
+  requiredBody(['files']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { files } = req.body;
+    res.send(SourceService.getFilesStatus(files));
+  }
+);
+
 router.get(
   '/source/photos',
   requiredParams(['id']),
