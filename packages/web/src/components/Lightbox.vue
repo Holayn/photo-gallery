@@ -96,11 +96,12 @@
           :space-between="50"
           :threshold="10"
           :initial-slide="index"
+          :speed="slideshow.effect === 'fade' ? 2000 : null"
           centered-slides
           virtual
           zoom
           :effect="slideshow.effect"
-          :fade-effect="{ crossFade: slideshow.effect === 'fade' }"
+          :fade-effect="{ mode: slideshow.effect === 'fade' ? 'cross-fade' : 'default' }"
           @activeIndexChange="_swiperOnActiveIndexChange"
           @afterInit="_swiperOnAfterInit"
           @click="toggleMenu"
