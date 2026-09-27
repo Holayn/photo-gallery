@@ -45,7 +45,8 @@ router.get(
     if (fileData) {
       const { path, fileType } = fileData;
       res.contentType(fileType);
-      res.setHeader('Cache-Control', 'public, max-age=86400');
+      // `private`: responses are auth-gated, so shared caches (e.g. an nginx proxy_cache) must never store them.
+      res.setHeader('Cache-Control', 'private, max-age=86400');
       sendFile(path, req, res);
     } else {
       res.sendStatus(404);
