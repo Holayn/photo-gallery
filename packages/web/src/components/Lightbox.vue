@@ -1,6 +1,6 @@
 <template>
   <dialog ref="dialog">
-    <div class="lightbox">
+    <div class="lightbox" :style="{ transform: `translateY(${lightboxGestures.dragDownDistance}px)` }">
       <div class="lightbox_menu lightbox_menugrid top-0 p-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
         <div class="flex h-9">
           <button @click.stop="showMetadata = !showMetadata">
@@ -89,6 +89,7 @@
 
       <div class="flex flex-col h-full">
         <swiper
+          v-drag="lightboxGestures.dragHandler"
           class="min-h-0 h-full w-full"
           :key="slideshow.effect"
           :keyboard="{enabled: true, onlyInViewport: false}"
@@ -235,6 +236,7 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { ref, reactive } from 'vue';
 
 import LightboxSlide from './LightboxSlide.vue';
 import PhotoStripPhoto from './PhotoStripPhoto.vue';
@@ -243,6 +245,7 @@ import Modal from './Modal.vue';
 
 import { PHOTO_SIZES, sharePhoto } from '../services/api';
 import { useAuthStore } from '../store';
+import { useLightboxGestures } from '../composables/ligthbox-gestures';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(customParseFormat);
@@ -286,8 +289,18 @@ export default {
     },
     autoStartSlideshow: Boolean,
   },
-  setup() {
+  setup(props, { emit }) {
     const authStore = useAuthStore();
+
+    const swiper = ref(null);
+
+    const close = () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+      emit('close');
+    };
+
     return {
       authStore,
       modules: [
@@ -296,11 +309,16 @@ export default {
         Virtual,
         Zoom,
       ],
+      swiper,
+      lightboxGestures: reactive(useLightboxGestures({
+        swiper,
+        closeLightbox: close,
+      })),
+      close,
     };
   },
   data() {
     return {
-      swiper: null,
       showMetadata: false,
       showMenu: true,
       thumbRefs: {},
@@ -434,14 +452,6 @@ export default {
     this.close();
   },
   methods: {
-    close() {
-      this.$refs.dialog?.close();
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-      this.$emit('close');
-    },
-
     updatePhotoStripCount() {
       const container = this.$refs.photoStrip;
       if (!container) {

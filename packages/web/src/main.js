@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router';
+import { GesturePlugin } from '@vueuse/gesture'
 import App from './App.vue'
 import Gallery from './views/Gallery.vue';
 import Albums from './views/Albums.vue';
@@ -94,5 +95,6 @@ app.config.errorHandler = (err, instance, info) => {
 app
   .use(pinia)
   .use(router)
+  .use(GesturePlugin)
   .mount('#app');
 

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vueuse/gesture": "^2.0.0",
     "dayjs": "^1.11.7",
     "js-cookie": "^3.0.1",
     "justified-layout": "^4.1.0",
