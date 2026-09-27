@@ -10,7 +10,7 @@ const missingProperty = (res, propertyName) => {
 
 const requiredParams = (params) => (req, res, next) => {
   for (const p of params) {
-    if (!req.query.hasOwnProperty(p)) {
+    if (!Object.hasOwn(req.query, p)) {
       missingParam(res, p);
       return;
     }
@@ -21,7 +21,8 @@ const requiredParams = (params) => (req, res, next) => {
 
 const requiredBody = (properties) => (req, res, next) => {
   for (const p of properties) {
-    if (!req.body.hasOwnProperty(p)) {
+    // Express 5 leaves req.body undefined when no body parser matched the request.
+    if (!req.body || !Object.hasOwn(req.body, p)) {
       missingProperty(res, p);
       return;
     }

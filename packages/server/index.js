@@ -117,15 +117,18 @@ app.use('/api', apiRouter);
 
 // SPA fallback: serve index.html for any unmatched, non-API route so client-side
 // (history mode) routes work on direct load/refresh, not just client navigation.
-app.get('*', (req, res) => {
+app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, '../web/dist/index.html'));
 });
 
 // Should be placed at the end of middleware stack to ensure they catch any errors that weren't handled by earlier middleware.
 app.use((err, req, res, next) => {
   logger.error(err, null, true);
+  if (res.headersSent) {
+    // Let Express's default handler close the connection mid-response.
+    return next(err);
+  }
   res.sendStatus(500);
-  next();
 });
 
 app.listen(config.port, () => {
