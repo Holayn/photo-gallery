@@ -200,11 +200,11 @@
     </div>
 
     <Modal v-if="showSlideshowSettings" size="md" @close="showSlideshowSettings = false">
-      <div class="grid grid-cols-1 gap-2">
+      <div class="grid grid-cols-1 gap-4">
         <div>
           <label>Interval</label>
           <div>
-            <select v-model="slideshow.interval" class="border rounded px-2 py-1">
+            <select v-model="slideshow.interval" class="w-full h-10 border rounded px-2 py-1">
               <option v-for="interval in slideshowIntervals" :key="interval" :value="interval">{{ interval/1000 }} seconds</option>
             </select>
           </div>
@@ -212,13 +212,15 @@
         
         <div>
           <div>Effect</div>
-          <div>
-            <input v-model="slideshow.effect" id="slide" type="radio" name="effect" :value="null">
-            <label class="ml-1" for="slide">Slide</label>
-          </div>
-          <div>
-            <input v-model="slideshow.effect" id="fade" type="radio" name="effect" value="fade">
-            <label class="ml-1" for="fade">Fade</label>
+          <div class="grid grid-cols-1">
+            <div class="h-10 flex items-center">
+              <input v-model="slideshow.effect" id="slide" type="radio" name="effect" :value="null">
+              <label class="ml-2 h-full flex items-center" for="slide">Slide</label>
+            </div>
+            <div class="h-10 flex items-center">
+              <input v-model="slideshow.effect" id="fade" type="radio" name="effect" value="fade">
+              <label class="ml-2 h-full flex items-center" for="fade">Fade</label>
+            </div>
           </div>
         </div>
       </div>
