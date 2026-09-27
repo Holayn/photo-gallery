@@ -1,6 +1,6 @@
 <template>
   <dialog ref="dialog">
-    <div class="lightbox" :style="{ transform: `translateY(${lightboxGestures.dragDownDistance}px)` }">
+    <div class="lightbox" :style="{ transform: `translateY(${lightboxGestures.dragCloseDistance}px)` }">
       <div class="lightbox_menu lightbox_menugrid top-0 p-2 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
         <div class="flex h-9">
           <button @click.stop="showMetadata = !showMetadata">
@@ -126,65 +126,69 @@
           </swiper-slide>
         </swiper>
 
-        <div v-if="showMetadata" class="h-1/4 min-h-[12rem] bg-white">
-          <div class="flex flex-col min-h-0 h-full">
-            <div class="flex gap-4 p-4 pb-2">
-              <h2 class="flex-auto text-lg">Info</h2>
-              <button @click="showMetadata = false">
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-            </div>
+        <div v-if="showMetadata" class="relative">
+          <!-- Calculations rely on the metadata element retaining its intrinsic height. -->
+          <div v-if="lightboxGestures.dragging && lightboxGestures.draggingMetadata" :style="{ height: lightboxGestures.dragging ? `${lightboxGestures.revealedMetadataHeight}px` : null }"></div>
+          <div ref="metadataEl" class="w-full max-h-[500px] bg-white" :class="{ 'absolute': lightboxGestures.dragging && lightboxGestures.draggingMetadata }" :style="{ top: lightboxGestures.dragging ? 0 : null }">
+            <div class="flex flex-col min-h-0 h-full">
+              <div class="flex gap-4 p-4 pb-2">
+                <h2 class="flex-auto text-lg">Info</h2>
+                <button @click="showMetadata = false">
+                  <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
 
-            <div class="overflow-auto p-4 pt-0 pb-12">
-              <div class="flex flex-col md:flex-row gap-y-4 gap-x-8">
-                <div>
+              <div class="overflow-auto p-4 pt-0 pb-12">
+                <div class="flex flex-col md:flex-row gap-y-4 gap-x-8">
                   <div>
-                    <div>{{ currentPhoto.metadata.fileName }}</div>
-                    <div class="text-sm text-slate-600">
-                      <p>{{ currentPhoto.metadata.width }} x {{ currentPhoto.metadata.height }}, {{ currentPhoto.metadata.fileSize }}</p>
-                      <p>{{ currentPhoto.metadata.device }}</p>
-                    </div>
-                    <div class="leading-none">
-                      <a class="text-xs underline" :href="fullSizeUrl" target="_blank">View full size</a>
-                    </div>
-                    <div v-if="currentPhoto.source" class="text-xs text-slate-600 leading-none">
-                      <router-link class="text-sm underline" :to="{ name: 'source', params: { sourceId: currentPhoto.source.id } }" @click="close()">{{ currentPhoto.source.alias }}</router-link>
-                    </div>
-                  </div>
-                </div>
-
-                <div v-if="currentPhoto.albums.length">
-                  <h2 class="text-sm text-slate-600">Albums</h2>
-                  <div v-for="album in currentPhoto.albums" :key="album.idAlias"> 
-                    <router-link class="text-blue-600 underline" :to="{ name: 'album', params: { albumId: album.idAlias } }">{{ album.name }}</router-link>
-                  </div>
-                </div>
-
-                <div>
-                  <div class="flex flex-col md:flex-row gap-2">
                     <div>
-                      <div class="text-sm text-slate-600">Location</div>
-                      <div v-if="location && location.lat != null && location.long != null" class="flex flex-col gap-1">
-                        <iframe
-                          class="max-w-full"
-                          width="360"
-                          height="120"
-                          style="border:0"
-                          loading="lazy"
-                          allowfullscreen
-                          referrerpolicy="no-referrer-when-downgrade"
-                          :src="`https://www.google.com/maps?q=${location.lat},${location.long}&z=14&output=embed`"
-                        ></iframe>
-                        <div>
-                          <a class="text-black underline" :href="location.link" target="_blank">lat:{{ location.lat }}, long:{{ location.long }}, alt:{{ location.altitude ?? '--' }}</a>
-                        </div>
+                      <div>{{ currentPhoto.metadata.fileName }}</div>
+                      <div class="text-sm text-slate-600">
+                        <p>{{ currentPhoto.metadata.width }} x {{ currentPhoto.metadata.height }}, {{ currentPhoto.metadata.fileSize }}</p>
+                        <p>{{ currentPhoto.metadata.device }}</p>
                       </div>
-                      <div v-else>Unknown Location</div>
+                      <div class="leading-none">
+                        <a class="text-xs underline" :href="fullSizeUrl" target="_blank">View full size</a>
+                      </div>
+                      <div v-if="currentPhoto.source" class="text-xs text-slate-600 leading-none">
+                        <router-link class="text-sm underline" :to="{ name: 'source', params: { sourceId: currentPhoto.source.id } }" @click="close()">{{ currentPhoto.source.alias }}</router-link>
+                      </div>
                     </div>
+                  </div>
 
-                    <div v-if="currentPhoto.metadata.timezone">
-                      <div class="text-sm text-slate-600">Timezone</div>
-                      <div>{{ currentPhoto.metadata.timezone }}</div>
+                  <div v-if="currentPhoto.albums.length">
+                    <h2 class="text-sm text-slate-600">Albums</h2>
+                    <div v-for="album in currentPhoto.albums" :key="album.idAlias"> 
+                      <router-link class="text-blue-600 underline" :to="{ name: 'album', params: { albumId: album.idAlias } }">{{ album.name }}</router-link>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="flex flex-col md:flex-row gap-2">
+                      <div>
+                        <div class="text-sm text-slate-600">Location</div>
+                        <div v-if="location && location.lat != null && location.long != null" class="flex flex-col gap-1">
+                          <iframe
+                            class="max-w-full"
+                            width="360"
+                            height="120"
+                            style="border:0"
+                            loading="lazy"
+                            allowfullscreen
+                            referrerpolicy="no-referrer-when-downgrade"
+                            :src="`https://www.google.com/maps?q=${location.lat},${location.long}&z=14&output=embed`"
+                          ></iframe>
+                          <div>
+                            <a class="text-black underline" :href="location.link" target="_blank">lat:{{ location.lat }}, long:{{ location.long }}, alt:{{ location.altitude ?? '--' }}</a>
+                          </div>
+                        </div>
+                        <div v-else>Unknown Location</div>
+                      </div>
+
+                      <div v-if="currentPhoto.metadata.timezone">
+                        <div class="text-sm text-slate-600">Timezone</div>
+                        <div>{{ currentPhoto.metadata.timezone }}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -236,7 +240,7 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch } from 'vue';
 
 import LightboxSlide from './LightboxSlide.vue';
 import PhotoStripPhoto from './PhotoStripPhoto.vue';
@@ -293,6 +297,9 @@ export default {
     const authStore = useAuthStore();
 
     const swiper = ref(null);
+    const showMetadata = ref(false);
+    const metadataEl = ref(null);
+    const metadataHeight = ref(0);
 
     const close = () => {
       document.documentElement.style.overflow = '';
@@ -300,6 +307,10 @@ export default {
       document.body.style.touchAction = '';
       emit('close');
     };
+
+    watch(metadataEl, (el) => {
+      metadataHeight.value = el?.clientHeight ?? 0;
+    });
 
     return {
       authStore,
@@ -310,16 +321,19 @@ export default {
         Zoom,
       ],
       swiper,
+      showMetadata,
+      metadataEl,
       lightboxGestures: reactive(useLightboxGestures({
         swiper,
         closeLightbox: close,
+        showMetadata,
+        metadataHeight,
       })),
       close,
     };
   },
   data() {
     return {
-      showMetadata: false,
       showMenu: true,
       thumbRefs: {},
       photoStripCount: 5,
@@ -412,8 +426,8 @@ export default {
         this.scheduleSlideshowAdvance();
       }
     },
-    async showMetadata(showMetadata) {
-      if (!showMetadata) {
+    async showMetadata() {
+      if (!this.showMetadata) {
         await this.$nextTick();
         this.updatePhotoStripCount();
         this.scrollThumbIntoView();
