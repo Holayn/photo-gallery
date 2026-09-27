@@ -131,7 +131,8 @@ app.use((err, req, res, next) => {
   res.sendStatus(500);
 });
 
-app.listen(config.port, () => {
-  console.info(`Listening on ${config.port}`);
+// Explicit binding to 127.0.0.1 (loopback) so this doesn't accept connections from other things on network.
+app.listen(config.port, '127.0.0.1', () => {
+  console.info(`Listening on 127.0.0.1:${config.port}`);
 });
 
