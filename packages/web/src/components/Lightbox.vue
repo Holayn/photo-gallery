@@ -26,7 +26,7 @@
 
       <div v-if="!showMetadata && showPhotoStrip" class="lightbox_menu bottom-0 pt-1 pb-6 md:pb-4 px-6 md:px-4" :style="{ opacity: showMenu ? 1 : 0, pointerEvents: showMenu ? 'all' : 'none' }">
         <div ref="photoStrip" class="mb-3 grid gap-1 overflow-hidden" style="grid-template-columns: 1fr auto 1fr;">
-          <div class="flex justify-end gap-1">
+          <div class="min-w-0 flex justify-end gap-1">
             <PhotoStripPhoto
               v-for="item in photoStripPhotos.filter(item => item.index < index)"
               :key="item.photo.id"
@@ -43,7 +43,7 @@
             @click="goToPhoto(activePhotoStripPhoto.index)"
           ></PhotoStripPhoto>
 
-          <div class="flex gap-1">
+          <div class="min-w-0 flex gap-1">
             <PhotoStripPhoto
               v-for="item in photoStripPhotos.filter(item => item.index > index)"
               :key="item.photo.id"
@@ -393,7 +393,7 @@ export default {
       const sideCount = Math.floor(this.photoStripCount / 2);
       const start = Math.max(0, this.index - sideCount);
       const end = Math.min(this.index + sideCount, this.photos.length);
-      return this.photos.slice(start, end).map((photo, i) => ({ photo, index: start + i }));
+      return this.photos.slice(start, end + 1).map((photo, i) => ({ photo, index: start + i }));
     },
     activePhotoStripPhoto() {
       return this.photoStripPhotos.find(photo => photo.index === this.index);
