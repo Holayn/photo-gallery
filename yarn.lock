@@ -4184,7 +4184,7 @@ __metadata:
     pinia: ^3.0.4
     plyr: ^3.7.8
     postcss: ^8.4.23
-    swiper: ^12.1.1
+    swiper: ^14.2.0
     tailwindcss: ^3.3.2
     vite: ^4.3.3
     vue: ^3.2.45
@@ -5172,10 +5172,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"swiper@npm:^12.1.1":
-  version: 12.2.0
-  resolution: "swiper@npm:12.2.0"
-  checksum: fceb3d2233430a8f9fff37e5b4abe51768366064b1037cb151c5f2e5a76e0b0446e570ebf71f39ceea97c250daaeb2b5f1a4928b439158103e01c5d874548f74
+"swiper@npm:^14.2.0":
+  version: 14.2.0
+  resolution: "swiper@npm:14.2.0"
+  checksum: cfecb3d6e67f81977acca895babd2891ca93eca5d7640bc018b5ee7449aa5e5bb5e9cda0a622f8f4108375577769ba4ab59e6e9897a0bfedd2225e78bed20fb0
   languageName: node
   linkType: hard
 

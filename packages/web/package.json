@@ -15,7 +15,7 @@
     "justified-layout": "^4.1.0",
     "pinia": "^3.0.4",
     "plyr": "^3.7.8",
-    "swiper": "^12.1.1",
+    "swiper": "^14.2.0",
     "vue": "^3.2.45",
     "vue-router": "^4.1.6"
   },
