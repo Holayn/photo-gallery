@@ -97,7 +97,7 @@
           :space-between="50"
           :threshold="10"
           :initial-slide="index"
-          :speed="slideshow.effect === 'fade' ? 2000 : null"
+          :speed="slideshow.effect === 'fade' ? 2000 : 300"
           centered-slides
           virtual
           zoom
