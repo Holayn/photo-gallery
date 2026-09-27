@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full w-full">
+  <div class="h-full w-full" style="user-select: none;">
     <div v-if="loading || error" class="relative flex items-center justify-center h-full w-full pointer-events-none">
       <img class="w-full h-full object-contain blur-sm" :src="preview">
       <div class="absolute flex flex-col items-center justify-center pointer-events-auto">
