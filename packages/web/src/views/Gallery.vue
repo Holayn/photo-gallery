@@ -193,7 +193,7 @@
 </template>
 
 <script>
-import { getAlbums, createAlbum, addToAlbum, deleteFromAlbum, getFilesStatus, PHOTO_SIZES } from '../services/api';
+import { getAssignedAlbums, createAlbum, addToAlbum, deleteFromAlbum, getFilesStatus, PHOTO_SIZES } from '../services/api';
 import { useAuthStore, useSettingsStore } from '../store';
 
 import Lightbox from '../components/Lightbox.vue'
@@ -547,7 +547,7 @@ export default {
       this.showAddToAlbum = true;
       this.loadingAlbums = true;
       try {
-        this.albums = await getAlbums();
+        this.albums = await getAssignedAlbums();
       } catch (e) {
         alert(`Error loading albums: ${e.message}`);
         this.showAddToAlbum = false;

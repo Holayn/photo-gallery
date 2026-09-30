@@ -7,7 +7,7 @@ const PushNotification = require('./push-notification');
 const { enqueue } = require('./processing-queue');
 const { baseUrl, filesPath, webImgToolPath } = require('./config');
 const { PHOTO_SIZES } = require('../constants/photo');
-const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO } = require('./db');
+const { SourceDAO, GalleryFileDAO, AlbumFileDAO, transaction, AlbumDAO, AlbumAssignmentDAO } = require('./db');
 const Source = require('../model/source');
 
 const SKIP_LARGE_VIDEOS_ARG = '--skip-large-videos';
@@ -333,7 +333,7 @@ module.exports = {
     return result;
   },
 
-  findFiles(sourceId, startDateRange, directory) {
+  findFiles(sourceId, startDateRange, directory, userId) {
     const source = SourceDAO.getById(sourceId);
     if (source) {
       const processorSource = new ProcessorSource(source);
@@ -345,7 +345,7 @@ module.exports = {
         urls: generateSourceFileUrls(sourceId, id),
         createdAt,
         previewOnly,
-      })));
+      })), userId);
     }
 
     return [];
@@ -403,7 +403,7 @@ module.exports = {
   },
 };
 
-function setFileProperties(sourceId, sourceFiles) {
+function setFileProperties(sourceId, sourceFiles, userId) {
   const galleryFiles = GalleryFileDAO.findBySourceFileIds(sourceId, sourceFiles.map(f => f.sourceFileId));
   const albumFiles = AlbumFileDAO.findByFileIds(galleryFiles.map(f => f.id));
 
@@ -414,7 +414,7 @@ function setFileProperties(sourceId, sourceFiles) {
   });
   albumIds.forEach(albumId => {
     const album = AlbumDAO.getById(albumId);
-    if (album && !album.hidden) {
+    if (album && !album.hidden && AlbumAssignmentDAO.isAssigned(userId, albumId)) {
       albums[albumId] = {
         name: album.name,
         idAlias: album.idAlias,

@@ -9,6 +9,7 @@ const GalleryFileDAO = require('./dao/gallery-file');
 const SourceDAO = require('./dao/source');
 const UserDAO = require('./dao/user');
 const UserSourceDAO = require('./dao/user-source');
+const AlbumAssignmentDAO = require('./dao/album-assignment');
 const UserExploreHistoryDAO = require('./dao/user-explore-history');
 const PushSubscriptionDAO = require('./dao/push-subscription');
 
@@ -19,6 +20,7 @@ module.exports = {
   SourceDAO,
   UserDAO,
   UserSourceDAO,
+  AlbumAssignmentDAO,
   UserExploreHistoryDAO,
   PushSubscriptionDAO,
   transaction: (fn) => DB.transaction(() => fn())(),

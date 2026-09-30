@@ -3,21 +3,22 @@ const PushNotification = require('./push-notification');
 const logger = require('./logger');
 const { generateUniqueRandomNumbers, generateRandomString } = require('../util/random');
 
-const { AlbumDAO, AlbumFileDAO, GalleryFileDAO, SourceDAO, transaction } = require('./db');
+const { AlbumDAO, AlbumFileDAO, GalleryFileDAO, SourceDAO, AlbumAssignmentDAO, transaction } = require('./db');
 const Album = require('../model/album');
 const AlbumFile = require('../model/album-file');
 const GalleryFile = require('../model/gallery-file');
 
 module.exports = {
-  createAlbum(name, files = {}) {
+  createAlbum(name, files = {}, userId = null) {
     return transaction(() => {
-      const albumId = AlbumDAO.insert(new Album({ name }));
-      this.addToAlbum(albumId, files);
+      const albumId = AlbumDAO.insert(new Album({ name, createdBy: userId }));
+      AlbumAssignmentDAO.insert({ userId, albumId });
+      this.addToAlbum(albumId, files, userId);
       return albumId;
     });
   },
 
-  addToAlbum(albumId, files = {}) {
+  addToAlbum(albumId, files = {}, actingUserId = null) {
     transaction(() => {
       // Make all added files have the same createdAt time, so that they appear to have been added at the same time rather than milliseconds apart.
       const createdAt = new Date().getTime();
@@ -59,10 +60,16 @@ module.exports = {
         AlbumDAO.touch(albumId, createdAt);
 
         const album = AlbumDAO.getById(albumId);
-        PushNotification.notifyAll({
-          title: 'New Photos',
-          body: `${addedCount} new ${addedCount > 1 ? 'photos were' : 'photo was'} added to ${album.name}.`,
-        }).catch((err) => logger.error(`Failed to send push notification for album #${albumId}`, err));
+        const recipientIds = AlbumAssignmentDAO.findUsersByAlbumId(albumId)
+          .map((u) => u.id)
+          .filter((id) => id !== actingUserId);
+
+        if (recipientIds.length) {
+          PushNotification.notifyUsers(recipientIds, {
+            title: 'New Photos',
+            body: `${addedCount} new ${addedCount > 1 ? 'photos were' : 'photo was'} added to ${album.name}.`,
+          }).catch((err) => logger.error(`Failed to send push notification for album #${albumId}`, err));
+        }
       }
     });
   },

@@ -139,11 +139,18 @@ router.get(
   AuthController.authAdmin,
   (req, res) => {
     const { id: sourceId, date = null, directory = null } = req.query;
+    const { username } = req.session.user;
+    const user = UserDAO.getByUsername(username);
+    if (!user) {
+      res.status(400).send('Failed to find user from session');
+      return;
+    }
 
     const files = SourceService.findFiles(
       sourceId,
       date ? dayjs(date, 'YYYY-MM-DD').valueOf() : null,
-      directory
+      directory,
+      user.id
     );
     if (!files) {
       res.sendStatus(400);

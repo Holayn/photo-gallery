@@ -36,4 +36,18 @@ async function notifyAll({ title, body }) {
   await sendToSubscriptions(subscriptions, JSON.stringify({ title, body, icon: '/icon-192x192.png' }));
 }
 
-module.exports = { notifyAll, sendToSubscriptions };
+// Sends the same push notification to every subscribed device for the given users only.
+async function notifyUsers(userIds, { title, body }) {
+  if (!userIds.length) {
+    return;
+  }
+
+  const subscriptions = PushSubscriptionDAO.findByUserIds(userIds);
+  if (!subscriptions.length) {
+    return;
+  }
+
+  await sendToSubscriptions(subscriptions, JSON.stringify({ title, body, icon: '/icon-192x192.png' }));
+}
+
+module.exports = { notifyAll, notifyUsers, sendToSubscriptions };

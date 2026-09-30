@@ -27,6 +27,16 @@ module.exports = {
       .all(userId)
       .map((s) => toPushSubscriptionModel(s));
   },
+  findByUserIds(userIds) {
+    if (!userIds.length) {
+      return [];
+    }
+
+    const placeholders = userIds.map(() => '?').join(',');
+    return DB.prepare(`SELECT * FROM push_subscription WHERE user_id IN (${placeholders})`)
+      .all(...userIds)
+      .map((s) => toPushSubscriptionModel(s));
+  },
   deleteById(id) {
     return DB.prepare('DELETE FROM push_subscription WHERE id = ?').run(id).changes;
   },

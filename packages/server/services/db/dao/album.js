@@ -7,11 +7,11 @@ const generateIdAlias = () => generateRandomString(16);
 const toAlbumModel = toModelFactory(Album);
 
 module.exports = {
-  insert({ name, modifiedDate = new Date().getTime() }) {
+  insert({ name, modifiedDate = new Date().getTime(), createdBy }) {
     const idAlias = generateIdAlias();
     return DB.prepare(
-      'INSERT INTO album (id_alias, name, modified_date) VALUES (@idAlias, @name, @modifiedDate)'
-    ).run({ idAlias, name, modifiedDate }).lastInsertRowid;
+      'INSERT INTO album (id_alias, name, modified_date, created_by) VALUES (@idAlias, @name, @modifiedDate, @createdBy)'
+    ).run({ idAlias, name, modifiedDate, createdBy }).lastInsertRowid;
   },
   findAll() {
     return DB.prepare('SELECT * FROM album WHERE hidden = 0')

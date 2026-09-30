@@ -29,7 +29,7 @@ router.get(
       let years = memoryYears.map(year => ({
           ...year,
           files: year.files
-            .filter(file => UserSourceDAO.hasAccess(user.id, file.sourceId))
+            .filter(file => UserSourceDAO.isAssigned(user.id, file.sourceId))
             .map(file => SourceService.getFile(file.sourceId, file.id)),
         }));
 
@@ -59,7 +59,7 @@ router.get(
       const memories = getMemories();
 
       let years = memories.years.map(year => {
-        const files = year.files.filter(file => UserSourceDAO.hasAccess(user.id, file.sourceId));
+        const files = year.files.filter(file => UserSourceDAO.isAssigned(user.id, file.sourceId));
         return {
           year: year.year,
           count: files.length,

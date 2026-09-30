@@ -35,7 +35,7 @@ module.exports = {
   findByUserId(userId) {
     return DB.prepare('SELECT * from user_source WHERE user_id = ?').all(userId).map((us) => toUserSourceModel(us));
   },
-  hasAccess(userId, sourceId) {
+  isAssigned(userId, sourceId) {
     const result = DB.prepare(
       'SELECT 1 FROM user_source WHERE user_id = ? AND source_id = ?'
     ).get(userId, sourceId);

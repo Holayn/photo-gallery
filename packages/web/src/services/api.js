@@ -134,6 +134,9 @@ export async function getPhotosFromAlbum(albumId, albumToken) {
 export function getAlbums() {
   return fetcher.fetch(`${BASE}/albums`);
 }
+export function getAssignedAlbums() {
+  return fetcher.fetch(`${BASE}/albums?assigned=true`);
+}
 export function getRecentlyUpdatedCollections(limit) {
   const url = new URL(`${BASE}/recently-updated`, window.location.origin);
   if (limit) {
@@ -143,8 +146,8 @@ export function getRecentlyUpdatedCollections(limit) {
   return fetcher.fetch(url.toString());
 }
 export async function getAlbum(albumId, albumToken) {
-  const { id, name, token } = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${albumToken ? `&token=${albumToken}` : ''}`);
-  return { id, name, token };
+  const { id, name, token, createdBy } = await fetcher.fetch(`${BASE}/album/info?id=${albumId}${albumToken ? `&token=${albumToken}` : ''}`);
+  return { id, name, token, createdBy };
 }
 export async function getAlbumCover(albumId) {
   const { files } = await fetcher.fetch(`${BASE}/album/cover?id=${albumId}`);
@@ -267,6 +270,30 @@ export function removeSourceUser(sourceId, userId) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ sourceId, userId }),
+  });
+}
+
+export function getAlbumUsers(albumId) {
+  return fetcher.fetch(`${BASE}/album/users?id=${albumId}`);
+}
+
+export function addAlbumUser(albumId, userId) {
+  return fetcher.fetch(`${BASE}/album/users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ albumId, userId }),
+  });
+}
+
+export function removeAlbumUser(albumId, userId) {
+  return fetcher.fetch(`${BASE}/album/users/delete`, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ albumId, userId }),
   });
 }
 
