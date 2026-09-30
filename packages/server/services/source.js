@@ -206,6 +206,7 @@ module.exports = {
           PushNotification.notifyAll({
             title: 'New Photos',
             body: `${addedCount} new ${addedCount > 1 ? 'photos were' : 'photo was'} added to ${source.alias}.`,
+            url: `/source/${source.id}`,
           }).catch((err) => logger.error(`Failed to send push notification for source #${source.id}`, err));
         }
       } catch (err) {

@@ -68,6 +68,7 @@ module.exports = {
           PushNotification.notifyUsers(recipientIds, {
             title: 'New Photos',
             body: `${addedCount} new ${addedCount > 1 ? 'photos were' : 'photo was'} added to ${album.name}.`,
+            url: `/album/${album.idAlias}`,
           }).catch((err) => logger.error(`Failed to send push notification for album #${albumId}`, err));
         }
       }

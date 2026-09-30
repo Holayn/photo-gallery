@@ -13,6 +13,7 @@ self.addEventListener('push', (event) => {
     body: data.body,
     icon: data.icon || '/icon-192x192.png',
     badge: '/icon-192x192.png',
+    data: { url: data.url },
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
@@ -21,7 +22,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  const url = '/photos/memories';
+  const url = (event.notification.data && event.notification.data.url) || '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

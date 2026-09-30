@@ -64,6 +64,7 @@ cron.schedule('0 10 * * *', async () => {
       const payload = JSON.stringify({
         title: 'New Memories Available!',
         body: `${files.length} ${files.length > 1 ? 'photos' : 'photo'} from this day in previous years.`,
+        url: '/photos/memories',
         icon: '/icon-192x192.png'
       });
 

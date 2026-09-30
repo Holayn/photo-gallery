@@ -27,17 +27,17 @@ async function sendToSubscriptions(subscriptions, payload) {
 }
 
 // Sends the same push notification to every subscribed device across all users.
-async function notifyAll({ title, body }) {
+async function notifyAll({ title, body, url }) {
   const subscriptions = PushSubscriptionDAO.findAll();
   if (!subscriptions.length) {
     return;
   }
 
-  await sendToSubscriptions(subscriptions, JSON.stringify({ title, body, icon: '/icon-192x192.png' }));
+  await sendToSubscriptions(subscriptions, JSON.stringify({ title, body, url, icon: '/icon-192x192.png' }));
 }
 
 // Sends the same push notification to every subscribed device for the given users only.
-async function notifyUsers(userIds, { title, body }) {
+async function notifyUsers(userIds, { title, body, url }) {
   if (!userIds.length) {
     return;
   }
@@ -47,7 +47,7 @@ async function notifyUsers(userIds, { title, body }) {
     return;
   }
 
-  await sendToSubscriptions(subscriptions, JSON.stringify({ title, body, icon: '/icon-192x192.png' }));
+  await sendToSubscriptions(subscriptions, JSON.stringify({ title, body, url, icon: '/icon-192x192.png' }));
 }
 
 module.exports = { notifyAll, notifyUsers, sendToSubscriptions };
