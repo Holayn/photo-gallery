@@ -31,6 +31,14 @@ module.exports = {
   getById(id) {
     return toAlbumModel(DB.prepare('SELECT * FROM album WHERE id = ?').get(id));
   },
+  findByIds(ids) {
+    if (!ids.length) {
+      return [];
+    }
+    return DB.prepare(`SELECT * FROM album WHERE id IN (${ids.map(() => '?').join(',')})`)
+      .all(ids)
+      .map((a) => toAlbumModel(a));
+  },
   // Public lookup by the id exposed to clients - hidden (i.e. "deleted")
   // albums are unreachable here, same as if the row didn't exist.
   getByIdAlias(idAlias) {

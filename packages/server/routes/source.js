@@ -4,6 +4,7 @@ const express = require('express');
 
 const AuthController = require('../controllers/auth');
 const SourceService = require('../services/source');
+const SourceFileService = require('../services/source-file');
 const SourceWatcher = require('../services/source-watcher');
 const logger = require('../services/logger');
 const { SourceDAO, UserSourceDAO, UserDAO } = require('../services/db');
@@ -20,7 +21,7 @@ router.get('/sources', AuthController.authAdmin, (req, res) => {
       .sort((a, b) => b.id - a.id)
       .map((source) => ({
         ...source,
-        fileCount: source.processed ? SourceService.getFileCount(source.id) : 0,
+        fileCount: source.processed ? SourceFileService.getFileCount(source.id) : 0,
         users: UserSourceDAO.findUsersBySourceId(source.id),
       }))
   );
@@ -129,7 +130,7 @@ router.post(
   AuthController.authAdmin,
   (req, res) => {
     const { files } = req.body;
-    res.send(SourceService.getFilesStatus(files));
+    res.send(SourceFileService.getFilesStatus(files));
   }
 );
 
@@ -146,7 +147,7 @@ router.get(
       return;
     }
 
-    const files = SourceService.findFiles(
+    const files = SourceFileService.findFilesWithAlbums(
       sourceId,
       date ? dayjs(date, 'YYYY-MM-DD').valueOf() : null,
       directory,
@@ -169,7 +170,7 @@ router.get(
   (req, res) => {
     const { id: sourceId } = req.query;
 
-    const files = SourceService.findCoverFiles(sourceId);
+    const files = SourceFileService.findCoverFiles(sourceId);
     if (!files) {
       res.sendStatus(400);
     } else {

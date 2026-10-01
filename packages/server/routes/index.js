@@ -8,7 +8,7 @@ const memories = require('./memories');
 const explore = require('./explore');
 const pushSubscription = require('./push-subscription');
 const AuthController = require('../controllers/auth');
-const SourceService = require('../services/source');
+const SourceFileService = require('../services/source-file');
 const AlbumService = require('../services/album');
 const { SourceDAO, AlbumDAO } = require('../services/db');
 
@@ -33,7 +33,7 @@ apiRouter.get('/recently-updated', AuthController.authAdmin, (req, res) => {
     id: source.id,
     name: source.alias,
     updatedDate: source.updatedDate,
-    fileCount: source.processed ? SourceService.getFileCount(source.id) : 0,
+    fileCount: source.processed ? SourceFileService.getFileCount(source.id) : 0,
   }));
 
   const albums = AlbumDAO.findRecentlyUpdated(limit).map((album) => ({

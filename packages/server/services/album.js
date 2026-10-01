@@ -1,4 +1,4 @@
-const SourceService = require('./source');
+const SourceFileService = require('./source-file');
 const PushNotification = require('./push-notification');
 const logger = require('./logger');
 const { generateUniqueRandomNumbers, generateRandomString } = require('../util/random');
@@ -6,6 +6,7 @@ const { generateUniqueRandomNumbers, generateRandomString } = require('../util/r
 const { AlbumDAO, AlbumFileDAO, GalleryFileDAO, SourceDAO, AlbumAssignmentDAO, transaction } = require('./db');
 const Album = require('../model/album');
 const AlbumFile = require('../model/album-file');
+const AlbumFileDto = require('../dto/album-file');
 const GalleryFile = require('../model/gallery-file');
 
 module.exports = {
@@ -44,10 +45,11 @@ module.exports = {
             AlbumFileDAO.unhide(albumId, existingFile.id, createdAt);
           }
         } else {
-          const sourceFile = SourceService.getFile(f.sourceId, f.sourceFileId);
+          const sourceFile = SourceFileService.getFile(f.sourceId, f.sourceFileId);
           const newFileId = GalleryFileDAO.insert(
             new GalleryFile({
-              ...sourceFile,
+              date: sourceFile.date,
+              sourceFileId: f.sourceFileId,
               sourceId: f.sourceId,
             })
           );
@@ -104,34 +106,27 @@ module.exports = {
   },
 
   getAlbumFiles(id, albumIdAlias, token) {
-    const albumFiles = AlbumFileDAO.findByAlbumId(id);
-    const fileIds = albumFiles.map((f) => f.fileId);
-    return GalleryFileDAO.findByIds(fileIds)
-      .map(({ id, sourceId, sourceFileId }) => {
-        const file = {
-          ...SourceService.getFile(sourceId, sourceFileId),
-          galleryFileId: id,
-          sourceId,
-          sourceAlias: SourceDAO.getById(sourceId).alias,
-          createdAt: albumFiles.find(f => f.fileId === id).createdAt,
-        };
+    const albumFilesByFileId = new Map(AlbumFileDAO.findByAlbumId(id).map((af) => [af.fileId, af]));
+    const galleryFiles = GalleryFileDAO.findByIds([...albumFilesByFileId.keys()]);
+    const sourceFilesByGalleryFileId = new Map(
+      SourceFileService.getFiles(galleryFiles, {
+        urlParams: `&id=${albumIdAlias}${token ? `&token=${token}` : ''}`,
+      }).map((sf) => [sf.galleryFileId, sf])
+    );
+    const aliasBySourceId = new Map();
 
-        if (!file.urls) {
-          return file;
-        }
+    return galleryFiles.map((galleryFile) => {
+      if (!aliasBySourceId.has(galleryFile.sourceId)) {
+        aliasBySourceId.set(galleryFile.sourceId, SourceDAO.getById(galleryFile.sourceId).alias);
+      }
 
-        const albumParams = `&id=${albumIdAlias}${token ? `&token=${token}` : ''}`;
-        return {
-          ...file,
-          urls: {
-            view: Object.keys(file.urls.view).reduce((acc, size) => {
-              acc[size] = file.urls.view[size] + albumParams;
-              return acc;
-            }, {}),
-            download: file.urls.download + albumParams,
-          },
-        };
+      return new AlbumFileDto({
+        albumFile: albumFilesByFileId.get(galleryFile.id),
+        galleryFile,
+        sourceFile: sourceFilesByGalleryFileId.get(galleryFile.id) ?? null,
+        sourceAlias: aliasBySourceId.get(galleryFile.sourceId),
       });
+    });
   },
 
   getFileCount(albumId) {
@@ -152,7 +147,7 @@ module.exports = {
       return null;
     }
 
-    return SourceService.getFile(file.sourceId, file.sourceFileId);
+    return SourceFileService.getFile(file.sourceId, file.sourceFileId);
   },
 
   findCoverFiles(albumId) {
@@ -161,12 +156,7 @@ module.exports = {
     const files = generateUniqueRandomNumbers(albumFiles.length, 4).map(index => albumFiles[index]);
     const fileIds = files.map(f => f.fileId);
 
-    return GalleryFileDAO.findByIds(fileIds)
-      .map(({ id, sourceId, sourceFileId }) => ({
-        ...SourceService.getFile(sourceId, sourceFileId),
-        galleryFileId: id,
-        sourceId,
-      }));
+    return SourceFileService.getFiles(GalleryFileDAO.findByIds(fileIds));
   },
 
   deleteAlbum(albumId) {

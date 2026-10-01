@@ -3,7 +3,7 @@ const path = require('path');
 const send = require('send');
 
 const config = require('../services/config');
-const SourceService = require('../services/source');
+const SourceFileService = require('../services/source-file');
 const PhotoService = require('../services/photo');
 const PhotoOfDayService = require('../services/photo-of-day');
 const AuthController = require('../controllers/auth');
@@ -36,7 +36,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const { sourceFileId, sourceId, size } = req.query;
 
-    const fileData = await SourceService.getProcessedFilePath(
+    const fileData = await SourceFileService.getProcessedFilePath(
       sourceId,
       sourceFileId,
       size.toLowerCase(),
@@ -61,7 +61,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const { sourceFileId, sourceId } = req.query;
 
-    const p = await SourceService.getOriginalPath(sourceId, sourceFileId);
+    const p = await SourceFileService.getOriginalPath(sourceId, sourceFileId);
 
     if (p) {
       const safeName = path.basename(p).replace(/[^\w.\-]/g, '_');

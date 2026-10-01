@@ -1,6 +1,6 @@
 const { generateRandomString } = require('../util/random');
 const { GalleryFileDAO } = require('./db');
-const SourceService = require('./source');
+const SourceFileService = require('./source-file');
 const GalleryFile = require('../model/gallery-file');
 
 module.exports = {
@@ -17,10 +17,11 @@ module.exports = {
       return existingFile.token;
     } else {
       const token = generateRandomString(72);
-      const sourceFile = SourceService.getFile(sourceId, sourceFileId);
+      const sourceFile = SourceFileService.getFile(sourceId, sourceFileId);
       GalleryFileDAO.insert(
         new GalleryFile({
-          ...sourceFile,
+          date: sourceFile.date,
+          sourceFileId,
           sourceId,
           token,
         })

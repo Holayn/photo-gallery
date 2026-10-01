@@ -1,5 +1,5 @@
 const { GalleryFileDAO, UserExploreHistoryDAO, UserSourceDAO } = require('./db');
-const SourceService = require('./source');
+const SourceFileService = require('./source-file');
 
 function getNext(user) {
   const sourceIds = UserSourceDAO.findByUserId(user.id).map((us) => us.sourceId);
@@ -15,7 +15,7 @@ function getNext(user) {
     sourceFileId: found.sourceFileId,
   });
 
-  return SourceService.getFile(found.sourceId, found.sourceFileId);
+  return SourceFileService.getFile(found.sourceId, found.sourceFileId);
 }
 
 module.exports = {

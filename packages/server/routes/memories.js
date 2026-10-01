@@ -2,7 +2,7 @@ const express = require('express');
 
 const AuthController = require('../controllers/auth');
 const { getMemories } = require('../services/memories');
-const SourceService = require('../services/source');
+const SourceFileService = require('../services/source-file');
 const { UserDAO, UserSourceDAO } = require('../services/db');
 
 const router = express.Router();
@@ -30,7 +30,7 @@ router.get(
           ...year,
           files: year.files
             .filter(file => UserSourceDAO.isAssigned(user.id, file.sourceId))
-            .map(file => SourceService.getFile(file.sourceId, file.id)),
+            .map(file => SourceFileService.getFile(file.sourceId, file.id)),
         }));
 
       years = years.filter(year => year.files.length > 0);
@@ -63,7 +63,7 @@ router.get(
         return {
           year: year.year,
           count: files.length,
-          files: files.slice(0, 4).map(file => SourceService.getFile(file.sourceId, file.id)),
+          files: files.slice(0, 4).map(file => SourceFileService.getFile(file.sourceId, file.id)),
         };
       });
 

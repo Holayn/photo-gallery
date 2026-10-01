@@ -1,7 +1,7 @@
 const dayjs = require('dayjs');
 
 const { GalleryFileDAO, UserSourceDAO } = require('./db');
-const SourceService = require('./source');
+const SourceFileService = require('./source-file');
 
 // Simple string hash so consecutive days don't land on sequential offsets.
 function hashSeed(str) {
@@ -21,7 +21,7 @@ function getPhotoOfDay(user) {
     return null;
   }
 
-  return SourceService.getFile(found.sourceId, found.sourceFileId);
+  return SourceFileService.getFile(found.sourceId, found.sourceFileId);
 }
 
 module.exports = {
