@@ -4,6 +4,7 @@ const chokidar = require('chokidar');
 const logger = require('./logger');
 const { SourceDAO } = require('./db');
 const SourceService = require('./source');
+const notify = require('./notify');
 
 // Quiet period after the last file-settle event before triggering a
 // reprocess, since a batch of new files each fires their own event as they
@@ -11,10 +12,32 @@ const SourceService = require('./source');
 // single file has stopped changing, not that the whole batch has landed).
 const DEBOUNCE_MS = 10000;
 
+// How long a file's size must stay unchanged before it counts as done. This is
+// the longest stall in a transfer (e.g. a big video over a flaky link) that is
+// tolerated before the file is treated as finished.
+const STABILITY_MS = 5000;
+
+// Per source: { stable, raw } chokidar watchers. `raw` reports every write the
+// moment it happens, `stable` only once a file has stopped changing.
 const watchers = new Map();
+// Per source: files that have been written to but haven't settled yet.
+const inTransfer = new Map();
+// Sources with settled changes that haven't been handed to a run yet.
+const needsProcessing = new Set();
 const debounceTimers = new Map();
 const inFlight = new Map();
 const pendingRetry = new Set();
+
+function closeWatchers(sourceId) {
+  const entry = watchers.get(sourceId);
+  if (entry) {
+    entry.stable.close();
+    entry.raw.close();
+    watchers.delete(sourceId);
+  }
+  inTransfer.delete(sourceId);
+  needsProcessing.delete(sourceId);
+}
 
 function triggerProcessing(source) {
   if (inFlight.has(source.id)) {
@@ -54,6 +77,16 @@ function scheduleProcessing(source) {
     source.id,
     setTimeout(() => {
       debounceTimers.delete(source.id);
+
+      const transferring = inTransfer.get(source.id);
+      if (transferring && transferring.size > 0) {
+        // Not rescheduled here: each of these files schedules processing again
+        // when it settles (or is removed), so the last one out triggers the run.
+        logger.info(`${source.alias}: ${transferring.size} file(s) still transferring, deferring processing...`);
+        return;
+      }
+
+      needsProcessing.delete(source.id);
       logger.info(`Detected new files for ${source.alias}, processing...`);
       triggerProcessing(source);
     }, DEBOUNCE_MS)
@@ -71,38 +104,71 @@ function watchSource(source) {
   }
 
   try {
-    const watcher = chokidar.watch(source.filesPath, {
-      // Don't fire for the whole existing library on startup, only for
-      // changes from here on.
+    const transferring = new Set();
+    inTransfer.set(source.id, transferring);
+
+    // Fires on every write, so a file lands in `transferring` as soon as it
+    // starts arriving and stays there for as long as it keeps growing.
+    // ignoreInitial: don't fire for the whole existing library on startup, only
+    // for changes from here on (same for the watcher below).
+    const raw = chokidar.watch(source.filesPath, { ignoreInitial: true });
+    raw.on('add', (filePath) => {
+      // Only the empty -> non-empty transition notifies, so a batch of files
+      // arriving together (or a stalled file resuming) doesn't send one per file.
+      const startedTransfer = transferring.size === 0;
+      transferring.add(filePath);
+
+      if (startedTransfer) {
+        notify(undefined, `Files are being added to ${source.alias}.`);
+      }
+    });
+    raw.on('change', (filePath) => transferring.add(filePath));
+    // A file that disappears (temp file renamed or removed mid-transfer) will
+    // never settle, so drop it here and let processing proceed. If settled files
+    // were waiting on a run that got deferred because of this one, retrigger it:
+    // when a file is deleted before its first settle, chokidar cancels the wait
+    // without emitting `unlink` on the settled watcher below, so nothing else
+    // would.
+    raw.on('unlink', (filePath) => {
+      transferring.delete(filePath);
+      if (needsProcessing.has(source.id)) {
+        scheduleProcessing(source);
+      }
+    });
+
+    // Waits for a file's size to stop changing before reporting it.
+    const stable = chokidar.watch(source.filesPath, {
       ignoreInitial: true,
-      // Wait for a file's size to stop changing before reporting it, so a
-      // still-transferring/partially-written file doesn't trigger a run.
       awaitWriteFinish: {
-        stabilityThreshold: 2000,
-        pollInterval: 500,
+        stabilityThreshold: STABILITY_MS,
+        pollInterval: 1000,
       },
     });
-
-    watcher.on('all', () => scheduleProcessing(source));
-
-    watcher.on('error', (err) => {
-      logger.error(`Watcher error for source ${source.alias}, no longer watching its files path`, err);
-      watchers.delete(source.id);
+    stable.on('all', (event, filePath) => {
+      if (event === 'add' || event === 'change') {
+        transferring.delete(filePath);
+      }
+      needsProcessing.add(source.id);
+      scheduleProcessing(source);
     });
 
-    watchers.set(source.id, watcher);
+    const onError = (err) => {
+      logger.error(`Watcher error for source ${source.alias}, no longer watching its files path`, err);
+      closeWatchers(source.id);
+    };
+    raw.on('error', onError);
+    stable.on('error', onError);
+
+    watchers.set(source.id, { stable, raw });
     logger.info(`Watching ${source.alias}'s files path for continuous updates.`);
   } catch (err) {
     logger.error(`Failed to watch source ${source.alias}'s files path`, err);
+    closeWatchers(source.id);
   }
 }
 
 function unwatchSource(sourceId) {
-  const watcher = watchers.get(sourceId);
-  if (watcher) {
-    watcher.close();
-    watchers.delete(sourceId);
-  }
+  closeWatchers(sourceId);
 
   clearTimeout(debounceTimers.get(sourceId));
   debounceTimers.delete(sourceId);
@@ -116,8 +182,7 @@ function initSourceWatchers() {
 }
 
 function closeSourceWatchers() {
-  watchers.forEach((watcher) => watcher.close());
-  watchers.clear();
+  [...watchers.keys()].forEach(closeWatchers);
 
   debounceTimers.forEach((timer) => clearTimeout(timer));
   debounceTimers.clear();
