@@ -123,6 +123,12 @@ app.get('/{*splat}', (req, res) => {
 
 // Should be placed at the end of middleware stack to ensure they catch any errors that weren't handled by earlier middleware.
 app.use((err, req, res, next) => {
+  // Client errors (malformed URLs, bad request bodies, etc.) carry a 4xx status; respond with it
+  // and don't treat it as a server failure. Morgan already records the request and status.
+  if (!res.headersSent && err.status >= 400 && err.status < 500) {
+    return res.sendStatus(err.status);
+  }
+
   logger.error(err, null, true);
   if (res.headersSent) {
     // Let Express's default handler close the connection mid-response.
