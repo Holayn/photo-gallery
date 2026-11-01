@@ -197,6 +197,8 @@ module.exports = {
             args.push(SKIP_VIDEO_DATE_RANGES_ARG, ...skipVideoDateRanges);
           }
 
+          logger.info(`Running webimg with args: ${args.join(' ')}`);
+
           return execa('npm', args, {
             cwd: webImgToolPath,
             stdio: 'inherit',
