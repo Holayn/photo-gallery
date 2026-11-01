@@ -26,7 +26,7 @@
         <img class="w-full h-full object-contain blur-sm" :src="preview">
         <div class="absolute flex flex-col items-center gap-2 text-white text-center px-4 bg-gray-500/50 p-2">
           <svg class="w-12 h-12" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
-          <div>Video too large - not automatically converted</div>
+          <div>Video not converted - preview only</div>
           <button v-if="authStore.isLoggedIn" class="btn px-3 py-1 text-black" :disabled="converting" @click.stop="convert">Convert</button>
         </div>
       </div>
