@@ -32,11 +32,38 @@
                 <sl-icon slot="prefix" name="eye"></sl-icon>
                 Continuous Processing
               </sl-menu-item>
+              <sl-menu-item value="skipVideoDateRanges">
+                <sl-icon slot="prefix" name="calendar-x"></sl-icon>
+                Skip video conversion dates<template v-if="source.skipVideoDateRanges?.length"> ({{ source.skipVideoDateRanges.length }})</template>
+              </sl-menu-item>
             </sl-menu>
           </sl-dropdown>
         </div>
         <div v-if="directory" class="text-xl mt-1">({{ directory }})</div>
       </h1>
+
+      <Modal v-if="showSkipVideoDateRanges" size="md" @close="showSkipVideoDateRanges = false">
+        <h2 class="text-lg">Skip video conversion dates</h2>
+        <p class="mt-1 text-sm text-gray-600">Videos captured within these dates (inclusive) are left preview-only during processing, until converted manually.</p>
+
+        <div class="mt-4 flex flex-col gap-2">
+          <div v-if="!editedSkipVideoDateRanges.length" class="text-sm text-gray-500">No dates set.</div>
+          <div v-for="(range, i) in editedSkipVideoDateRanges" :key="i" class="flex items-center gap-2">
+            <input v-model="range.start" type="date" class="border px-1 min-w-0" aria-label="Start date">
+            <span>to</span>
+            <input v-model="range.end" type="date" class="border px-1 min-w-0" aria-label="End date">
+            <button aria-label="Remove range" @click="editedSkipVideoDateRanges.splice(i, 1)">
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 flex items-center gap-2">
+          <button class="btn px-2 py-1" @click="editedSkipVideoDateRanges.push({ start: '', end: '' })">Add range</button>
+          <button class="btn px-2 py-1" :disabled="savingSkipVideoDateRanges" @click="saveSkipVideoDateRanges()">Save</button>
+          <Loading v-if="savingSkipVideoDateRanges" class="w-8 h-8"></Loading>
+        </div>
+      </Modal>
     </template>
     <template v-if="loadingPhotoInfo" #loading>
       <div class="flex flex-col items-center justify-center pb-4">
@@ -49,9 +76,10 @@
 
 <script>
 import Loading from '../components/Loading.vue';
+import Modal from '../components/Modal.vue';
 import Gallery from './Gallery.vue';
 
-import { getPhotosFromSource, getSource, processSource, setSourceContinuous, subscribeToSourceCreation } from '../services/api';
+import { getPhotosFromSource, getSource, processSource, setSourceContinuous, setSourceSkipVideoDateRanges, subscribeToSourceCreation } from '../services/api';
 import {  setDocumentTitle } from '../utils';
 
 export default {
@@ -59,6 +87,7 @@ export default {
   components: {
     Gallery,
     Loading,
+    Modal,
   },
   props: {
     directory: String,
@@ -80,6 +109,10 @@ export default {
       date: null,
       source: null,
       photos: [],
+
+      showSkipVideoDateRanges: false,
+      editedSkipVideoDateRanges: [],
+      savingSkipVideoDateRanges: false,
     };
   },
   computed: {
@@ -133,6 +166,41 @@ export default {
         this.triggerProcessing();
       } else if (value === 'continuous') {
         this.toggleContinuous();
+      } else if (value === 'skipVideoDateRanges') {
+        this.openSkipVideoDateRanges();
+      }
+    },
+    openSkipVideoDateRanges() {
+      this.editedSkipVideoDateRanges = (this.source.skipVideoDateRanges ?? []).map((range) => {
+        const [start, end] = range.split(':');
+        return { start, end };
+      });
+      this.showSkipVideoDateRanges = true;
+    },
+    async saveSkipVideoDateRanges() {
+      const ranges = this.editedSkipVideoDateRanges;
+      if (ranges.some(({ start, end }) => !start || !end)) {
+        alert('Every range needs both a start and an end date.');
+        return;
+      }
+      // <input type="date"> values are YYYY-MM-DD, so they compare correctly as strings.
+      if (ranges.some(({ start, end }) => start > end)) {
+        alert('A range\'s start date must not be after its end date.');
+        return;
+      }
+
+      this.savingSkipVideoDateRanges = true;
+      try {
+        const { skipVideoDateRanges } = await setSourceSkipVideoDateRanges(
+          this.sourceId,
+          ranges.map(({ start, end }) => `${start}:${end}`)
+        );
+        this.source.skipVideoDateRanges = skipVideoDateRanges;
+        this.showSkipVideoDateRanges = false;
+      } catch (e) {
+        alert(`Error saving dates: ${e.message}`);
+      } finally {
+        this.savingSkipVideoDateRanges = false;
       }
     },
     async triggerProcessing() {

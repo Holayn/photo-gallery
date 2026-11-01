@@ -33,8 +33,23 @@ router.get(
   AuthController.authAdmin,
   (req, res) => {
     const { id: sourceId } = req.query;
-    const { id, alias, processed, processing, continuous, filesPath } = SourceDAO.getById(sourceId);
-    res.send({ id, alias, processed, processing, continuous, filesPath });
+    const { id, alias, processed, processing, continuous, filesPath, skipVideoDateRanges } = SourceDAO.getById(sourceId);
+    res.send({ id, alias, processed, processing, continuous, filesPath, skipVideoDateRanges });
+  }
+);
+
+router.post(
+  '/source/skip-video-date-ranges',
+  requiredBody(['id', 'ranges']),
+  AuthController.authAdmin,
+  (req, res) => {
+    const { id: sourceId, ranges } = req.body;
+
+    try {
+      res.send({ skipVideoDateRanges: SourceService.setSkipVideoDateRanges(sourceId, ranges) });
+    } catch (err) {
+      res.status(400).send({ message: err.message });
+    }
   }
 );
 

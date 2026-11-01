@@ -8,8 +8,10 @@ const { enqueue } = require('./processing-queue');
 const { filesPath, webImgToolPath } = require('./config');
 const { SourceDAO, GalleryFileDAO, transaction } = require('./db');
 const Source = require('../model/source');
+const { validateDateRange } = require('../util/date-ranges');
 
 const SKIP_LARGE_VIDEOS_ARG = '--skip-large-videos';
+const SKIP_VIDEO_DATE_RANGES_ARG = '--skip-video-date-ranges';
 
 // A source's webimg config may be named anything as long as it ends with
 // "config.json" - find whichever file in the source's directory matches.
@@ -187,10 +189,19 @@ module.exports = {
         logger.info(`Started processing ${source.alias}`);
 
         const { execa } = await import('execa');
-        await enqueue(() => execa('npm', ['run', 'start', '--', '--config', webImgConfigPath, SKIP_LARGE_VIDEOS_ARG], {
-          cwd: webImgToolPath,
-          stdio: 'inherit',
-        }));
+        await enqueue(() => {
+          // Re-read so date ranges edited while this run sat in the queue still apply.
+          const { skipVideoDateRanges } = SourceDAO.getById(source.id);
+          const args = ['run', 'start', '--', '--config', webImgConfigPath, SKIP_LARGE_VIDEOS_ARG];
+          if (skipVideoDateRanges.length) {
+            args.push(SKIP_VIDEO_DATE_RANGES_ARG, ...skipVideoDateRanges);
+          }
+
+          return execa('npm', args, {
+            cwd: webImgToolPath,
+            stdio: 'inherit',
+          });
+        });
 
         logger.info(`Finishing processing ${source.alias}`);
 
@@ -212,10 +223,30 @@ module.exports = {
         notify(undefined, `${source.alias} failed to process: ${err.message}`);
         throw err;
       } finally {
-        source.processing = false;
-        SourceDAO.update(source);
+        // Re-read rather than writing back `source` as captured at the start of
+        // the run, which would clobber anything changed since (updated_date
+        // from touch() above, or settings edited mid-run).
+        const latest = SourceDAO.getById(source.id);
+        latest.processing = false;
+        SourceDAO.update(latest);
       }
     })();
+  },
+
+  setSkipVideoDateRanges(sourceId, ranges) {
+    const source = SourceDAO.getById(sourceId);
+    if (!source) {
+      throw new Error(`Source ${sourceId} does not exist.`);
+    }
+    if (!Array.isArray(ranges)) {
+      throw new Error('Date ranges must be an array.');
+    }
+
+    ranges.forEach(validateDateRange);
+
+    source.skipVideoDateRanges = [...new Set(ranges)].sort();
+    SourceDAO.update(source);
+    return source.skipVideoDateRanges;
   },
 
   resumeInterruptedProcessing() {

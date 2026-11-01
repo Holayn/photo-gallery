@@ -88,6 +88,15 @@ export function setSourceContinuous(sourceId, continuous) {
     body: JSON.stringify({ id: sourceId, continuous }),
   });
 }
+export function setSourceSkipVideoDateRanges(sourceId, ranges) {
+  return fetcher.fetch(`${BASE}/source/skip-video-date-ranges`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ id: sourceId, ranges }),
+  });
+}
 export function getSourcesProcessing() {
   return fetcher.fetch(`${BASE}/sources/processing`);
 }

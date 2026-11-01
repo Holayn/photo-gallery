@@ -1,3 +1,5 @@
+const { deserializeDateRanges } = require('../util/date-ranges');
+
 class Source {
   id;
   alias;
@@ -7,8 +9,9 @@ class Source {
   processing;
   continuous;
   updatedDate;
+  skipVideoDateRanges;
 
-  constructor({ id, alias, path, processed = true, filesPath, processing = false, continuous = false, updatedDate }) {
+  constructor({ id, alias, path, processed = true, filesPath, processing = false, continuous = false, updatedDate, skipVideoDateRanges = null }) {
     this.id = id;
     this.alias = alias;
     this.path = path;
@@ -17,6 +20,7 @@ class Source {
     this.processing = Boolean(processing);
     this.continuous = Boolean(continuous);
     this.updatedDate = updatedDate;
+    this.skipVideoDateRanges = Array.isArray(skipVideoDateRanges) ? skipVideoDateRanges : deserializeDateRanges(skipVideoDateRanges);
   }
 }
 

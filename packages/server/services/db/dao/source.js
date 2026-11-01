@@ -1,6 +1,7 @@
 const DB = require('../connection');
 const { toModelFactory } = require('../../../util/db-utils');
 const Source = require('../../../model/source');
+const { serializeDateRanges } = require('../../../util/date-ranges');
 
 const toSourceModel = toModelFactory(Source);
 
@@ -12,12 +13,13 @@ module.exports = {
   },
   update(source) {
     DB.prepare(
-      'UPDATE source SET path = @path, alias = @alias, processed = @processed, files_path = @filesPath, processing = @processing, continuous = @continuous, updated_date = @updatedDate WHERE id = @id'
+      'UPDATE source SET path = @path, alias = @alias, processed = @processed, files_path = @filesPath, processing = @processing, continuous = @continuous, updated_date = @updatedDate, skip_video_date_ranges = @skipVideoDateRanges WHERE id = @id'
     ).run({
       ...source,
       processed: source.processed ? 1 : 0,
       processing: source.processing ? 1 : 0,
       continuous: source.continuous ? 1 : 0,
+      skipVideoDateRanges: serializeDateRanges(source.skipVideoDateRanges),
     });
   },
   touch(id, updatedDate = new Date().getTime()) {
